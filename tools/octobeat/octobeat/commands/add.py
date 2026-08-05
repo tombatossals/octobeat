@@ -7,10 +7,7 @@ from octobeat.config import (
     ensure_workspace,
 )
 from octobeat.io.resource import CATALOG_FILE
-from octobeat.pipeline import (
-    BuildResult,
-    build_dataset,
-)
+from octobeat.pipeline import build_dataset
 from octobeat.ui import console
 
 
@@ -53,86 +50,63 @@ def run(args: argparse.Namespace) -> int:
         traceback.print_exc()
         return 1
 
-    _report(result)
-
-    return 0
-
-
-def _report(result: BuildResult) -> None:
-    console.title("octobeat")
-
-    console.section("Dataset")
-    console.field(
-        "Artist",
-        result.artist or "-",
-    )
-    console.field(
-        "Title",
-        result.title or "-",
-    )
-
-    console.blank()
-    console.section("Resources")
-    console.field(
-        "Audio",
-        result.audio,
-    )
+    resources: list[tuple[str, object]] = [
+        ("Audio", result.audio),
+    ]
 
     if result.video is not None:
-        console.field(
-            "Video",
-            result.video,
+        resources.append(
+            ("Video", result.video),
         )
 
     if result.cover_source is not None:
-        console.field(
-            "Cover",
-            result.cover_source,
+        resources.append(
+            ("Cover", result.cover_source),
         )
 
-    console.blank()
-    console.section("Analysis")
-    console.field(
-        "Duration",
-        f"{result.duration:.1f} s",
-    )
-    console.field(
-        "Tempo",
-        f"{result.bpm:.0f} BPM",
-    )
-    console.field(
-        "Beats",
-        result.beats,
-    )
-    console.field(
-        "Confidence",
-        f"{result.confidence:.2f}",
+    console.table_report(
+        [
+            (
+                "Dataset",
+                [
+                    ("Artist", result.artist or "-"),
+                    ("Title", result.title or "-"),
+                ],
+            ),
+            (
+                "Resources",
+                resources,
+            ),
+            (
+                "Analysis",
+                [
+                    ("Duration", f"{result.duration:.1f} s"),
+                    ("Tempo", f"{result.bpm:.0f} BPM"),
+                    ("Beats", result.beats),
+                    (
+                        "Confidence",
+                        f"{result.confidence:.2f}",
+                    ),
+                ],
+            ),
+            (
+                "Output",
+                [
+                    ("Dataset", result.dataset_dir),
+                    ("SongMap", result.songmap_path),
+                    ("Metadata", result.metadata_path),
+                    ("Catalog", result.catalog_path),
+                    (
+                        "Catalog entries",
+                        result.catalog_entries,
+                    ),
+                ],
+            ),
+        ],
     )
 
-    console.blank()
-    console.section("Output")
-    console.field(
-        "Dataset",
-        result.dataset_dir,
-    )
-    console.field(
-        "SongMap",
-        result.songmap_path,
-    )
-    console.field(
-        "Metadata",
-        result.metadata_path,
-    )
-    console.field(
-        "Catalog",
-        result.catalog_path,
-    )
-    console.field(
-        "Catalog entries",
-        result.catalog_entries,
-    )
-
-    console.blank()
     console.success(
         "Dataset built.",
     )
+
+    return 0

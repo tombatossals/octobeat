@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from octobeat.metadata import parse_recording_title
 from octobeat.models.recording import Recording
 from octobeat.models.songmap import Source
 from octobeat.providers.base import SourceProvider
@@ -38,9 +39,12 @@ class LocalFileProvider(SourceProvider):
         if not path.exists():
             raise FileNotFoundError(path)
 
+        parsed = parse_recording_title(path.stem)
+
         return Recording(
             path=path,
-            title=path.stem,
+            artist=parsed.artist,
+            title=parsed.title,
             source=Source(
                 type="file",
                 id=str(path),

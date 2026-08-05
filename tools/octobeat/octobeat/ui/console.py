@@ -2,9 +2,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from rich import box
+from rich.console import Console as RichConsole
+from rich.table import Table
+
 from octobeat.models.analysis import (
     AnalysisReport,
 )
+
+_rich = RichConsole()
 
 
 class Console:
@@ -49,37 +55,104 @@ class Console:
         self,
         report: AnalysisReport,
     ) -> None:
-        self.title("octobeat")
+        """
+        Render an analysis report as a table.
+        """
 
-        self.section("Input")
-        self.field("Provider", report.provider)
-        self.field("Source", report.source)
-
-        self.blank()
-
-        self.section("Audio")
-        self.field("Recording", report.recording)
-        self.field("Decoded PCM", report.decoded)
-
-        self.blank()
-
-        self.section("Analysis")
-        self.field("Duration", f"{report.duration:.2f}s")
-        self.field("BPM", f"{report.bpm:.2f}")
-        self.field("Beats", report.beats)
-        self.field(
-            "Confidence",
-            f"{report.confidence:.2%}",
+        self.table_report(
+            [
+                (
+                    "Input",
+                    [
+                        ("Provider", report.provider),
+                        ("Source", report.source),
+                    ],
+                ),
+                (
+                    "Audio",
+                    [
+                        ("Recording", report.recording),
+                        ("Decoded PCM", report.decoded),
+                    ],
+                ),
+                (
+                    "Analysis",
+                    [
+                        ("Duration", f"{report.duration:.2f}s"),
+                        ("BPM", f"{report.bpm:.2f}"),
+                        ("Beats", report.beats),
+                        (
+                            "Confidence",
+                            f"{report.confidence:.2%}",
+                        ),
+                    ],
+                ),
+                (
+                    "Output",
+                    [
+                        ("SongMap", report.output),
+                    ],
+                ),
+            ],
         )
-
-        self.blank()
-
-        self.section("Output")
-        self.field(
-            "SongMap",
-            report.output,
-        )
-
-        self.blank()
 
         self.success("Analysis completed.")
+
+    def table_report(
+        self,
+        groups: list[
+            tuple[
+                str,
+                list[tuple[str, Any]],
+            ]
+        ],
+        title: str = "octobeat",
+    ) -> None:
+        """
+        Render grouped key/value data as a single table.
+        """
+
+        self.title(title)
+
+        table = Table(
+            show_header=False,
+            box=box.HEAVY,
+            padding=(0, 2),
+        )
+        table.add_column(
+            "Key",
+            style="bold",
+            no_wrap=True,
+        )
+        table.add_column(
+            "Value",
+            overflow="fold",
+        )
+
+        for index, (label, rows) in enumerate(
+            groups
+        ):
+            if index:
+                table.add_section()
+
+            table.add_row(
+                label,
+                "",
+                style="bold cyan",
+            )
+
+            for key, value in rows:
+                table.add_row(
+                    key,
+                    _as_text(value),
+                )
+
+        _rich.print(table)
+        print()
+
+
+def _as_text(value: Any) -> str:
+    if value is None:
+        return "-"
+
+    return str(value)

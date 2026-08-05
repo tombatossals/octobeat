@@ -6,7 +6,11 @@ from pathlib import Path
 
 import numpy as np
 
+import octobeat.pipeline.builder as builder_module
+from octobeat.models.recording import Recording
+from octobeat.models.songmap import Source
 from octobeat.pipeline import build_dataset
+from octobeat.providers.deezer import DeezerMetadata
 
 
 def _make_click_wav(
@@ -128,3 +132,133 @@ def test_build_dataset_skips_catalog_when_disabled(
     )
 
     assert not (output / "catalog.json").exists()
+
+
+class _FakeSourceProvider:
+    def __init__(self, path: Path) -> None:
+        self._path = path
+
+    @classmethod
+    def supports(cls, source: str) -> bool:
+        return True
+
+    def load(self, source: str) -> Recording:
+        return Recording(
+            path=self._path,
+            artist="MxPx",
+            title="Responsibility",
+            source=Source(
+                type="file",
+                id="fixture",
+            ),
+        )
+
+
+class _FakeDeezer:
+    def metadata(
+        self,
+        artist: str,
+        title: str,
+    ) -> DeezerMetadata:
+        return DeezerMetadata(
+            artist=artist,
+            title=title,
+            album="Slowly Going the Way of the Buffalo",
+            year=1998,
+            genres=["Punk"],
+            tags=["punk"],
+        )
+
+
+def test_build_dataset_enriches_metadata_from_deezer(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    source = _make_click_wav(
+        tmp_path / "mxpx.wav",
+    )
+
+    monkeypatch.setattr(
+        builder_module,
+        "get_provider",
+        lambda _: _FakeSourceProvider(source),
+    )
+    monkeypatch.setattr(
+        builder_module,
+        "DeezerProvider",
+        lambda: _FakeDeezer(),
+    )
+
+    result = build_dataset(
+        str(source),
+        output=tmp_path / "datasets",
+        include_video=False,
+        include_cover=False,
+    )
+
+    metadata = json.loads(
+        (
+            tmp_path
+            / "datasets"
+            / result.dataset_id
+            / "metadata.json"
+        ).read_text(
+            encoding="utf-8",
+        )
+    )
+
+    assert metadata["album"] == "Slowly Going the Way of the Buffalo"
+    assert metadata["year"] == 1998
+    assert metadata["genres"] == ["Punk"]
+    assert metadata["tags"] == ["punk"]
+
+
+def test_build_dataset_tolerates_deezer_failure(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    source = _make_click_wav(
+        tmp_path / "mxpx.wav",
+    )
+
+    class _BrokenDeezer:
+        def metadata(
+            self,
+            artist: str,
+            title: str,
+        ) -> None:
+            raise RuntimeError("network down")
+
+    monkeypatch.setattr(
+        builder_module,
+        "get_provider",
+        lambda _: _FakeSourceProvider(source),
+    )
+    monkeypatch.setattr(
+        builder_module,
+        "DeezerProvider",
+        lambda: _BrokenDeezer(),
+    )
+
+    result = build_dataset(
+        str(source),
+        output=tmp_path / "datasets",
+        include_video=False,
+        include_cover=False,
+    )
+
+    metadata = json.loads(
+        (
+            tmp_path
+            / "datasets"
+            / result.dataset_id
+            / "metadata.json"
+        ).read_text(
+            encoding="utf-8",
+        )
+    )
+
+    assert "album" not in metadata
+    assert metadata["genres"] == []
+    assert metadata["tags"] == []
+

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import urllib.request
 from pathlib import Path
 from typing import Any, cast
 
@@ -11,6 +10,11 @@ from octobeat.metadata import parse_recording_title
 from octobeat.models.recording import Recording
 from octobeat.models.songmap import Source
 from octobeat.providers.base import SourceProvider
+from octobeat.ui.progress import (
+    download_bar,
+    download_url,
+    yt_dlp_progress_hook,
+)
 
 _DOWNLOADER_OPTIONS: dict[str, Any] = {
     "quiet": True,
@@ -91,20 +95,27 @@ class YouTubeProvider(SourceProvider):
             destination.with_suffix(".%(ext)s"),
         )
 
-        options = {
-            **_DOWNLOADER_OPTIONS,
-            "format": "bestaudio/best",
-            "outtmpl": output_template,
-            "postprocessors": [
-                {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "wav",
-                },
-            ],
-        }
+        with download_bar(
+            None,
+            "Audio",
+        ) as bar:
+            options = {
+                **_DOWNLOADER_OPTIONS,
+                "format": "bestaudio/best",
+                "outtmpl": output_template,
+                "progress_hooks": [
+                    yt_dlp_progress_hook(bar),
+                ],
+                "postprocessors": [
+                    {
+                        "key": "FFmpegExtractAudio",
+                        "preferredcodec": "wav",
+                    },
+                ],
+            }
 
-        with _downloader(options) as downloader:
-            downloader.download([url])
+            with _downloader(options) as downloader:
+                downloader.download([url])
 
         if not destination.exists():
             raise RuntimeError(
@@ -138,21 +149,28 @@ class YouTubeProvider(SourceProvider):
             destination.with_suffix(".%(ext)s"),
         )
 
-        options = {
-            **_DOWNLOADER_OPTIONS,
-            "format": "bestvideo+bestaudio/best",
-            "outtmpl": output_template,
-            "merge_output_format": "mp4",
-            "postprocessors": [
-                {
-                    "key": "FFmpegVideoConvertor",
-                    "preferedformat": "mp4",
-                },
-            ],
-        }
+        with download_bar(
+            None,
+            "Video",
+        ) as bar:
+            options = {
+                **_DOWNLOADER_OPTIONS,
+                "format": "bestvideo+bestaudio/best",
+                "outtmpl": output_template,
+                "merge_output_format": "mp4",
+                "progress_hooks": [
+                    yt_dlp_progress_hook(bar),
+                ],
+                "postprocessors": [
+                    {
+                        "key": "FFmpegVideoConvertor",
+                        "preferedformat": "mp4",
+                    },
+                ],
+            }
 
-        with _downloader(options) as downloader:
-            downloader.download([url])
+            with _downloader(options) as downloader:
+                downloader.download([url])
 
         if not destination.exists():
             raise RuntimeError(
@@ -188,9 +206,10 @@ class YouTubeProvider(SourceProvider):
                 "No thumbnail available for this video.",
             )
 
-        urllib.request.urlretrieve(
+        download_url(
             thumbnail,
             destination,
+            description="Thumbnail",
         )
 
         return destination

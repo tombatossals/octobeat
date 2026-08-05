@@ -213,6 +213,7 @@ def build_parser() -> argparse.ArgumentParser:
     analyse_parser.add_argument(
         "-o",
         "--output",
+        type=Path,
     )
 
     analyse_parser.add_argument(

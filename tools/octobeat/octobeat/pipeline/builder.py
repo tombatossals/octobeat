@@ -19,7 +19,10 @@ from octobeat.models.metadata import (
 )
 from octobeat.models.recording import Recording
 from octobeat.naming import dataset_slug
-from octobeat.providers.cover import DeezerCoverProvider
+from octobeat.providers.deezer import (
+    DeezerMetadata,
+    DeezerProvider,
+)
 from octobeat.providers.factory import get_provider
 from octobeat.providers.youtube import YouTubeProvider
 
@@ -87,6 +90,8 @@ def build_dataset(
 
     recording = provider.load(source)
 
+    deezer = DeezerProvider()
+
     try:
         result = analyse_recording(
             recording,
@@ -122,6 +127,7 @@ def build_dataset(
                     dataset_dir / "cover.jpg",
                     provider,
                     source,
+                    deezer,
                 )
 
         metadata = _build_metadata(
@@ -129,6 +135,7 @@ def build_dataset(
             dataset_id,
             result,
             video_path,
+            deezer,
         )
 
         write_resource(
@@ -188,6 +195,7 @@ def _build_metadata(
     dataset_id: str,
     result: AnalysisResult,
     video_path: Path | None,
+    deezer: DeezerProvider,
 ) -> CatalogMetadata:
     """
     Build catalogue metadata from the analysis result.
@@ -204,6 +212,11 @@ def _build_metadata(
         else None
     )
 
+    enriched = _deezer_metadata(
+        recording,
+        deezer,
+    )
+
     return CatalogMetadata(
         id=dataset_id,
         title=(
@@ -211,8 +224,28 @@ def _build_metadata(
             or songmap.metadata.title
         ),
         artist=recording.artist or "",
+        album=(
+            enriched.album
+            if enriched is not None
+            else None
+        ),
+        year=(
+            enriched.year
+            if enriched is not None
+            else None
+        ),
+        genres=(
+            enriched.genres
+            if enriched is not None
+            else []
+        ),
         bpm=songmap.timing.bpm,
         duration=songmap.metadata.duration,
+        tags=(
+            enriched.tags
+            if enriched is not None
+            else []
+        ),
         youtube=youtube_id,
         resources=ResourceRefs(
             audio="recording.webm",
@@ -225,11 +258,32 @@ def _build_metadata(
     )
 
 
+def _deezer_metadata(
+    recording: Recording,
+    deezer: DeezerProvider,
+) -> DeezerMetadata | None:
+    """
+    Enrich metadata from Deezer, best effort.
+    """
+
+    if not recording.artist or not recording.title:
+        return None
+
+    try:
+        return deezer.metadata(
+            recording.artist,
+            recording.title,
+        )
+    except Exception:
+        return None
+
+
 def _download_cover(
     recording: Recording,
     destination: Path,
     youtube: YouTubeProvider,
     source: str,
+    deezer: DeezerProvider,
 ) -> str:
     """
     Download the best available album cover.
@@ -240,7 +294,7 @@ def _download_cover(
 
     if recording.artist and recording.title:
         try:
-            DeezerCoverProvider().download(
+            deezer.download_cover(
                 recording.artist,
                 recording.title,
                 destination,
