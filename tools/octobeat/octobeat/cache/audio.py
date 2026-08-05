@@ -90,6 +90,11 @@ class AudioCache:
         automatically if the source recording changes.
         """
 
+        if recording.source is None:
+            raise ValueError(
+                "Recording has no source.",
+            )
+
         path = self.decoded_path(
             recording.source,
         )
@@ -115,7 +120,5 @@ class AudioCache:
     @staticmethod
     def _key(source: Source) -> str:
         return hashlib.sha256(
-            f"{source.type}:{source.id}".encode(
-                "utf-8",
-            ),
+            f"{source.type}:{source.id}".encode(),
         ).hexdigest()

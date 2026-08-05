@@ -3,11 +3,14 @@ from __future__ import annotations
 import argparse
 from collections.abc import Sequence
 from pathlib import Path
+from typing import cast
 
+from octobeat.commands.add import run as add
 from octobeat.commands.analyse import run as analyse
+from octobeat.commands.config import run as config
 from octobeat.commands.export import run as export
 from octobeat.commands.info import run as info
-from octobeat.commands.resource import run as resource
+from octobeat.commands.init import run as init
 from octobeat.commands.validate import run as validate
 from octobeat.version import __version__
 
@@ -44,7 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     init_parser.set_defaults(
-        func=not_implemented,
+        func=init,
     )
 
     #
@@ -66,12 +69,12 @@ def build_parser() -> argparse.ArgumentParser:
     config_commands.add_parser(
         "show",
         help="Show the current configuration.",
-    ).set_defaults(func=not_implemented)
+    ).set_defaults(func=config)
 
     config_commands.add_parser(
         "edit",
         help="Edit the configuration file.",
-    ).set_defaults(func=not_implemented)
+    ).set_defaults(func=config)
 
     config_set = config_commands.add_parser(
         "set",
@@ -82,7 +85,7 @@ def build_parser() -> argparse.ArgumentParser:
     config_set.add_argument("value")
 
     config_set.set_defaults(
-        func=not_implemented,
+        func=config,
     )
 
     #
@@ -99,8 +102,38 @@ def build_parser() -> argparse.ArgumentParser:
         help="YouTube URL or local recording.",
     )
 
+    add_parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Datasets directory (defaults to paths.datasets).",
+    )
+
+    add_parser.add_argument(
+        "--catalog",
+        type=Path,
+        help="Catalog file (defaults to <output>/catalog.json).",
+    )
+
+    add_parser.add_argument(
+        "--id",
+        help="Override the dataset identifier.",
+    )
+
+    add_parser.add_argument(
+        "--no-video",
+        action="store_true",
+        help="Skip downloading the video track.",
+    )
+
+    add_parser.add_argument(
+        "--no-cover",
+        action="store_true",
+        help="Skip downloading the cover artwork.",
+    )
+
     add_parser.set_defaults(
-        func=resource,
+        func=add,
     )
 
     #
@@ -384,7 +417,7 @@ def main(
 
     args = parser.parse_args(argv)
 
-    return args.func(args)
+    return cast(int, args.func(args))
 
 
 if __name__ == "__main__":

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import sys
 
 from octobeat.ui import console
 from octobeat.validation import validate_songmap

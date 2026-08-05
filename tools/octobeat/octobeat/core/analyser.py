@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import librosa
 import numpy as np
@@ -115,7 +115,7 @@ def analyse_recording(
         schema=SCHEMA_ID,
         generatedBy=f"octobeat {__version__}",
         createdAt=datetime.now(
-            timezone.utc,
+            UTC,
         ).isoformat(),
         metadata=SongMetadata(
             title=recording.title

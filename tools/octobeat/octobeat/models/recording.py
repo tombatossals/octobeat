@@ -20,7 +20,7 @@ class Recording:
 
     source: Source | None = None
 
-    cleanup_dir: tempfile.TemporaryDirectory | None = None
+    cleanup_dir: tempfile.TemporaryDirectory[str] | None = None
 
     def cleanup(self) -> None:
         if self.cleanup_dir is not None:

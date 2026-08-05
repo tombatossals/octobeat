@@ -6,6 +6,7 @@ from octobeat.models.analysis import (
     AnalysisReport,
 )
 
+
 class Console:
     """
     Terminal output helper.
@@ -31,9 +32,6 @@ class Console:
 
     def info(self, message: str) -> None:
         print(message)
-
-    def warning(self, message: str) -> None:
-        print(f"WARNING: {message}")
 
     def error(self, message: str) -> None:
         print(f"ERROR: {message}")

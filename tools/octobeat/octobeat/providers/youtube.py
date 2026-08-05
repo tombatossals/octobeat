@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, cast
 import urllib.request
 from pathlib import Path
+from typing import Any, cast
 
 import yt_dlp
 
@@ -22,6 +22,12 @@ _DOWNLOADER_OPTIONS: dict[str, Any] = {
         "bun": {"path": None},
     },
 }
+
+
+def _downloader(options: dict[str, Any]) -> yt_dlp.YoutubeDL:
+    return yt_dlp.YoutubeDL(
+        cast(Any, options),
+    )
 
 
 class YouTubeProvider(SourceProvider):
@@ -60,7 +66,7 @@ class YouTubeProvider(SourceProvider):
             "skip_download": True,
         }
 
-        with yt_dlp.YoutubeDL(options) as downloader:
+        with _downloader(options) as downloader:
             return cast(
                 dict[str, Any],
                 downloader.extract_info(
@@ -97,7 +103,7 @@ class YouTubeProvider(SourceProvider):
             ],
         }
 
-        with yt_dlp.YoutubeDL(options) as downloader:
+        with _downloader(options) as downloader:
             downloader.download([url])
 
         if not destination.exists():
@@ -145,7 +151,7 @@ class YouTubeProvider(SourceProvider):
             ],
         }
 
-        with yt_dlp.YoutubeDL(options) as downloader:
+        with _downloader(options) as downloader:
             downloader.download([url])
 
         if not destination.exists():

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-SCHEMA_ID = "songmap/v1"
-SONGMAP_VERSION = 1
+SCHEMA_ID: Final = "songmap/v1"
+SONGMAP_VERSION: Final = 1
 
 
 MODEL_CONFIG = ConfigDict(
@@ -81,8 +81,8 @@ class SongMap(SongMapModel):
     Root SongMap document.
     """
 
-    version: Literal[SONGMAP_VERSION] = SONGMAP_VERSION
-    schema_: Literal[SCHEMA_ID] = Field(
+    version: Literal[1] = SONGMAP_VERSION
+    schema_: Literal["songmap/v1"] = Field(
         default=SCHEMA_ID,
         alias="schema",
     )

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 
 from octobeat.io import write_dataset
@@ -7,7 +8,7 @@ from octobeat.io.songmap import read_songmap
 from octobeat.ui import console
 
 
-def run(args) -> int:
+def run(args: argparse.Namespace) -> int:
     """
     Export a SongMap dataset.
     """

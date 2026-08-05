@@ -2,6 +2,7 @@ from pathlib import Path
 
 from octobeat.models.songmap import SongMap
 
+
 def read_songmap(path: Path) -> SongMap:
     """
     Read a SongMap from disk.

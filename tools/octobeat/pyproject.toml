@@ -29,7 +29,7 @@ dependencies = [
 octobeat = "octobeat.cli:main"
 
 [project.optional-dependencies]
-dev = ["pytest>=8.4", "pytest-cov>=7.0", "ruff>=0.12", "mypy>=1.17"]
+dev = ["pytest>=8.4", "pytest-cov>=7.0", "ruff>=0.12", "mypy>=1.17", "types-yt-dlp"]
 
 [build-system]
 requires = ["hatchling"]

@@ -136,44 +136,6 @@ wheels = [
 ]
 
 [[package]]
-name = "octobeat"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "click" },
-    { name = "jsonschema" },
-    { name = "librosa" },
-    { name = "numpy" },
-    { name = "platformdirs" },
-    { name = "pydantic" },
-    { name = "yt-dlp" },
-]
-
-[package.optional-dependencies]
-dev = [
-    { name = "mypy" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "click", specifier = ">=8.1" },
-    { name = "jsonschema", specifier = ">=4.25" },
-    { name = "librosa", specifier = ">=0.11" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.17" },
-    { name = "numpy", specifier = ">=2.0" },
-    { name = "platformdirs", specifier = ">=4.3,<5" },
-    { name = "pydantic", specifier = ">=2.11,<3" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12" },
-    { name = "yt-dlp", specifier = ">=2025.7.21" },
-]
-provides-extras = ["dev"]
-
-[[package]]
 name = "certifi"
 version = "2026.7.22"
 source = { registry = "https://pypi.org/simple" }
@@ -810,6 +772,46 @@ wheels = [
 ]
 
 [[package]]
+name = "octobeat"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "click" },
+    { name = "jsonschema" },
+    { name = "librosa" },
+    { name = "numpy" },
+    { name = "platformdirs" },
+    { name = "pydantic" },
+    { name = "yt-dlp" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+    { name = "types-yt-dlp" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "click", specifier = ">=8.1" },
+    { name = "jsonschema", specifier = ">=4.25" },
+    { name = "librosa", specifier = ">=0.11" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.17" },
+    { name = "numpy", specifier = ">=2.0" },
+    { name = "platformdirs", specifier = ">=4.3,<5" },
+    { name = "pydantic", specifier = ">=2.11,<3" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12" },
+    { name = "types-yt-dlp", marker = "extra == 'dev'" },
+    { name = "yt-dlp", specifier = ">=2025.7.21" },
+]
+provides-extras = ["dev"]
+
+[[package]]
 name = "packaging"
 version = "26.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1320,6 +1322,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b7/4d/08c89e34946fce2aec4fbb45c9016efd5f4d7f24af8e5d93296e935631d8/threadpoolctl-3.6.0.tar.gz", hash = "sha256:8ab8b4aa3491d812b623328249fab5302a68d2d71745c8a4c719a2fcaba9f44e", size = 21274, upload-time = "2025-03-13T13:49:23.031Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/32/d5/f9a850d79b0851d1d4ef6456097579a9005b31fea68726a4ae5f2d82ddd9/threadpoolctl-3.6.0-py3-none-any.whl", hash = "sha256:43a0b8fd5a2928500110039e43a5eed8480b918967083ea48dc3ab9f13c4a7fb", size = 18638, upload-time = "2025-03-13T13:49:21.846Z" },
+]
+
+[[package]]
+name = "types-yt-dlp"
+version = "2026.7.4.20260725"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/bb/5d/5d0340849c772baa68f023c5c05e13b2de1f0b83785b3349592a589a7699/types_yt_dlp-2026.7.4.20260725.tar.gz", hash = "sha256:52068a528d4f997a17b6b2b272f021c2947d0f4abb20d3be9ae862c7d8bc08ce", size = 41887, upload-time = "2026-07-25T04:53:21.34Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c8/06/3e5043b8e79f3eac02a7f6f01bf984d0dbf3587344c45976ca02e984254c/types_yt_dlp-2026.7.4.20260725-py3-none-any.whl", hash = "sha256:55af37ede6e088529313297a72cfe09d434fd4e0ee9522ad4c4f9f06eda6aec0", size = 55065, upload-time = "2026-07-25T04:53:20.406Z" },
 ]
 
 [[package]]
