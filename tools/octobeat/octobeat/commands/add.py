@@ -45,6 +45,7 @@ def run(args: argparse.Namespace) -> int:
             update_catalog=(
                 config.catalog.auto_rebuild
             ),
+            offset=args.offset,
         )
     except Exception:
         traceback.print_exc()

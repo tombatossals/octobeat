@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { Settings as SettingsIcon } from "lucide-react";
 
-import { Button } from "@octobeat/ui";
-
 import { SettingsDialog } from "./SettingsDialog";
 
 export function SettingsButton() {
@@ -13,17 +11,19 @@ export function SettingsButton() {
 
     return (
         <>
-            <Button
+            <button
                 type="button"
-                variant="outline"
-                size="icon"
                 aria-label="Open settings"
                 title="Settings"
                 onClick={() => setOpen(true)}
-                className="pointer-events-auto fixed right-4 top-4 z-50 rounded-full bg-background/70 text-muted-foreground shadow-lg backdrop-blur-md hover:text-foreground"
+                className="pointer-events-auto fixed right-10 top-8 z-50 cursor-pointer text-white transition-colors hover:text-gray-400"
+                style={{
+                    filter:
+                        "drop-shadow(1px 1px 0 #374151) drop-shadow(-1px -1px 0 #374151) drop-shadow(1px -1px 0 #374151) drop-shadow(-1px 1px 0 #374151) drop-shadow(1px 0 0 #374151) drop-shadow(-1px 0 0 #374151) drop-shadow(0 1px 0 #374151) drop-shadow(0 -1px 0 #374151)",
+                }}
             >
-                <SettingsIcon />
-            </Button>
+                <SettingsIcon className="h-9 w-9" />
+            </button>
 
             <SettingsDialog
                 open={open}

@@ -1,18 +1,21 @@
 "use client";
 
 import { useEffect } from "react";
+import type { MouseEvent } from "react";
 
 import { PlayerBackend } from "../backends/PlayerBackend";
 
 import { usePlayerStore } from "@octobeat/player";
 
 import { DebugHud } from "@/features/overlay/components/DebugHud";
+import { Logo } from "@/features/overlay/components/Logo";
 import { ExerciseOverlay } from "@/features/exercises/components/ExerciseOverlay";
 import { DifficultySwitcher } from "@/features/exercises/components/DifficultySwitcher";
 import { SettingsButton } from "@/features/settings/components/SettingsButton";
 import { SettingsToast } from "@/features/settings/components/SettingsToast";
 import { useSettingsHydration } from "@/features/settings/hooks/useSettingsHydration";
 import { NowPlayingCard } from "./NowPlayingCard";
+import { PlayerControlsOverlay } from "./PlayerControlsOverlay";
 
 import {
     useKeyboardShortcuts,
@@ -58,13 +61,52 @@ export function Player() {
         void autoStart();
     }, [playPause, setStarted]);
 
+    const player = usePlayerStore(
+        (state) => state.player,
+    );
+
+    useEffect(() => {
+        if (!player) {
+            return;
+        }
+
+        return player.on("ended", () => {
+            void next();
+        });
+    }, [player, next]);
+
+    function handleVideoClick(
+        event: MouseEvent<HTMLDivElement>,
+    ) {
+        const target =
+            event.target as HTMLElement | null;
+
+        if (
+            target &&
+            target.closest(
+                "button, a, input, select, textarea, [role='button']",
+            )
+        ) {
+            return;
+        }
+
+        void playPause();
+    }
+
     return (
-        <div className="relative h-screen w-screen overflow-hidden bg-black">
+        <div
+            onClick={handleVideoClick}
+            className="relative h-screen w-screen overflow-hidden bg-black"
+        >
             <PlayerBackend />
+
+            <Logo />
 
             <DifficultySwitcher />
 
             <NowPlayingCard />
+
+            <PlayerControlsOverlay />
 
             <ExerciseOverlay />
 

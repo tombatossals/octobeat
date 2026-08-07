@@ -77,6 +77,7 @@ def build_dataset(
     include_video: bool = True,
     include_cover: bool = True,
     update_catalog: bool = True,
+    offset: float | None = None,
 ) -> BuildResult:
     """
     Build a complete dataset from a recording source.
@@ -84,6 +85,9 @@ def build_dataset(
     Runs the full pipeline: acquire the recording, analyse it, fetch
     the video and cover artwork when the source supports them, write
     the dataset and update the catalog.
+
+    ``offset`` overrides the detected music start (seconds into the
+    media where the actual song begins).
     """
 
     provider = get_provider(source)
@@ -97,6 +101,7 @@ def build_dataset(
             recording,
             provider=type(provider).__name__,
             source=source,
+            offset=offset,
         )
 
         dataset_id = (

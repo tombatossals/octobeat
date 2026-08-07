@@ -132,6 +132,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Skip downloading the cover artwork.",
     )
 
+    add_parser.add_argument(
+        "--offset",
+        type=float,
+        default=None,
+        help="Seconds into the media where the song begins "
+        "(overrides auto-detection).",
+    )
+
     add_parser.set_defaults(
         func=add,
     )
@@ -218,6 +226,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     analyse_parser.add_argument(
         "--title",
+    )
+
+    analyse_parser.add_argument(
+        "--offset",
+        type=float,
+        default=None,
+        help="Seconds into the media where the song begins "
+        "(overrides auto-detection).",
     )
 
     analyse_parser.set_defaults(

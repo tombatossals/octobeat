@@ -15,6 +15,7 @@ export interface MediaPlayerEventMap {
     ready: EmptyEvent;
     play: EmptyEvent;
     pause: EmptyEvent;
+    ended: EmptyEvent;
 
     timeupdate: PlaybackPositionEvent;
     seek: PlaybackPositionEvent;

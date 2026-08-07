@@ -24,6 +24,7 @@ def run(args: argparse.Namespace) -> int:
             recording,
             provider=type(provider).__name__,
             source=args.input,
+            offset=args.offset,
         )
 
         output = resolve_output_path(

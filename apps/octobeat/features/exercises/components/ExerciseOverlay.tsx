@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { JSX } from "react";
 
-import { books, subdivideExercise } from "@octobeat/exercises";
+import { books } from "@octobeat/exercises";
 import { usePlayerStore } from "@octobeat/player";
 import { ExerciseRenderer } from "@octobeat/ui";
 
@@ -37,25 +37,13 @@ export function ExerciseOverlay(): JSX.Element | null {
     const [currentBeat, setCurrentBeat] =
         useState(0);
 
+    const [currentTime, setCurrentTime] =
+        useState(0);
+
     const exercise = useMemo(() => {
-        const line1 =
-            books.stickControl.exercises
-                .line1;
-
-        const factor =
-            DIFFICULTY_FACTOR[
-                difficulty
-            ];
-
-        if (factor === 1) {
-            return line1;
-        }
-
-        return subdivideExercise(
-            line1,
-            factor,
-        );
-    }, [difficulty]);
+        return books.stickControl.exercises
+            .line1;
+    }, []);
 
     const factor =
         DIFFICULTY_FACTOR[difficulty];
@@ -103,10 +91,25 @@ export function ExerciseOverlay(): JSX.Element | null {
                           1000
                     : media;
 
+            setCurrentTime(
+                currentTime,
+            );
+
             const beat = beatAtTime(
                 map,
                 currentTime,
             );
+
+            if (!beat) {
+                setCurrentBeat(0);
+
+                frame =
+                    requestAnimationFrame(
+                        tick,
+                    );
+
+                return;
+            }
 
             if (beat) {
                 const next = nextBeat(
@@ -163,12 +166,49 @@ export function ExerciseOverlay(): JSX.Element | null {
         return null;
     }
 
+    const remaining =
+        songmap.timing.offset -
+        currentTime;
+
+    const musicStarted =
+        remaining <= 0;
+
     return (
-        <div className="pointer-events-none absolute inset-x-0 top-[72%] z-30 flex -translate-y-1/2 justify-center">
-            <ExerciseRenderer
-                exercise={exercise}
-                currentBeat={currentBeat}
-            />
+        <div className="pointer-events-none absolute inset-x-0 bottom-28 z-30 flex justify-center">
+            {musicStarted ? (
+                <ExerciseRenderer
+                    exercise={exercise}
+                    currentBeat={currentBeat}
+                />
+            ) : (
+                <div className="flex flex-col items-center gap-1 rounded-lg border border-white/10 bg-gray-800/60 px-6 py-3 shadow-2xl backdrop-blur-md">
+                    <span
+                        className="text-xs uppercase tracking-widest text-white"
+                        style={{
+                            textShadow:
+                                "1px 1px 0 #374151, -1px -1px 0 #374151, 1px -1px 0 #374151, -1px 1px 0 #374151, 1px 0 0 #374151, -1px 0 0 #374151, 0 1px 0 #374151, 0 -1px 0 #374151",
+                        }}
+                    >
+                        Empieza en
+                    </span>
+
+                    <span
+                        className="font-mono text-3xl font-black leading-none text-white"
+                        style={{
+                            textShadow:
+                                "1px 1px 0 #374151, -1px -1px 0 #374151, 1px -1px 0 #374151, -1px 1px 0 #374151, 1px 0 0 #374151, -1px 0 0 #374151, 0 1px 0 #374151, 0 -1px 0 #374151",
+                        }}
+                    >
+                        {Math.max(
+                            0,
+                            Math.ceil(
+                                remaining,
+                            ),
+                        )}
+                        s
+                    </span>
+                </div>
+            )}
         </div>
     );
 }

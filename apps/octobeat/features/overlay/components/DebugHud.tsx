@@ -34,7 +34,7 @@ export function DebugHud() {
     );
 
     return (
-        <div className="fixed bottom-4 right-4 z-40 rounded-lg border border-border bg-background/70 p-4 font-mono text-sm text-foreground backdrop-blur">
+        <div className="fixed bottom-10 right-10 z-40 rounded-lg border border-border bg-background/70 p-4 font-mono text-sm text-foreground backdrop-blur">
             <div>
                 Beat: {beat?.index ?? "-"}
             </div>

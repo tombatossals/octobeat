@@ -32,9 +32,14 @@ def analyse_recording(
     *,
     provider: str,
     source: str,
+    offset: float | None = None,
 ) -> AnalysisResult:
     """
     Analyse a recording and generate a SongMap plus a display report.
+
+    ``offset`` overrides the detected music start (seconds into the
+    media where the actual song begins). When omitted, the start is
+    estimated from the onset envelope.
     """
 
     if not recording.path.exists():
@@ -92,10 +97,21 @@ def analyse_recording(
         beat_frames,
     )
 
-    offset = (
-        float(beat_times[0])
-        if len(beat_times)
-        else 0.0
+    music_start = (
+        float(offset)
+        if offset is not None
+        else _detect_music_start(
+            onset_envelope,
+            sr,
+        )
+    )
+
+    music_start = max(
+        0.0,
+        min(
+            music_start,
+            duration,
+        ),
     )
 
     beats = [
@@ -108,6 +124,7 @@ def analyse_recording(
             start=1,
         )
         if 0 <= float(time) <= duration
+        and float(time) >= music_start
     ]
 
     songmap = SongMap(
@@ -134,7 +151,7 @@ def analyse_recording(
         ),
         timing=Timing(
             bpm=round(bpm, 2),
-            offset=round(offset, 3),
+            offset=round(music_start, 3),
             timeSignature=DEFAULT_TIME_SIGNATURE,
             confidence=round(
                 confidence,
@@ -218,6 +235,64 @@ def _fallback_grid(
         0.0,
         duration,
         interval,
+    )
+
+
+def _detect_music_start(
+    onset_envelope: np.ndarray,
+    sr: int,
+    *,
+    min_sustain_frames: int = 6,
+) -> float:
+    """
+    Estimate the time where the actual music begins.
+
+    Locates the first sustained burst of onset energy above a
+    relative threshold, which tolerates quiet intros or a brief
+    count-in before the song really kicks in.
+    """
+
+    if onset_envelope.size == 0:
+        return 0.0
+
+    peak = float(
+        np.percentile(
+            onset_envelope,
+            95,
+        )
+    )
+
+    if peak <= 0:
+        return 0.0
+
+    threshold = peak * 0.2
+
+    run = 0
+    start = 0
+    sustained = False
+
+    for frame, energy in enumerate(
+        onset_envelope
+    ):
+        if energy >= threshold:
+            if run == 0:
+                start = frame
+            run += 1
+
+            if run >= min_sustain_frames:
+                sustained = True
+                break
+        else:
+            run = 0
+
+    if not sustained:
+        return 0.0
+
+    return float(
+        librosa.frames_to_time(
+            start,
+            sr=sr,
+        )
     )
 
 

@@ -20,7 +20,7 @@ export function ExerciseRenderer({
     currentBeat,
 }: ExerciseRendererProps): JSX.Element {
     return (
-        <div className="rounded-3xl border border-neutral-200 bg-white px-8 py-6 shadow-2xl">
+        <div className="rounded-lg border border-neutral-200 bg-white px-3 py-1 shadow-2xl">
             <ExerciseTimeline
                 exercise={exercise}
                 currentBeat={currentBeat}

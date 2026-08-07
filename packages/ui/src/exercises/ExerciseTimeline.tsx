@@ -40,13 +40,13 @@ export function ExerciseTimeline({
     }
 
     return (
-        <div className="w-screen border-y border-neutral-300 bg-zinc-50 px-16 py-8 shadow-2xl">
-            <div className="mx-auto flex max-w-7xl items-center">
+        <div className="mx-auto w-full max-w-3xl">
+            <div className="mx-auto flex items-center">
                 {measures.map(
                     (measure, measureIndex) => (
                         <Fragment key={measureIndex}>
                             {measureIndex > 0 && (
-                                <div className="mx-8 flex h-20 items-center">
+                                <div className="mx-2 flex h-8 items-center">
                                     <div className="h-full w-[2px] rounded-full bg-neutral-300" />
                                 </div>
                             )}
@@ -87,10 +87,10 @@ function BeatCell({
     active,
 }: BeatCellProps): JSX.Element {
     return (
-        <div className="relative flex justify-center py-5">
+        <div className="relative flex justify-center py-1.5">
             {active && (
                 <>
-                    <div className="absolute -top-3 text-xl text-blue-600">
+                    <div className="absolute -top-1 text-sm text-blue-600">
                         ▼
                     </div>
 
@@ -107,7 +107,9 @@ function BeatCell({
                 )}
                 style={{
                     fontSize:
-                        "clamp(2rem,3vw,3.4rem)",
+                        "clamp(1.4rem,2vw,2rem)",
+                    textShadow:
+                        "1px 1px 0 #e5e5e5, -1px -1px 0 #e5e5e5, 1px -1px 0 #e5e5e5, -1px 1px 0 #e5e5e5, 1px 0 0 #e5e5e5, -1px 0 0 #e5e5e5, 0 1px 0 #e5e5e5, 0 -1px 0 #e5e5e5, 0 2px 4px rgb(0 0 0 / 25%)",
                 }}
             >
                 {beat.hand}

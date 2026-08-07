@@ -28,9 +28,10 @@ export function loadSettings(): Settings {
 
     try {
         const parsed =
-            SettingsSchema.safeParse(
-                JSON.parse(raw),
-            );
+            SettingsSchema.safeParse({
+                ...DEFAULT_SETTINGS,
+                ...JSON.parse(raw),
+            });
 
         if (!parsed.success) {
             return DEFAULT_SETTINGS;

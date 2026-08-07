@@ -145,8 +145,8 @@ function SettingsForm({
                 </Button>
             </div>
 
-            <div className="space-y-6">
-                <div className="space-y-2">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="space-y-2 lg:col-span-2">
                     <Label htmlFor="settings-catalog-url">
                         Catalog URL
                     </Label>
@@ -325,7 +325,7 @@ export function SettingsDialog({
             <Dialog.Portal>
                 <Dialog.Backdrop className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm" />
 
-                <Dialog.Popup className="fixed left-1/2 top-1/2 z-[90] w-[min(90vw,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-background p-6 text-foreground shadow-2xl">
+                <Dialog.Popup className="fixed left-1/2 top-1/2 z-[90] w-[min(90vw,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-background p-6 text-foreground shadow-2xl lg:w-[min(90vw,56rem)]">
                     <SettingsForm
                         settings={settings}
                         onSave={handleSave}

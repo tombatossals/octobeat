@@ -12,6 +12,11 @@ export function beatAtTime(
         return null;
     }
 
+    // La música aún no ha empezado: no hay beat activo.
+    if (time < songmap.timing.offset) {
+        return null;
+    }
+
     const index = lowerBound(
         beats,
         time,

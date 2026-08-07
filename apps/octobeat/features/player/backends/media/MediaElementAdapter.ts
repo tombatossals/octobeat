@@ -16,6 +16,7 @@ export class MediaElementAdapter
             ready: new Set(),
             play: new Set(),
             pause: new Set(),
+            ended: new Set(),
             seek: new Set(),
             timeupdate: new Set(),
         };
@@ -178,6 +179,8 @@ export class MediaElementAdapter
     };
 
     private handleEnded = (): void => {
+        this.emit("ended");
+
         this.emit("pause");
 
         this.emit("seek", {

@@ -31,6 +31,7 @@ export class YouTubeAdapter
             ready: new Set(),
             play: new Set(),
             pause: new Set(),
+            ended: new Set(),
             seek: new Set(),
             timeupdate: new Set(),
         };
@@ -70,6 +71,8 @@ export class YouTubeAdapter
 
             case PLAYER_STATE.ENDED:
                 this.stopTimer();
+
+                this.emit("ended");
 
                 this.emit("pause");
 
