@@ -1,0 +1,23 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/songmap"
+    },
+    {
+      "path": "./packages/player"
+    },
+    {
+      "path": "./packages/ui"
+    },
+    {
+      "path": "./packages/exercises"
+    },
+    {
+      "path": "./apps/octobeat"
+    },
+    {
+      "path": "./apps/songmap-studio"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+    "name": "@octobeat/library",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "devDependencies": {
+        "@types/node": "^20.19.43",
+        "tsx": "^4.23.5"
+    },
+    "dependencies": {
+        "@octobeat/songmap": "workspace:*",
+        "zod": "^4.4.3"
+    }
+}

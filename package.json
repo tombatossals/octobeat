@@ -1,0 +1,7 @@
+{
+  "name": "octobeat",
+  "private": true,
+  "scripts": {
+    "resources:sync": "bash scripts/sync-resources.sh"
+  }
+}

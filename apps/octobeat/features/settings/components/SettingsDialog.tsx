@@ -1,0 +1,342 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { Dialog } from "@base-ui/react/dialog";
+import { X } from "lucide-react";
+
+import {
+    Button,
+    Input,
+    Label,
+} from "@octobeat/ui";
+
+import { useSettingsStore } from "../store";
+import { SettingsSchema, isHttpsUrl } from "../schema";
+import { AVAILABLE_GENRES, DIFFICULTY_OPTIONS } from "../genres";
+
+import type { Settings } from "../types";
+
+interface SettingsDialogProps {
+    open: boolean;
+
+    onOpenChange(
+        open: boolean,
+    ): void;
+}
+
+function toDraft(
+    settings: Settings,
+): Settings {
+    return {
+        catalogUrl:
+            settings.catalogUrl,
+        defaultDifficulty:
+            settings.defaultDifficulty,
+        preferredGenres: [
+            ...settings.preferredGenres,
+        ],
+    };
+}
+
+interface SettingsFormProps {
+    settings: Settings;
+
+    onSave(
+        settings: Settings,
+    ): void;
+
+    onCancel(): void;
+}
+
+function SettingsForm({
+    settings,
+    onSave,
+    onCancel,
+}: SettingsFormProps) {
+    const [draft, setDraft] =
+        useState<Settings>(() =>
+            toDraft(settings),
+        );
+
+    const result = useMemo(
+        () =>
+            SettingsSchema.safeParse(
+                draft,
+            ),
+        [draft],
+    );
+
+    const dirty = useMemo(
+        () =>
+            JSON.stringify(draft) !==
+            JSON.stringify(settings),
+        [draft, settings],
+    );
+
+    const invalid =
+        !result.success;
+
+    const catalogUrlError = invalid
+        ? result.error.issues.find(
+              (issue) =>
+                  issue.path[0] ===
+                  "catalogUrl",
+          )?.message
+        : undefined;
+
+    const httpsWarning =
+        !catalogUrlError &&
+        draft.catalogUrl.includes(
+            "://",
+        ) &&
+        !isHttpsUrl(
+            draft.catalogUrl,
+        );
+
+    function toggleGenre(
+        genre: string,
+    ) {
+        setDraft((current) => {
+            const selected =
+                current.preferredGenres.includes(
+                    genre,
+                );
+
+            return {
+                ...current,
+                preferredGenres: selected
+                    ? current.preferredGenres.filter(
+                          (item) =>
+                              item !==
+                              genre,
+                      )
+                    : [
+                          ...current.preferredGenres,
+                          genre,
+                      ],
+            };
+        });
+    }
+
+    function handleSave() {
+        if (invalid) {
+            return;
+        }
+
+        onSave(result.data);
+    }
+
+    return (
+        <>
+            <div className="mb-6 flex items-center justify-between">
+                <Dialog.Title className="text-xl font-bold text-foreground">
+                    Settings
+                </Dialog.Title>
+
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Close settings"
+                    onClick={onCancel}
+                    className="text-muted-foreground hover:text-foreground"
+                >
+                    <X />
+                </Button>
+            </div>
+
+            <div className="space-y-6">
+                <div className="space-y-2">
+                    <Label htmlFor="settings-catalog-url">
+                        Catalog URL
+                    </Label>
+
+                    <Input
+                        id="settings-catalog-url"
+                        type="text"
+                        inputMode="url"
+                        value={
+                            draft.catalogUrl
+                        }
+                        onChange={(event) =>
+                            setDraft(
+                                (current) => ({
+                                    ...current,
+                                    catalogUrl:
+                                        event
+                                            .target
+                                            .value,
+                                }),
+                            )
+                        }
+                        aria-invalid={
+                            catalogUrlError
+                                ? true
+                                : undefined
+                        }
+                        placeholder="/resources"
+                    />
+
+                    {catalogUrlError ? (
+                        <p className="text-xs text-destructive">
+                            {catalogUrlError}
+                        </p>
+                    ) : httpsWarning ? (
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                            HTTPS is recommended.
+                        </p>
+                    ) : null}
+                </div>
+
+                <fieldset>
+                    <legend className="mb-2 block text-sm font-semibold text-foreground">
+                        Default Difficulty
+                    </legend>
+
+                    <div className="space-y-1">
+                        {DIFFICULTY_OPTIONS.map(
+                            (
+                                option,
+                            ) => (
+                                <Label
+                                    key={
+                                        option.value
+                                    }
+                                    className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
+                                >
+                                    <input
+                                        type="radio"
+                                        name="default-difficulty"
+                                        value={
+                                            option.value
+                                        }
+                                        checked={
+                                            draft.defaultDifficulty ===
+                                            option.value
+                                        }
+                                        onChange={() =>
+                                            setDraft(
+                                                (current) => ({
+                                                    ...current,
+                                                    defaultDifficulty:
+                                                        option.value,
+                                                }),
+                                            )
+                                        }
+                                        className="size-4 accent-primary"
+                                    />
+
+                                    {option.label}
+                                </Label>
+                            ),
+                        )}
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend className="mb-2 block text-sm font-semibold text-foreground">
+                        Preferred Genres
+                    </legend>
+
+                    <div className="grid grid-cols-2 gap-1">
+                        {AVAILABLE_GENRES.map(
+                            (genre) => {
+                                const checked =
+                                    draft.preferredGenres.includes(
+                                        genre,
+                                    );
+
+                                return (
+                                    <Label
+                                        key={
+                                            genre
+                                        }
+                                        className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={
+                                                checked
+                                            }
+                                            onChange={() =>
+                                                toggleGenre(
+                                                    genre,
+                                                )
+                                            }
+                                            className="size-4 accent-primary"
+                                        />
+
+                                        {genre}
+                                    </Label>
+                                );
+                            },
+                        )}
+                    </div>
+                </fieldset>
+            </div>
+
+            <div className="mt-8 flex justify-end gap-2">
+                <Button
+                    variant="ghost"
+                    onClick={onCancel}
+                >
+                    Cancel
+                </Button>
+
+                <Button
+                    variant="default"
+                    disabled={
+                        !dirty || invalid
+                    }
+                    onClick={handleSave}
+                >
+                    Save
+                </Button>
+            </div>
+        </>
+    );
+}
+
+export function SettingsDialog({
+    open,
+    onOpenChange,
+}: SettingsDialogProps) {
+    const settings = useSettingsStore(
+        (state) => state.settings,
+    );
+
+    const update = useSettingsStore(
+        (state) => state.update,
+    );
+
+    function handleSave(
+        next: Settings,
+    ) {
+        update(next);
+
+        onOpenChange(false);
+    }
+
+    return (
+        <Dialog.Root
+            open={open}
+            onOpenChange={onOpenChange}
+        >
+            <Dialog.Portal>
+                <Dialog.Backdrop className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm" />
+
+                <Dialog.Popup className="fixed left-1/2 top-1/2 z-[90] w-[min(90vw,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-background p-6 text-foreground shadow-2xl">
+                    <SettingsForm
+                        settings={settings}
+                        onSave={handleSave}
+                        onCancel={() =>
+                            onOpenChange(
+                                false,
+                            )
+                        }
+                    />
+                </Dialog.Popup>
+            </Dialog.Portal>
+        </Dialog.Root>
+    );
+}
