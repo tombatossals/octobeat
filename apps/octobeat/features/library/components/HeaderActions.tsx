@@ -1,5 +1,6 @@
 "use client";
 
+import { FullscreenButton } from "@/features/player/components/FullscreenButton";
 import { VolumeControl } from "@/features/player/components/VolumeControl";
 import { SettingsButton } from "@/features/settings/components/SettingsButton";
 
@@ -22,6 +23,8 @@ export function HeaderActions() {
                 <SettingsButton />
 
                 <VolumeControl />
+
+                <FullscreenButton />
             </div>
         </div>
     );

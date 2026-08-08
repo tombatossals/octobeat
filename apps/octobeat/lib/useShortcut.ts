@@ -22,6 +22,11 @@ export interface ShortcutOptions {
      * Require Alt.
      */
     alt?: boolean;
+
+    /**
+     * Require that no modifier (Ctrl/Cmd/Shift/Alt) is pressed.
+     */
+    plain?: boolean;
 }
 
 /**
@@ -90,6 +95,16 @@ export function useShortcut(
                 return;
             }
 
+            if (
+                options.plain &&
+                (event.metaKey ||
+                    event.ctrlKey ||
+                    event.shiftKey ||
+                    event.altKey)
+            ) {
+                return;
+            }
+
             event.preventDefault();
 
             handlerRef.current();
@@ -111,5 +126,6 @@ export function useShortcut(
         options.meta,
         options.shift,
         options.alt,
+        options.plain,
     ]);
 }
