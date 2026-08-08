@@ -78,6 +78,15 @@ export class MediaElementAdapter
         this.media.currentTime = time;
     }
 
+    setVolume(
+        volume: number,
+    ): void {
+        this.media.volume = Math.max(
+            0,
+            Math.min(1, volume),
+        );
+    }
+
     zoom(
         _pixelsPerSecond: number,
     ): void {

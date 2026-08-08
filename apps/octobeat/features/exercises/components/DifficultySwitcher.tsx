@@ -97,11 +97,12 @@ export function DifficultySwitcher() {
                         }
 
                         {revealed && (
-                            <span className="absolute -right-2 -top-2">
+                            <span className="absolute -right-2 -top-4">
                                 <ShortcutBadge
                                     label={String(
                                         index + 1,
                                     )}
+                                    className="border border-white/60"
                                 />
                             </span>
                         )}

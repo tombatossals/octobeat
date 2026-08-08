@@ -4,8 +4,6 @@ import { useEffect } from "react";
 
 import { useUiStore } from "../store";
 
-const POINTER_HIDE_DELAY = 2500;
-
 /**
  * Drives interface visibility:
  *
@@ -18,34 +16,9 @@ export function useUiVisibility(): void {
             useUiStore.getState()
                 .setRevealed;
 
-        const setPointerActive =
-            useUiStore.getState()
-                .setPointerActive;
-
-        let pointerTimer: ReturnType<
-            typeof setTimeout
-        > | null = null;
-
         function wakePointer() {
-            setPointerActive(true);
-
-            if (pointerTimer) {
-                clearTimeout(
-                    pointerTimer,
-                );
-            }
-
-            pointerTimer = setTimeout(
-                () => {
-                    setPointerActive(
-                        false,
-                    );
-
-                    pointerTimer =
-                        null;
-                },
-                POINTER_HIDE_DELAY,
-            );
+            useUiStore.getState()
+                .wakePointer();
         }
 
         function onKeyDown(
@@ -124,12 +97,6 @@ export function useUiVisibility(): void {
                 "blur",
                 onBlur,
             );
-
-            if (pointerTimer) {
-                clearTimeout(
-                    pointerTimer,
-                );
-            }
         };
     }, []);
 }

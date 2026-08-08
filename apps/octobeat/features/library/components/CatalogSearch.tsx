@@ -172,7 +172,7 @@ export function CatalogSearch(): JSX.Element {
                         true,
                     )
                 }
-                className="relative flex cursor-pointer items-center text-white transition-colors hover:text-gray-400"
+                className="relative flex cursor-pointer items-center text-white transition-colors outline-none focus:outline-none hover:text-gray-400"
             >
                 <span
                     style={{
@@ -183,8 +183,11 @@ export function CatalogSearch(): JSX.Element {
                 </span>
 
                 {revealed && (
-                    <span className="absolute -right-2 -top-2">
-                        <ShortcutBadge label="⌘K" />
+                    <span className="absolute -right-3 -top-4">
+                        <ShortcutBadge
+                            label="K"
+                            className="border border-white/60"
+                        />
                     </span>
                 )}
             </button>

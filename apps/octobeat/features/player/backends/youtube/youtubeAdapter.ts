@@ -45,7 +45,6 @@ export class YouTubeAdapter
     //
 
     ready(): void {
-        this.player.setVolume(100);
         this.player.unMute();
 
         this.emit("ready");
@@ -119,6 +118,16 @@ export class YouTubeAdapter
         this.emit("seek", {
             currentTime: time,
         });
+    }
+
+    setVolume(
+        volume: number,
+    ): void {
+        this.player.setVolume(
+            Math.round(
+                Math.max(0, Math.min(1, volume)) * 100,
+            ),
+        );
     }
 
     currentTime(): number {

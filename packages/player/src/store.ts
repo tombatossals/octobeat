@@ -29,9 +29,19 @@ interface PlayerStore {
     duration: number;
 
     /**
+     * Volume level (0..1).
+     */
+    volume: number;
+
+    /**
      * Register the active player.
      */
     setPlayer(player: MediaPlayer | null): void;
+
+    /**
+     * Update the volume level.
+     */
+    setVolume(volume: number): void;
 
     /**
      * Update whether playback has started.
@@ -74,10 +84,31 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
     duration: 0,
 
+    volume: 1,
+
     setPlayer(player) {
         set({
             player,
         });
+
+        if (player) {
+            player.setVolume(
+                get().volume,
+            );
+        }
+    },
+
+    setVolume(volume) {
+        const clamped =
+            Math.max(0, Math.min(1, volume));
+
+        set({
+            volume: clamped,
+        });
+
+        get().player?.setVolume(
+            clamped,
+        );
     },
 
     setStarted(started) {

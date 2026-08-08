@@ -56,11 +56,14 @@ export function FilterButton() {
                 <Filter className="h-7 w-7" />
             </span>
 
-            {revealed && (
-                <span className="absolute -right-2 -top-2">
-                    <ShortcutBadge label="⌘F" />
-                </span>
-            )}
+                {revealed && (
+                    <span className="absolute -right-3 -top-4">
+                        <ShortcutBadge
+                            label="F"
+                            className="border border-white/60"
+                        />
+                    </span>
+                )}
         </button>
     );
 }

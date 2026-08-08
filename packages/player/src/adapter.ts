@@ -46,6 +46,11 @@ export interface MediaPlayer {
     seek(time: number): void;
 
     /**
+     * Set the volume level (0..1).
+     */
+    setVolume(volume: number): void;
+
+    /**
      * Set the waveform zoom level.
      */
     zoom(pixelsPerSecond: number): void;

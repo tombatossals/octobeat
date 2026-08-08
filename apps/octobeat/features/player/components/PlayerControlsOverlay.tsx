@@ -84,117 +84,142 @@ export function PlayerControlsOverlay(): JSX.Element {
 
     return (
         <div className="pointer-events-none fixed inset-0 z-40">
-            <button
-                type="button"
-                aria-label="Previous song"
-                onClick={() =>
-                    void previous()
-                }
-                className="pointer-events-auto absolute left-[8%] top-1/2 flex h-14 w-14 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-black/10 text-white opacity-50 transition-all hover:bg-black/50 hover:opacity-100"
-                style={{
-                    filter: ICON_OUTLINE,
-                }}
-            >
-                <SkipBack className="h-7 w-7" />
+            <div className="pointer-events-auto absolute left-[8%] top-1/2 -translate-y-1/2">
+                <button
+                    type="button"
+                    aria-label="Previous song"
+                    onClick={() =>
+                        void previous()
+                    }
+                    className="flex cursor-pointer items-center justify-center text-white opacity-50 transition-all hover:opacity-100"
+                    style={{
+                        filter: ICON_OUTLINE,
+                    }}
+                >
+                    <SkipBack className="h-9 w-9" />
+                </button>
 
                 {revealed && (
-                    <span className="absolute -right-2 -top-2">
-                        <ShortcutBadge label="P" />
+                    <span className="absolute left-1/2 -top-4 -translate-x-1/2">
+                        <ShortcutBadge
+                            label="P"
+                            className="border border-white/60"
+                        />
                     </span>
                 )}
-            </button>
+            </div>
 
-            <button
-                type="button"
-                aria-label="Rewind 5 seconds"
-                onClick={() =>
-                    seekRelative(
-                        -SEEK_SECONDS,
-                    )
-                }
-                className="pointer-events-auto absolute left-[25%] top-1/2 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-black/10 text-white opacity-50 transition-all hover:bg-black/50 hover:opacity-100"
-                style={{
-                    filter: ICON_OUTLINE,
-                }}
-            >
-                <Rewind className="h-6 w-6" />
+            <div className="pointer-events-auto absolute left-[25%] top-1/2 -translate-y-1/2">
+                <button
+                    type="button"
+                    aria-label="Rewind 5 seconds"
+                    onClick={() =>
+                        seekRelative(
+                            -SEEK_SECONDS,
+                        )
+                    }
+                    className="flex cursor-pointer items-center justify-center text-white opacity-50 transition-all hover:opacity-100"
+                    style={{
+                        filter: ICON_OUTLINE,
+                    }}
+                >
+                    <Rewind className="h-8 w-8" />
+                </button>
 
                 {revealed && (
-                    <span className="absolute -right-2 -top-2">
-                        <ShortcutBadge label="←" />
+                    <span className="absolute left-1/2 -top-4 -translate-x-1/2">
+                        <ShortcutBadge
+                            label="←"
+                            className="border border-white/60"
+                        />
                     </span>
                 )}
-            </button>
+            </div>
 
-            <button
-                type="button"
-                aria-label={
-                    playing
-                        ? "Pause"
-                        : "Play"
-                }
-                onClick={() =>
-                    void playPause()
-                }
-                className="pointer-events-auto absolute left-1/2 top-1/2 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-black/10 text-white opacity-50 transition-all hover:bg-black/50 hover:opacity-100"
-                style={{
-                    filter: ICON_OUTLINE,
-                }}
-            >
-                {playing ? (
-                    <Pause className="h-10 w-10" />
-                ) : (
-                    <Play className="h-10 w-10" />
-                )}
+            <div className="pointer-events-auto absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                <button
+                    type="button"
+                    aria-label={
+                        playing
+                            ? "Pause"
+                            : "Play"
+                    }
+                    onClick={() =>
+                        void playPause()
+                    }
+                    className="flex cursor-pointer items-center justify-center text-white opacity-50 transition-all hover:opacity-100"
+                    style={{
+                        filter: ICON_OUTLINE,
+                    }}
+                >
+                    {playing ? (
+                        <Pause className="h-14 w-14" />
+                    ) : (
+                        <Play className="h-14 w-14" />
+                    )}
+                </button>
 
                 {revealed && (
-                    <span className="absolute -right-2 -top-2">
-                        <ShortcutBadge label="Space" />
+                    <span className="absolute left-1/2 -top-4 -translate-x-1/2">
+                        <ShortcutBadge
+                            label="Space"
+                            className="border border-white/60"
+                        />
                     </span>
                 )}
-            </button>
+            </div>
 
-            <button
-                type="button"
-                aria-label="Forward 5 seconds"
-                onClick={() =>
-                    seekRelative(
-                        SEEK_SECONDS,
-                    )
-                }
-                className="pointer-events-auto absolute right-[25%] top-1/2 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-black/10 text-white opacity-50 transition-all hover:bg-black/50 hover:opacity-100"
-                style={{
-                    filter: ICON_OUTLINE,
-                }}
-            >
-                <FastForward className="h-6 w-6" />
+            <div className="pointer-events-auto absolute right-[25%] top-1/2 -translate-y-1/2">
+                <button
+                    type="button"
+                    aria-label="Forward 5 seconds"
+                    onClick={() =>
+                        seekRelative(
+                            SEEK_SECONDS,
+                        )
+                    }
+                    className="flex cursor-pointer items-center justify-center text-white opacity-50 transition-all hover:opacity-100"
+                    style={{
+                        filter: ICON_OUTLINE,
+                    }}
+                >
+                    <FastForward className="h-8 w-8" />
+                </button>
 
                 {revealed && (
-                    <span className="absolute -right-2 -top-2">
-                        <ShortcutBadge label="→" />
+                    <span className="absolute left-1/2 -top-4 -translate-x-1/2">
+                        <ShortcutBadge
+                            label="→"
+                            className="border border-white/60"
+                        />
                     </span>
                 )}
-            </button>
+            </div>
 
-            <button
-                type="button"
-                aria-label="Next song"
-                onClick={() =>
-                    void next()
-                }
-                className="pointer-events-auto absolute right-[8%] top-1/2 flex h-14 w-14 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-black/10 text-white opacity-50 transition-all hover:bg-black/50 hover:opacity-100"
-                style={{
-                    filter: ICON_OUTLINE,
-                }}
-            >
-                <SkipForward className="h-7 w-7" />
+            <div className="pointer-events-auto absolute right-[8%] top-1/2 -translate-y-1/2">
+                <button
+                    type="button"
+                    aria-label="Next song"
+                    onClick={() =>
+                        void next()
+                    }
+                    className="flex cursor-pointer items-center justify-center text-white opacity-50 transition-all hover:opacity-100"
+                    style={{
+                        filter: ICON_OUTLINE,
+                    }}
+                >
+                    <SkipForward className="h-9 w-9" />
+                </button>
 
                 {revealed && (
-                    <span className="absolute -right-2 -top-2">
-                        <ShortcutBadge label="N" />
+                    <span className="absolute left-1/2 -top-4 -translate-x-1/2">
+                        <ShortcutBadge
+                            label="N"
+                            className="border border-white/60"
+                        />
                     </span>
                 )}
-            </button>
+            </div>
 
             <div className="pointer-events-auto absolute bottom-10 left-1/2 w-[min(80vw,36rem)] -translate-x-1/2">
                 <SeekBar />

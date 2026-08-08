@@ -1,5 +1,6 @@
 "use client";
 
+import { VolumeControl } from "@/features/player/components/VolumeControl";
 import { SettingsButton } from "@/features/settings/components/SettingsButton";
 
 import { CatalogSearch } from "./CatalogSearch";
@@ -11,13 +12,17 @@ export function HeaderActions() {
             onClick={(event) =>
                 event.stopPropagation()
             }
-            className="pointer-events-auto fixed right-10 top-8 z-50 flex items-center gap-3"
+            className="pointer-events-auto fixed right-10 top-8 z-50 flex items-start gap-5"
         >
             <FilterButton />
 
             <CatalogSearch />
 
-            <SettingsButton />
+            <div className="flex flex-col items-center gap-4">
+                <SettingsButton />
+
+                <VolumeControl />
+            </div>
         </div>
     );
 }

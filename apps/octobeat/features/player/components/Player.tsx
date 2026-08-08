@@ -45,12 +45,6 @@ export function Player() {
     const uiVisible =
         revealed || pointerActive;
 
-    const setPointerActive =
-        useUiStore(
-            (state) =>
-                state.setPointerActive,
-        );
-
     const next = useLibraryStore(
         (state) => state.next,
     );
@@ -63,7 +57,7 @@ export function Player() {
         next,
         previous,
         onShortcut: () =>
-            setPointerActive(true),
+            useUiStore.getState().wakePointer(),
     });
 
     const playPause = usePlayerStore(
