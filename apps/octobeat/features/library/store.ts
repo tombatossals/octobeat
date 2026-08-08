@@ -5,6 +5,26 @@ import { usePlayerStore } from "@octobeat/player";
 
 import { getLibrary } from "@/lib/library";
 
+/**
+ * Fisher-Yates shuffle. Returns a new array.
+ */
+function shuffle<T>(items: readonly T[]): T[] {
+    const result = [...items];
+
+    for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(
+            Math.random() * (i + 1),
+        );
+
+        [result[i], result[j]] = [
+            result[j],
+            result[i],
+        ];
+    }
+
+    return result;
+}
+
 interface LibraryState {
     /**
      * Available dataset ids, loaded from the catalog.
@@ -59,8 +79,10 @@ export const useLibraryStore =
             const catalog =
                 await getLibrary().list();
 
-            const ids = catalog.map(
-                (entry) => entry.id,
+            const ids = shuffle(
+                catalog.map(
+                    (entry) => entry.id,
+                ),
             );
 
             set({ ids });
