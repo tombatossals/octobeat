@@ -100,7 +100,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                 </button>
 
                 {revealed && (
-                    <span className="absolute left-1/2 -top-4 -translate-x-1/2">
+                    <span className="absolute left-1/2 -top-6 -translate-x-1/2">
                         <ShortcutBadge
                             label="P"
                             className="border border-white/60"
@@ -127,7 +127,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                 </button>
 
                 {revealed && (
-                    <span className="absolute left-1/2 -top-4 -translate-x-1/2">
+                    <span className="absolute left-1/2 -top-6 -translate-x-1/2">
                         <ShortcutBadge
                             label="←"
                             className="border border-white/60"
@@ -160,7 +160,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                 </button>
 
                 {revealed && (
-                    <span className="absolute left-1/2 -top-4 -translate-x-1/2">
+                    <span className="absolute left-1/2 -top-6 -translate-x-1/2">
                         <ShortcutBadge
                             label="Space"
                             className="border border-white/60"
@@ -187,7 +187,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                 </button>
 
                 {revealed && (
-                    <span className="absolute left-1/2 -top-4 -translate-x-1/2">
+                    <span className="absolute left-1/2 -top-6 -translate-x-1/2">
                         <ShortcutBadge
                             label="→"
                             className="border border-white/60"
@@ -212,7 +212,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                 </button>
 
                 {revealed && (
-                    <span className="absolute left-1/2 -top-4 -translate-x-1/2">
+                    <span className="absolute left-1/2 -top-6 -translate-x-1/2">
                         <ShortcutBadge
                             label="N"
                             className="border border-white/60"
