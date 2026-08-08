@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import json
+import re
 from datetime import UTC, datetime
+from urllib.parse import urlencode
+from urllib.request import urlopen
 
 import librosa
 import numpy as np
@@ -16,6 +20,7 @@ from octobeat.models.songmap import (
     SONGMAP_VERSION,
     Bar,
     Beat,
+    LyricLine,
     SongMap,
     SongMetadata,
     Source,
@@ -25,6 +30,13 @@ from octobeat.version import __version__
 
 DEFAULT_TIME_SIGNATURE = "4/4"
 BEATS_PER_BAR = 4
+
+LRCLIB_API = "https://lrclib.net/api"
+LRCLIB_TIMEOUT = 8
+
+LRC_TIMESTAMP = re.compile(
+    r"\[(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?\]"
+)
 
 
 def analyse_recording(
@@ -163,6 +175,11 @@ def analyse_recording(
             len(beats),
             BEATS_PER_BAR,
         ),
+        lyrics=_fetch_lrclib_lyrics(
+            recording.artist or "",
+            recording.title or "",
+            duration,
+        ),
     )
 
     return AnalysisResult(
@@ -183,6 +200,176 @@ def analyse_recording(
                 2,
             ),
         ),
+    )
+
+
+def _fetch_lrclib_lyrics(
+    artist: str,
+    title: str,
+    duration: float,
+) -> list[LyricLine] | None:
+    """
+    Best-effort fetch of synced lyrics from LRCLIB.
+
+    Returns ``None`` when the track is not found or on any failure,
+    so analysis never fails because of missing lyrics.
+    """
+
+    if not artist or not title:
+        return None
+
+    params = urlencode(
+        {
+            "artist_name": artist,
+            "track_name": title,
+            "album_name": "",
+            "duration": str(
+                int(round(duration))
+            ),
+        }
+    )
+
+    try:
+        with urlopen(
+            f"{LRCLIB_API}/get?{params}",
+            timeout=LRCLIB_TIMEOUT,
+        ) as response:
+            data = json.load(
+                response
+            )
+    except Exception:
+        data = None
+
+    synced = (
+        data.get("syncedLyrics")
+        if data
+        else None
+    )
+
+    if not synced:
+        synced = _search_synced_lyrics(
+            artist,
+            title,
+            duration,
+        )
+
+    if not synced:
+        return None
+
+    return _parse_lrc(synced)
+
+
+def _search_synced_lyrics(
+    artist: str,
+    title: str,
+    duration: float,
+) -> str | None:
+    """
+    Fall back to the LRCLIB search endpoint and pick the closest
+    non-instrumental match that has synced lyrics.
+    """
+
+    params = urlencode(
+        {
+            "artist_name": artist,
+            "track_name": title,
+        }
+    )
+
+    try:
+        with urlopen(
+            f"{LRCLIB_API}/search?{params}",
+            timeout=LRCLIB_TIMEOUT,
+        ) as response:
+            results = json.load(
+                response
+            )
+    except Exception:
+        return None
+
+    candidates = [
+        result
+        for result in results
+        if result.get(
+            "syncedLyrics"
+        )
+        and not result.get(
+            "instrumental"
+        )
+    ]
+
+    if not candidates:
+        return None
+
+    best = min(
+        candidates,
+        key=lambda result: abs(
+            float(
+                result.get(
+                    "duration", 0
+                )
+            )
+            - duration
+        ),
+    )
+
+    return best.get(
+        "syncedLyrics"
+    )
+
+
+def _parse_lrc(lrc: str) -> list[LyricLine]:
+    lines: list[LyricLine] = []
+
+    for raw in lrc.splitlines():
+        matches = list(
+            LRC_TIMESTAMP.finditer(
+                raw
+            )
+        )
+
+        if not matches:
+            continue
+
+        text = LRC_TIMESTAMP.sub(
+            "", raw
+        ).strip()
+
+        if not text:
+            continue
+
+        for match in matches:
+            minutes = int(
+                match.group(1)
+            )
+            seconds = int(
+                match.group(2)
+            )
+            fraction = (
+                int(
+                    match.group(3).ljust(
+                        3, "0"
+                    )
+                )
+                / 1000
+                if match.group(3)
+                else 0.0
+            )
+
+            lines.append(
+                LyricLine(
+                    time=(
+                        minutes * 60
+                        + seconds
+                        + fraction
+                    ),
+                    text=text,
+                )
+            )
+
+    return sorted(
+        lines,
+        key=lambda line: line.time,
     )
 
 

@@ -5,12 +5,27 @@ import wave
 from pathlib import Path
 
 import numpy as np
+import pytest
 
+import octobeat.core.analyser as analyser_module
 import octobeat.pipeline.builder as builder_module
 from octobeat.models.recording import Recording
 from octobeat.models.songmap import Source
 from octobeat.pipeline import build_dataset
 from octobeat.providers.deezer import DeezerMetadata
+
+
+@pytest.fixture(autouse=True)
+def _no_lyrics_network(monkeypatch):
+    """
+    Keep builder tests hermetic: never hit LRCLIB.
+    """
+
+    monkeypatch.setattr(
+        analyser_module,
+        "_fetch_lrclib_lyrics",
+        lambda *args, **kwargs: None,
+    )
 
 
 def _make_click_wav(
