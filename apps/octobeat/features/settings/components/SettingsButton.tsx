@@ -16,7 +16,7 @@ export function SettingsButton() {
                 aria-label="Open settings"
                 title="Settings"
                 onClick={() => setOpen(true)}
-                className="pointer-events-auto fixed right-10 top-8 z-50 cursor-pointer text-white transition-colors hover:text-gray-400"
+                className="cursor-pointer text-white transition-colors hover:text-gray-400"
                 style={{
                     filter:
                         "drop-shadow(1px 1px 0 #374151) drop-shadow(-1px -1px 0 #374151) drop-shadow(1px -1px 0 #374151) drop-shadow(-1px 1px 0 #374151) drop-shadow(1px 0 0 #374151) drop-shadow(-1px 0 0 #374151) drop-shadow(0 1px 0 #374151) drop-shadow(0 -1px 0 #374151)",

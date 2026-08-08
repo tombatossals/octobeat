@@ -11,7 +11,7 @@ import { DebugHud } from "@/features/overlay/components/DebugHud";
 import { Logo } from "@/features/overlay/components/Logo";
 import { ExerciseOverlay } from "@/features/exercises/components/ExerciseOverlay";
 import { DifficultySwitcher } from "@/features/exercises/components/DifficultySwitcher";
-import { SettingsButton } from "@/features/settings/components/SettingsButton";
+import { HeaderActions } from "@/features/library/components/HeaderActions";
 import { SettingsToast } from "@/features/settings/components/SettingsToast";
 import { useSettingsHydration } from "@/features/settings/hooks/useSettingsHydration";
 import { NowPlayingCard } from "./NowPlayingCard";
@@ -112,7 +112,7 @@ export function Player() {
 
             <DebugHud />
 
-            <SettingsButton />
+            <HeaderActions />
 
             <SettingsToast />
         </div>
