@@ -15,8 +15,11 @@ import { cn } from "@octobeat/ui";
 import type { Metadata } from "@octobeat/library";
 
 import { getLibrary } from "@/lib/library";
+import { useShortcut } from "@/lib/useShortcut";
 
 import { useLibraryStore } from "../store";
+
+import { ShortcutBadge } from "./ShortcutBadge";
 
 const ICON_OUTLINE =
     "drop-shadow(1px 1px 0 #374151) drop-shadow(-1px -1px 0 #374151) drop-shadow(1px -1px 0 #374151) drop-shadow(-1px 1px 0 #374151) drop-shadow(1px 0 0 #374151) drop-shadow(-1px 0 0 #374151) drop-shadow(0 1px 0 #374151) drop-shadow(0 -1px 0 #374151)";
@@ -39,6 +42,11 @@ export function CatalogSearch(): JSX.Element {
 
     const openSong = useLibraryStore(
         (state) => state.open,
+    );
+
+    useShortcut(
+        { code: "KeyK", meta: true },
+        () => handleOpenChange(true),
     );
 
     useEffect(() => {
@@ -152,18 +160,23 @@ export function CatalogSearch(): JSX.Element {
             <button
                 type="button"
                 aria-label="Search catalog"
-                title="Search catalog"
+                title="Search catalog (⌘K)"
                 onClick={() =>
                     handleOpenChange(
                         true,
                     )
                 }
-                className="cursor-pointer text-white transition-colors hover:text-gray-400"
-                style={{
-                    filter: ICON_OUTLINE,
-                }}
+                className="flex cursor-pointer items-center gap-1.5 text-white transition-colors hover:text-gray-400"
             >
-                <Search className="h-7 w-7" />
+                <span
+                    style={{
+                        filter: ICON_OUTLINE,
+                    }}
+                >
+                    <Search className="h-7 w-7" />
+                </span>
+
+                <ShortcutBadge label="⌘K" />
             </button>
 
             <Dialog.Root
