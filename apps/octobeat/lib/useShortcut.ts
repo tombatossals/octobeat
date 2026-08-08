@@ -63,10 +63,14 @@ export function useShortcut(
                 return;
             }
 
+            // Cuando meta es true, exige Ctrl/Cmd pulsado.
+            // Cuando no se especifica, el modificador se ignora.
             if (
-                (options.meta ?? false) !==
-                (event.metaKey ||
-                    event.ctrlKey)
+                options.meta &&
+                !(
+                    event.metaKey ||
+                    event.ctrlKey
+                )
             ) {
                 return;
             }

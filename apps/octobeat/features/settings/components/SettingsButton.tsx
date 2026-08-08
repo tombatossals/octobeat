@@ -5,6 +5,8 @@ import { Settings as SettingsIcon } from "lucide-react";
 
 import { useShortcut } from "@/lib/useShortcut";
 
+import { useUiStore } from "@/features/ui/store";
+
 import { ShortcutBadge } from "@/features/library/components/ShortcutBadge";
 
 import { SettingsDialog } from "./SettingsDialog";
@@ -21,6 +23,10 @@ export function SettingsButton() {
         () => setOpen(true),
     );
 
+    const revealed = useUiStore(
+        (state) => state.revealed,
+    );
+
     return (
         <>
             <button
@@ -28,7 +34,7 @@ export function SettingsButton() {
                 aria-label="Open settings"
                 title="Open settings (⌘,)"
                 onClick={() => setOpen(true)}
-                className="flex cursor-pointer items-center gap-1.5 text-white transition-colors hover:text-gray-400"
+                className="relative flex cursor-pointer items-center text-white transition-colors hover:text-gray-400"
             >
                 <span
                     style={{
@@ -38,7 +44,11 @@ export function SettingsButton() {
                     <SettingsIcon className="h-9 w-9" />
                 </span>
 
-                <ShortcutBadge label="⌘," />
+                {revealed && (
+                    <span className="absolute -right-2 -top-2">
+                        <ShortcutBadge label="⌘," />
+                    </span>
+                )}
             </button>
 
             <SettingsDialog

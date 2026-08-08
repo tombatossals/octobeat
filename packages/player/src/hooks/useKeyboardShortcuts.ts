@@ -9,11 +9,17 @@ const SEEK_SECONDS = 5;
 export interface KeyboardShortcutsOptions {
     next?: () => void;
     previous?: () => void;
+
+    /**
+     * Called whenever a transport shortcut is handled.
+     */
+    onShortcut?: () => void;
 }
 
 export function useKeyboardShortcuts({
     next,
     previous,
+    onShortcut,
 }: KeyboardShortcutsOptions = {}) {
     const player = usePlayerStore(
         (state) => state.player,
@@ -106,6 +112,10 @@ export function useKeyboardShortcuts({
                     previous?.();
                     break;
             }
+
+            if (event.defaultPrevented) {
+                onShortcut?.();
+            }
         }
 
         window.addEventListener(
@@ -119,5 +129,5 @@ export function useKeyboardShortcuts({
                 onKeyDown,
             );
         };
-    }, [started, player, next, previous]);
+    }, [started, player, next, previous, onShortcut]);
 }

@@ -17,6 +17,8 @@ import type { Metadata } from "@octobeat/library";
 import { getLibrary } from "@/lib/library";
 import { useShortcut } from "@/lib/useShortcut";
 
+import { useUiStore } from "@/features/ui/store";
+
 import { useLibraryStore } from "../store";
 
 import { ShortcutBadge } from "./ShortcutBadge";
@@ -42,6 +44,10 @@ export function CatalogSearch(): JSX.Element {
 
     const openSong = useLibraryStore(
         (state) => state.open,
+    );
+
+    const revealed = useUiStore(
+        (state) => state.revealed,
     );
 
     useShortcut(
@@ -166,7 +172,7 @@ export function CatalogSearch(): JSX.Element {
                         true,
                     )
                 }
-                className="flex cursor-pointer items-center gap-1.5 text-white transition-colors hover:text-gray-400"
+                className="relative flex cursor-pointer items-center text-white transition-colors hover:text-gray-400"
             >
                 <span
                     style={{
@@ -176,7 +182,11 @@ export function CatalogSearch(): JSX.Element {
                     <Search className="h-7 w-7" />
                 </span>
 
-                <ShortcutBadge label="⌘K" />
+                {revealed && (
+                    <span className="absolute -right-2 -top-2">
+                        <ShortcutBadge label="⌘K" />
+                    </span>
+                )}
             </button>
 
             <Dialog.Root

@@ -2,6 +2,11 @@
 
 import { Button, cn } from "@octobeat/ui";
 
+import { useShortcut } from "@/lib/useShortcut";
+
+import { ShortcutBadge } from "@/features/library/components/ShortcutBadge";
+import { useUiStore } from "@/features/ui/store";
+
 import {
     DIFFICULTY_LABELS,
     useDifficultyStore,
@@ -30,9 +35,37 @@ export function DifficultySwitcher() {
                 state.setDifficulty,
         );
 
+    const revealed = useUiStore(
+        (state) => state.revealed,
+    );
+
+    useShortcut(
+        { code: "Digit1" },
+        () =>
+            setDifficulty(
+                ORDER[0]!,
+            ),
+    );
+
+    useShortcut(
+        { code: "Digit2" },
+        () =>
+            setDifficulty(
+                ORDER[1]!,
+            ),
+    );
+
+    useShortcut(
+        { code: "Digit3" },
+        () =>
+            setDifficulty(
+                ORDER[2]!,
+            ),
+    );
+
     return (
         <div className="pointer-events-auto fixed left-1/2 top-8 z-50 flex -translate-x-1/2 items-center gap-1 rounded-md border border-white/10 bg-gray-800/60 p-1.5 shadow-2xl backdrop-blur-md">
-            {ORDER.map((option) => {
+            {ORDER.map((option, index) => {
                 const active =
                     difficulty === option;
 
@@ -48,7 +81,7 @@ export function DifficultySwitcher() {
                             )
                         }
                         className={cn(
-                            "cursor-pointer rounded-sm text-lg text-white",
+                            "relative flex cursor-pointer items-center rounded-sm text-lg text-white",
                             active
                                 ? "bg-white/15 shadow-sm"
                                 : "hover:bg-white/10",
@@ -62,6 +95,16 @@ export function DifficultySwitcher() {
                                 option
                             ]
                         }
+
+                        {revealed && (
+                            <span className="absolute -right-2 -top-2">
+                                <ShortcutBadge
+                                    label={String(
+                                        index + 1,
+                                    )}
+                                />
+                            </span>
+                        )}
                     </Button>
                 );
             })}

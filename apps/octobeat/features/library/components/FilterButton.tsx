@@ -5,6 +5,8 @@ import { Filter } from "lucide-react";
 
 import { useShortcut } from "@/lib/useShortcut";
 
+import { useUiStore } from "@/features/ui/store";
+
 import { ShortcutBadge } from "./ShortcutBadge";
 
 const ICON_OUTLINE =
@@ -14,8 +16,12 @@ export function FilterButton() {
     const [active, setActive] =
         useState(false);
 
+    const revealed = useUiStore(
+        (state) => state.revealed,
+    );
+
     useShortcut(
-        { code: "KeyF" },
+        { code: "KeyF", meta: true },
         () =>
             setActive(
                 (current) =>
@@ -27,7 +33,7 @@ export function FilterButton() {
         <button
             type="button"
             aria-label="Filters"
-            title="Filters (F)"
+            title="Filters (⌘F)"
             aria-pressed={active}
             onClick={() =>
                 setActive(
@@ -36,7 +42,7 @@ export function FilterButton() {
                 )
             }
             className={[
-                "flex cursor-pointer items-center gap-1.5 transition-colors",
+                "relative flex cursor-pointer items-center transition-colors",
                 active
                     ? "text-amber-400"
                     : "text-white hover:text-gray-400",
@@ -50,7 +56,11 @@ export function FilterButton() {
                 <Filter className="h-7 w-7" />
             </span>
 
-            <ShortcutBadge label="F" />
+            {revealed && (
+                <span className="absolute -right-2 -top-2">
+                    <ShortcutBadge label="⌘F" />
+                </span>
+            )}
         </button>
     );
 }

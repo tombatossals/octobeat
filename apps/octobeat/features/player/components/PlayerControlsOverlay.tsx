@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import type { JSX } from "react";
 import {
     FastForward,
@@ -14,33 +13,16 @@ import {
 import { usePlayerStore } from "@octobeat/player";
 import { SeekBar, TimeDisplay } from "@octobeat/ui";
 
+import { ShortcutBadge } from "@/features/library/components/ShortcutBadge";
 import { useLibraryStore } from "@/features/library/store";
-
-const HIDE_DELAY = 1200;
+import { useUiStore } from "@/features/ui/store";
 
 const SEEK_SECONDS = 5;
-
-const HOTKEY_CODES = new Set([
-    "Space",
-    "ArrowLeft",
-    "ArrowRight",
-    "Home",
-    "End",
-    "KeyN",
-    "KeyP",
-]);
 
 const ICON_OUTLINE =
     "drop-shadow(1px 1px 0 #374151) drop-shadow(-1px -1px 0 #374151) drop-shadow(1px -1px 0 #374151) drop-shadow(-1px 1px 0 #374151) drop-shadow(1px 0 0 #374151) drop-shadow(-1px 0 0 #374151) drop-shadow(0 1px 0 #374151) drop-shadow(0 -1px 0 #374151)";
 
 export function PlayerControlsOverlay(): JSX.Element {
-    const [visible, setVisible] =
-        useState(false);
-
-    const hideTimer = useRef<
-        ReturnType<typeof setTimeout> | null
-    >(null);
-
     const playing = usePlayerStore(
         (state) => state.playing,
     );
@@ -72,89 +54,9 @@ export function PlayerControlsOverlay(): JSX.Element {
             (state) => state.previous,
         );
 
-    useEffect(() => {
-        function wake() {
-            setVisible(true);
-
-            if (hideTimer.current) {
-                clearTimeout(
-                    hideTimer.current,
-                );
-            }
-
-            hideTimer.current =
-                setTimeout(
-                    () =>
-                        setVisible(
-                            false,
-                        ),
-                    HIDE_DELAY,
-                );
-        }
-
-        function onKeyDown(
-            event: KeyboardEvent,
-        ) {
-            const target =
-                event.target as HTMLElement | null;
-
-            if (
-                target &&
-                (target.tagName === "INPUT" ||
-                    target.tagName ===
-                        "TEXTAREA" ||
-                    target.isContentEditable)
-            ) {
-                return;
-            }
-
-            if (
-                HOTKEY_CODES.has(
-                    event.code,
-                )
-            ) {
-                wake();
-            }
-        }
-
-        window.addEventListener(
-            "keydown",
-            onKeyDown,
-        );
-
-        window.addEventListener(
-            "mousemove",
-            wake,
-        );
-
-        window.addEventListener(
-            "mousedown",
-            wake,
-        );
-
-        return () => {
-            window.removeEventListener(
-                "keydown",
-                onKeyDown,
-            );
-
-            window.removeEventListener(
-                "mousemove",
-                wake,
-            );
-
-            window.removeEventListener(
-                "mousedown",
-                wake,
-            );
-
-            if (hideTimer.current) {
-                clearTimeout(
-                    hideTimer.current,
-                );
-            }
-        };
-    }, []);
+    const revealed = useUiStore(
+        (state) => state.revealed,
+    );
 
     const percentage =
         duration > 0
@@ -181,14 +83,7 @@ export function PlayerControlsOverlay(): JSX.Element {
     }
 
     return (
-        <div
-            className={[
-                "pointer-events-none fixed inset-0 z-40 transition-opacity duration-300 ease-out",
-                visible
-                    ? "opacity-100"
-                    : "opacity-0",
-            ].join(" ")}
-        >
+        <div className="pointer-events-none fixed inset-0 z-40">
             <button
                 type="button"
                 aria-label="Previous song"
@@ -201,6 +96,12 @@ export function PlayerControlsOverlay(): JSX.Element {
                 }}
             >
                 <SkipBack className="h-7 w-7" />
+
+                {revealed && (
+                    <span className="absolute -right-2 -top-2">
+                        <ShortcutBadge label="P" />
+                    </span>
+                )}
             </button>
 
             <button
@@ -217,6 +118,12 @@ export function PlayerControlsOverlay(): JSX.Element {
                 }}
             >
                 <Rewind className="h-6 w-6" />
+
+                {revealed && (
+                    <span className="absolute -right-2 -top-2">
+                        <ShortcutBadge label="←" />
+                    </span>
+                )}
             </button>
 
             <button
@@ -239,6 +146,12 @@ export function PlayerControlsOverlay(): JSX.Element {
                 ) : (
                     <Play className="h-10 w-10" />
                 )}
+
+                {revealed && (
+                    <span className="absolute -right-2 -top-2">
+                        <ShortcutBadge label="Space" />
+                    </span>
+                )}
             </button>
 
             <button
@@ -255,6 +168,12 @@ export function PlayerControlsOverlay(): JSX.Element {
                 }}
             >
                 <FastForward className="h-6 w-6" />
+
+                {revealed && (
+                    <span className="absolute -right-2 -top-2">
+                        <ShortcutBadge label="→" />
+                    </span>
+                )}
             </button>
 
             <button
@@ -269,6 +188,12 @@ export function PlayerControlsOverlay(): JSX.Element {
                 }}
             >
                 <SkipForward className="h-7 w-7" />
+
+                {revealed && (
+                    <span className="absolute -right-2 -top-2">
+                        <ShortcutBadge label="N" />
+                    </span>
+                )}
             </button>
 
             <div className="pointer-events-auto absolute bottom-10 left-1/2 w-[min(80vw,36rem)] -translate-x-1/2">

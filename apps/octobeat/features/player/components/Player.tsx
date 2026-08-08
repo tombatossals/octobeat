@@ -24,9 +24,32 @@ import {
 
 import { useLibraryStore } from "@/features/library/store";
 import { useLyricsStore } from "@/features/lyrics/store";
+import { useUiVisibility } from "@/features/ui/hooks/useUiVisibility";
+import { useUiStore } from "@/features/ui/store";
 
 export function Player() {
     useSettingsHydration();
+
+    useUiVisibility();
+
+    const revealed = useUiStore(
+        (state) => state.revealed,
+    );
+
+    const pointerActive =
+        useUiStore(
+            (state) =>
+                state.pointerActive,
+        );
+
+    const uiVisible =
+        revealed || pointerActive;
+
+    const setPointerActive =
+        useUiStore(
+            (state) =>
+                state.setPointerActive,
+        );
 
     const next = useLibraryStore(
         (state) => state.next,
@@ -39,6 +62,8 @@ export function Player() {
     useKeyboardShortcuts({
         next,
         previous,
+        onShortcut: () =>
+            setPointerActive(true),
     });
 
     const playPause = usePlayerStore(
@@ -140,8 +165,6 @@ export function Player() {
 
             <NowPlayingCard />
 
-            <PlayerControlsOverlay />
-
             <ExerciseOverlay />
 
             <LyricsOverlay />
@@ -151,6 +174,10 @@ export function Player() {
             <HeaderActions />
 
             <SettingsToast />
+
+            {uiVisible && (
+                <PlayerControlsOverlay />
+            )}
         </div>
     );
 }
