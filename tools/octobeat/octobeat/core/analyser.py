@@ -10,6 +10,10 @@ import librosa
 import numpy as np
 
 from octobeat.cache.audio import AudioCache
+from octobeat.core.grid import build_beat_grid
+from octobeat.core.onset import compute_onset_envelope
+from octobeat.core.phase import estimate_phase
+from octobeat.core.tempo import estimate_tempo
 from octobeat.models.analysis import (
     AnalysisReport,
     AnalysisResult,
@@ -61,11 +65,13 @@ def analyse_recording(
 
     wav = cache.decoded(recording)
 
-    y, sr = librosa.load(
+    y, sr_raw = librosa.load(
         wav,
         sr=None,
         mono=False,
     )
+
+    sr = int(sr_raw)
 
     duration = float(
         librosa.get_duration(
@@ -74,30 +80,36 @@ def analyse_recording(
         ),
     )
 
-    onset_envelope = librosa.onset.onset_strength(
+    onset_envelope = compute_onset_envelope(
         y=y,
         sr=sr,
     )
 
-    tempo_value, beat_frames = librosa.beat.beat_track(
-        y=y,
-        sr=sr,
-        onset_envelope=onset_envelope,
-        units="frames",
-        trim=False,
+    bpm = estimate_tempo(
+        onset_envelope,
+        sr,
     )
 
-    bpm = _as_float(tempo_value)
+    if bpm <= 0 and duration > 0:
+        bpm = 120.0
 
-    beat_times = librosa.frames_to_time(
-        beat_frames,
-        sr=sr,
+    phase = estimate_phase(
+        onset_envelope,
+        sr,
+        bpm,
+    )
+
+    beat_times = build_beat_grid(
+        onset_envelope,
+        sr,
+        bpm,
+        phase,
+        duration,
     )
 
     if (
         len(beat_times) == 0
         and duration > 0
-        and bpm > 0
     ):
         beat_times = _fallback_grid(
             duration,
@@ -106,7 +118,8 @@ def analyse_recording(
 
     confidence = _estimate_confidence(
         onset_envelope,
-        beat_frames,
+        beat_times,
+        sr,
     )
 
     music_start = (
@@ -313,8 +326,14 @@ def _search_synced_lyrics(
         ),
     )
 
-    return best.get(
+    synced = best.get(
         "syncedLyrics"
+    )
+
+    return (
+        str(synced)
+        if synced
+        else None
     )
 
 
@@ -399,19 +418,6 @@ def _build_bars(
     ]
 
 
-def _as_float(
-    value: object,
-) -> float:
-    array = np.asarray(value)
-
-    if array.size == 0:
-        return 0.0
-
-    return float(
-        array.reshape(-1)[0],
-    )
-
-
 def _fallback_grid(
     duration: float,
     bpm: float,
@@ -485,28 +491,18 @@ def _detect_music_start(
 
 def _estimate_confidence(
     onset_envelope: np.ndarray,
-    beat_frames: np.ndarray,
+    beat_times: np.ndarray,
+    sr: int,
 ) -> float:
-    if len(beat_frames) == 0:
+    if len(beat_times) == 0:
         return 0.0
 
     if len(onset_envelope) == 0:
         return 0.0
 
-    clipped_frames = beat_frames[
-        (beat_frames >= 0)
-        & (beat_frames < len(onset_envelope))
-    ]
-
-    if len(clipped_frames) == 0:
-        return 0.0
-
-    beat_energy = float(
-        np.mean(
-            onset_envelope[
-                clipped_frames
-            ],
-        ),
+    beat_frames = librosa.time_to_frames(
+        beat_times,
+        sr=sr,
     )
 
     peak_energy = float(
@@ -518,6 +514,42 @@ def _estimate_confidence(
 
     if peak_energy <= 0:
         return 0.0
+
+    # Sample the maximum onset energy in a small window around each
+    # beat: onset detection backtracks to the start of the attack,
+    # where the envelope may still be near zero.
+    window = 2
+
+    energies: list[float] = []
+
+    for frame in beat_frames:
+        low = max(
+            0,
+            int(frame) - window,
+        )
+
+        high = min(
+            len(onset_envelope),
+            int(frame) + window + 1,
+        )
+
+        if low >= high:
+            continue
+
+        energies.append(
+            float(
+                np.max(
+                    onset_envelope[low:high],
+                ),
+            ),
+        )
+
+    if not energies:
+        return 0.0
+
+    beat_energy = float(
+        np.mean(energies),
+    )
 
     return max(
         0.0,
