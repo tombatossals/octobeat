@@ -93,7 +93,7 @@ Musical information must always be reproducible.
 
 SongMap does not depend on:
 
-* VideoStick
+* OctoBeat
 * BeatEngine
 * any DAW
 * any player
@@ -172,20 +172,22 @@ SongMap
 
 ├── createdAt
 
-├── recording
+├── metadata
 
 ├── timing
 
 ├── beats
 
-└── bars
+├── bars
+
+└── lyrics (optional)
 ```
 
 ---
 
-# 6. Recording
+# 6. Metadata
 
-The recording block identifies the analysed recording.
+The metadata block identifies the analysed recording.
 
 It intentionally contains only the minimum information required to identify the analysed source.
 
@@ -218,10 +220,46 @@ It contains:
 * time signature
 * beat offset
 * analysis confidence
+* optional tempo map
 
 Applications should use this information only as a global reference.
 
 Precise synchronization should always rely on the beat list.
+
+## 7.1 Tempo map
+
+The `tempoMap` block is optional. When present, it describes how the
+tempo changes over time as a list of segments, each with a start time
+and a tempo:
+
+```json
+{
+  "tempoMap": [
+    { "time": 0.0, "bpm": 162 },
+    { "time": 135.2, "bpm": 175 }
+  ]
+}
+```
+
+Between two consecutive segments the tempo is interpolated linearly,
+which supports both abrupt changes (two segments at the same time) and
+gradual ramps such as accelerando and ritardando.
+
+When the `tempoMap` block is absent, the tempo is assumed to be
+constant at the global `bpm` value.
+
+## 7.2 Confidence
+
+The `confidence` field is a value in `[0, 1]` describing the overall
+reliability of the analysis.
+
+It is a combination of independent metrics:
+
+* tempo confidence — how unambiguous the detected tempo is;
+* beat confidence — how well the beats align with the onsets;
+* grid stability — how regular the beat intervals are.
+
+Applications should treat low-confidence SongMaps with caution.
 
 ---
 
@@ -233,6 +271,9 @@ Each beat contains only:
 
 * index
 * time
+
+Beat indices are absolute and continuous: when the tempo changes, the
+index keeps counting and only the spacing between beats changes.
 
 No additional musical information should be duplicated.
 
@@ -247,6 +288,10 @@ Bars reference the beat collection.
 Each bar identifies the first beat that belongs to it.
 
 This avoids duplicating information while allowing efficient reconstruction of the musical timeline.
+
+The first beat of a bar (its downbeat) is detected from the onset
+evidence rather than assumed to be beat 1, so a recording that begins
+on a pickup or an off-beat is represented correctly.
 
 ---
 
@@ -286,14 +331,38 @@ Applications must ignore unknown optional fields.
 
 ---
 
-# 12. Future evolution
+# 12. Lyrics
+
+The `lyrics` block is optional and contains time-synchronized lyrics.
+
+Each entry has:
+
+* time — seconds into the recording;
+* text — the lyric line.
+
+```json
+{
+  "lyrics": [
+    { "time": 12.45, "text": "Wake up" },
+    { "time": 13.12, "text": "Grab a brush and put a little make-up" }
+  ]
+}
+```
+
+Lyrics are embedded directly in the SongMap so that applications can
+render them offline without querying an external service. When the
+`lyrics` block is absent, consumers may fall back to a lyrics
+provider.
+
+---
+
+# 13. Future evolution
 
 Version 1 intentionally keeps the model minimal.
 
 Future versions may introduce optional blocks such as:
 
 * sections
-* tempoChanges
 * markers
 * cues
 * chords
@@ -305,7 +374,7 @@ without modifying the existing contract.
 
 ---
 
-# 13. Future timeline model
+# 14. Future timeline model
 
 Although version 1 uses dedicated collections, the long-term conceptual model is an event timeline.
 
@@ -341,7 +410,7 @@ Applications should not assume that future SongMaps will always be organised usi
 
 ---
 
-# 14. Design goals
+# 15. Design goals
 
 SongMap has four primary goals.
 
@@ -375,11 +444,11 @@ Examples:
 
 SongMap should outlive any particular implementation.
 
-BeatEngine and VideoStick are consumers of SongMap, not its definition.
+BeatEngine and OctoBeat are consumers of SongMap, not its definition.
 
 ---
 
-# 15. Non-goals
+# 16. Non-goals
 
 SongMap is not:
 
@@ -394,9 +463,9 @@ Those concerns belong to independent specifications.
 
 ---
 
-# 16. Ecosystem
+# 17. Ecosystem
 
-SongMap is intended to become the common contract of the VideoStick ecosystem.
+SongMap is intended to become the common contract of the OctoBeat ecosystem.
 
 Typical architecture:
 
@@ -410,14 +479,14 @@ Typical architecture:
          ┌───────────┼────────────┐
          ▼           ▼            ▼
 
-    VideoStick   SongMap Editor   Viewer
+    OctoBeat   SongMap Editor   Viewer
 ```
 
 Every component communicates exclusively through SongMap.
 
 ---
 
-# 17. Guiding principle
+# 18. Guiding principle
 
 > **A SongMap is a deterministic temporal description of a specific audio recording.**
 

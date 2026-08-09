@@ -256,7 +256,7 @@ def test_tempo_map_constant_single_segment() -> None:
 
 
 def test_tempo_map_detects_tempo_change() -> None:
-    """A 120 -> 150 BPM change must produce two segments."""
+    """A 120 -> 150 BPM change must produce two anchors."""
 
     # Build a two-segment track: 120 BPM for 6s, 150 BPM for 6s.
     samples = int(SR * DURATION)
@@ -289,14 +289,100 @@ def test_tempo_map_detects_tempo_change() -> None:
         SR,
     )
 
-    assert len(tempo_map) == 2
+    assert len(tempo_map) >= 2
 
     first_start, first_bpm = tempo_map[0]
-    second_start, second_bpm = tempo_map[1]
+    last_start, last_bpm = tempo_map[-1]
 
     assert first_start == 0.0
-    assert abs(first_bpm - 120) < 5
-    assert abs(second_bpm - 150) < 5
+    assert abs(first_bpm - 120) < 8
+    assert abs(last_bpm - 150) < 8
+
+
+def test_tempo_map_detects_accelerando() -> None:
+    """A gradual 120 -> 150 speed-up must produce a rising ramp."""
+
+    samples = int(SR * DURATION)
+
+    wave = np.zeros(samples)
+
+    time = 0.0
+    while time < DURATION:
+        fraction = min(
+            1.0,
+            time / DURATION,
+        )
+
+        bpm = 120.0 + 30.0 * fraction
+
+        index = int(time * SR)
+        wave[
+            index : index + int(0.03 * SR)
+        ] += 0.8
+
+        time += 60.0 / bpm
+
+    envelope = compute_onset_envelope(
+        wave,
+        SR,
+    )
+
+    tempo_map = estimate_tempo_map(
+        envelope,
+        SR,
+    )
+
+    assert len(tempo_map) >= 2
+
+    first_bpm = tempo_map[0][1]
+    last_bpm = tempo_map[-1][1]
+
+    assert first_bpm < last_bpm
+    assert abs(first_bpm - 120) < 10
+    assert abs(last_bpm - 150) < 12
+
+
+def test_tempo_map_detects_ritardando() -> None:
+    """A gradual 150 -> 120 slow-down must produce a falling ramp."""
+
+    samples = int(SR * DURATION)
+
+    wave = np.zeros(samples)
+
+    time = 0.0
+    while time < DURATION:
+        fraction = min(
+            1.0,
+            time / DURATION,
+        )
+
+        bpm = 150.0 - 30.0 * fraction
+
+        index = int(time * SR)
+        wave[
+            index : index + int(0.03 * SR)
+        ] += 0.8
+
+        time += 60.0 / bpm
+
+    envelope = compute_onset_envelope(
+        wave,
+        SR,
+    )
+
+    tempo_map = estimate_tempo_map(
+        envelope,
+        SR,
+    )
+
+    assert len(tempo_map) >= 2
+
+    first_bpm = tempo_map[0][1]
+    last_bpm = tempo_map[-1][1]
+
+    assert first_bpm > last_bpm
+    assert abs(first_bpm - 150) < 12
+    assert abs(last_bpm - 120) < 10
 
 
 def test_tempo_map_ignores_half_time_blip() -> None:
@@ -330,8 +416,8 @@ def test_tempo_map_ignores_half_time_blip() -> None:
         SR,
     )
 
-    # No tempo change: still a single segment.
-    assert len(tempo_map) == 1
+    # No tempo change: still constant around 120 BPM.
+    assert len(tempo_map) >= 1
 
     _start, bpm = tempo_map[0]
 

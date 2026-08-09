@@ -4,7 +4,7 @@
 
 SongMap is an open, deterministic and versioned specification that defines how temporal musical information is represented and exchanged.
 
-It is the common contract shared by every component of the VideoStick ecosystem and any third-party application that chooses to implement the specification.
+It is the common contract shared by every component of the OctoBeat ecosystem and any third-party application that chooses to implement the specification.
 
 ---
 
@@ -15,6 +15,14 @@ It is the common contract shared by every component of the VideoStick ecosystem 
 | **Current Version** | `songmap/v1` |
 | **Status**          | Draft        |
 
+The current schema supports:
+
+* beats and bars (with downbeat detection);
+* global tempo, offset and time signature;
+* a tempo map (constant, discrete changes, accelerando/ritardando);
+* overall and per-metric confidence;
+* optional synced lyrics.
+
 ---
 
 # Repository Structure
@@ -24,6 +32,8 @@ songmap/
 
 ├── README.md
 ├── SPEC.md
+├── GLOSSARY.md
+├── CHANGELOG.md
 ├── songmap.schema.json
 └── examples/
 ```
@@ -45,6 +55,18 @@ It defines:
 * future evolution.
 
 Every implementation should follow this document.
+
+---
+
+## GLOSSARY.md
+
+Definitions of the concepts used by the specification.
+
+---
+
+## CHANGELOG.md
+
+A chronological record of changes to the specification.
 
 ---
 
@@ -90,7 +112,7 @@ SongMap acts as the common language between all tools.
         ┌────────────┼────────────┐
         ▼            ▼            ▼
 
-   VideoStick   SongMap Editor   Viewer
+   OctoBeat   SongMap Editor   Viewer
 ```
 
 Applications communicate by exchanging SongMaps, never internal data structures.

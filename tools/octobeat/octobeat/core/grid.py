@@ -90,10 +90,11 @@ def _tempo_map_grid(
     phase: float,
     duration: float,
 ) -> np.ndarray:
-    """Beat grid that follows a tempo map.
+    """Beat grid that follows a tempo map (polyline).
 
-    The grid advances at each segment's interval, keeping the beat
-    index continuous across tempo changes (only the spacing changes).
+    The grid advances with the local tempo interpolated linearly
+    between anchors, keeping the beat index continuous across tempo
+    changes and ramps.
     """
 
     if not tempo_map:
@@ -102,30 +103,55 @@ def _tempo_map_grid(
     times: list[float] = []
 
     time = phase
-    segment_index = 0
+    guard = 0
 
-    while (
-        time <= duration
-        and segment_index < len(tempo_map)
-    ):
-        while (
-            segment_index + 1
-            < len(tempo_map)
-            and tempo_map[segment_index + 1][0]
-            <= time
-        ):
-            segment_index += 1
+    while time <= duration and guard < 100000:
+        guard += 1
 
-        interval = (
-            60.0
-            / tempo_map[segment_index][1]
+        bpm = _bpm_at(
+            tempo_map,
+            time,
         )
+
+        if bpm <= 0:
+            break
 
         times.append(time)
 
-        time += interval
+        time += 60.0 / bpm
 
     return np.asarray(times)
+
+
+def _bpm_at(
+    tempo_map: list[tuple[float, float]],
+    time: float,
+) -> float:
+    """Tempo at ``time``, linearly interpolated between anchors."""
+
+    if not tempo_map:
+        return 0.0
+
+    if len(tempo_map) == 1:
+        return tempo_map[0][1]
+
+    for index in range(len(tempo_map) - 1):
+        start_time, start_bpm = tempo_map[index]
+        end_time, end_bpm = tempo_map[index + 1]
+
+        if time <= end_time:
+            if end_time <= start_time:
+                return end_bpm
+
+            fraction = (
+                time - start_time
+            ) / (end_time - start_time)
+
+            return start_bpm + fraction * (
+                end_bpm - start_bpm
+            )
+
+    return tempo_map[-1][1]
 
 
 def _min_grid_gap(

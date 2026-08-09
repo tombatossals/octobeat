@@ -1,36 +1,148 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OctoBeat Web App
 
-## Getting Started
+> **The web interface for practicing musical technique with real songs.**
 
-First, run the development server:
+OctoBeat is a Next.js application that consumes SongMaps to keep
+technical exercises synchronized with real recordings.
+
+It plays the recording (local audio/video or YouTube), renders a
+synchronized exercise overlay, shows synced lyrics and provides a
+browsable catalog of datasets.
+
+---
+
+# Getting Started
+
+## Prerequisites
+
+- Node.js 20+
+- [pnpm](https://pnpm.io/)
+
+## Install
+
+From the repository root:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Configure the catalog
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The app serves dataset resources from `public/resources/`. Point a
+catalog there by configuring the catalog URL in the settings dialog
+(`⌘,`) — the default is `/resources`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copy your datasets into the public directory, or symlink them:
 
-## Learn More
+```bash
+ln -s ~/Music/OctoBeat apps/octobeat/public/resources
+```
 
-To learn more about Next.js, take a look at the following resources:
+Each dataset must contain `catalog.json`, plus per-song directories
+with `metadata.json`, `songmap.json`, `recording.webm`, `video.mp4`
+and `cover.jpg`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Run the dev server
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+cd apps/octobeat
+pnpm dev
+```
 
-## Deploy on Vercel
+Open [http://localhost:3000](http://localhost:3000).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+> The dev server uses port `3001` when `3000` is already in use.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Build for production
+
+```bash
+pnpm build
+pnpm start
+```
+
+---
+
+# Features
+
+## Catalog
+
+- browse the catalog, randomized each session;
+- filter by genre and preferred genres;
+- search songs with a command palette (`⌘K`);
+- open any song directly from the search results.
+
+## Player
+
+- plays local audio + video, or YouTube;
+- transport controls with keyboard shortcuts;
+- seek bar with elapsed time and percentage;
+- volume control (`↑`/`↓`) with a slider and percentage readout;
+- fullscreen toggle (`F`);
+- auto-advances to the next song when playback ends.
+
+## Exercises
+
+- Stick Control exercises synchronized with the beat grid;
+- difficulty selector (Easy / Medium / Hard) with shortcuts `1`/`2`/`3`;
+- countdown before the music starts;
+- a now-playing summary with title, artist, album, genre, year and BPM.
+
+## Lyrics
+
+- synchronized lyrics rendered over the video;
+- embedded in the SongMap when available, with an LRCLIB fallback.
+
+## Shortcuts
+
+Hold `Ctrl`/`Cmd` to reveal the keyboard shortcut badges on the
+interface.
+
+| Key                        | Action                    |
+| -------------------------- | ------------------------- |
+| `Space`                    | Play / pause              |
+| `←` / `→`                  | Seek ±5s                  |
+| `P` / `N`                  | Previous / next song      |
+| `Home` / `End`             | Start / end of recording  |
+| `↑` / `↓`                  | Volume up / down          |
+| `F`                        | Toggle fullscreen         |
+| `Ctrl`+`F`                 | Toggle genre filter       |
+| `Ctrl`+`K`                 | Search the catalog        |
+| `1` / `2` / `3`            | Difficulty Easy/Med/Hard  |
+
+---
+
+# Project Structure
+
+```text
+apps/octobeat/
+
+├── app/                    # Next.js app router
+├── features/
+│   ├── exercises/          # exercise overlay + difficulty
+│   ├── library/            # catalog, search, filter
+│   ├── lyrics/             # synced lyrics
+│   ├── overlay/            # logo, debug HUD
+│   ├── player/             # player, controls, now playing
+│   ├── settings/           # settings dialog + toast
+│   └── ui/                 # UI visibility levels
+├── lib/                    # library wiring, shortcuts
+└── public/resources/       # dataset resources (catalog + songs)
+```
+
+The UI is organized in three visibility levels:
+
+1. always visible — logo, difficulty, headers, exercises, lyrics;
+2. on pointer or shortcut activity — transport controls;
+3. while holding `Ctrl`/`Cmd` — shortcut badges.
+
+---
+
+# Packages
+
+The app depends on the workspace packages:
+
+- `@octobeat/songmap` — SongMap schema, model and beat/bar helpers;
+- `@octobeat/library` — catalog loading and dataset resolution;
+- `@octobeat/player` — media abstraction and keyboard shortcuts;
+- `@octobeat/exercises` — exercise definitions;
+- `@octobeat/ui` — shared UI components (exercise renderer, seek bar, etc.).

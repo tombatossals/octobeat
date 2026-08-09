@@ -9,6 +9,11 @@ from octobeat.pipeline.builder import get_provider
 # Tolerance around the expected BPM.
 BPM_TOLERANCE = 3.0
 
+# Looser tolerance for ramp endpoints: a 4s analysis window averages
+# over the ramping tempo, so the measured first/last tempo lags the
+# true ramp endpoints.
+RAMP_TOLERANCE = 10.0
+
 
 @pytest.fixture(autouse=True)
 def _no_lyrics_network(monkeypatch):
@@ -128,6 +133,8 @@ def test_fixture_manifest_exists(
         "half-time",
         "double-time",
         "tempo-change",
+        "accelerando",
+        "ritardando",
         "syncopated",
         "intro",
         "silence",
@@ -179,20 +186,62 @@ def test_fixture_tempo_change_segments(
 
     tempo_map = result.report.tempo_map
 
-    assert len(tempo_map) == 2
+    assert len(tempo_map) >= 2
 
     first_start, first_bpm = tempo_map[0]
-    second_start, second_bpm = tempo_map[1]
+    _last_start, last_bpm = tempo_map[-1]
 
     assert first_start == 0.0
     assert abs(first_bpm - 120) < BPM_TOLERANCE
-    assert abs(second_bpm - 150) < BPM_TOLERANCE
+    assert abs(last_bpm - 150) < BPM_TOLERANCE
 
     # The songmap serialises the tempo map.
     timing = result.songmap.timing
 
     assert timing.tempoMap is not None
-    assert len(timing.tempoMap) == 2
+    assert len(timing.tempoMap) >= 2
+
+
+def test_fixture_accelerando_ramp(
+    tmp_path,
+) -> None:
+    fixtures = _fixture_paths(tmp_path)
+
+    result = _analyse(
+        fixtures / "accelerando.wav",
+    )
+
+    tempo_map = result.report.tempo_map
+
+    assert len(tempo_map) >= 2
+
+    first_bpm = tempo_map[0][1]
+    last_bpm = tempo_map[-1][1]
+
+    assert first_bpm < last_bpm
+    assert abs(first_bpm - 120) < RAMP_TOLERANCE
+    assert abs(last_bpm - 150) < RAMP_TOLERANCE
+
+
+def test_fixture_ritardando_ramp(
+    tmp_path,
+) -> None:
+    fixtures = _fixture_paths(tmp_path)
+
+    result = _analyse(
+        fixtures / "ritardando.wav",
+    )
+
+    tempo_map = result.report.tempo_map
+
+    assert len(tempo_map) >= 2
+
+    first_bpm = tempo_map[0][1]
+    last_bpm = tempo_map[-1][1]
+
+    assert first_bpm > last_bpm
+    assert abs(first_bpm - 150) < RAMP_TOLERANCE
+    assert abs(last_bpm - 120) < RAMP_TOLERANCE
 
 
 def test_fixture_tempo_change_beat_grid_continuous(

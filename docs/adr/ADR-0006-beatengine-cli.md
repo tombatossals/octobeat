@@ -11,7 +11,7 @@ BeatEngine is responsible for generating SongMaps from audio recordings.
 
 During the initial design phase, several implementation approaches were considered:
 
-* an internal library used directly by VideoStick;
+* an internal library used directly by OctoBeat;
 * a REST service;
 * an independent command-line application (CLI).
 
@@ -27,7 +27,7 @@ Its responsibility is limited to reading an audio source, analyzing it and produ
 
 BeatEngine does not know how SongMaps will be consumed.
 
-It has no dependency on VideoStick or any other application.
+It has no dependency on OctoBeat or any other application.
 
 ---
 
@@ -62,7 +62,7 @@ BeatEngine can be used by any application capable of reading SongMaps.
 
 Examples include:
 
-* VideoStick;
+* OctoBeat;
 * SongMap Editor;
 * batch processing tools;
 * CI pipelines;
@@ -77,11 +77,11 @@ The CLI integrates naturally with automation workflows.
 Examples include:
 
 ```bash
-beatengine analyse get-lucky.mp3
+octobeat analyse get-lucky.mp3
 
-beatengine validate get-lucky.songmap.json
+octobeat validate get-lucky.songmap.json
 
-beatengine info get-lucky.songmap.json
+octobeat info get-lucky.songmap.json
 ```
 
 This makes BeatEngine suitable for scripting and continuous integration.
@@ -121,7 +121,7 @@ The command-line interface may introduce a small amount of overhead compared to 
 
 ## Internal Library
 
-BeatEngine could have been implemented as a library imported directly by VideoStick.
+BeatEngine could have been implemented as a library imported directly by OctoBeat.
 
 This option was rejected because it tightly couples the analysis engine to a specific application and makes reuse more difficult.
 
@@ -139,7 +139,7 @@ A service layer can always be added later if required.
 
 ## Embedded Analysis
 
-VideoStick could perform audio analysis internally.
+OctoBeat could perform audio analysis internally.
 
 This option was rejected because it violates the architectural principle that applications consume SongMaps rather than generating them.
 

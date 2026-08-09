@@ -7,14 +7,14 @@
 
 # Context
 
-The VideoStick ecosystem is composed of several independent components with distinct responsibilities.
+The OctoBeat ecosystem is composed of several independent components with distinct responsibilities.
 
 Examples include:
 
 * SongMap Specification
 * BeatEngine
 * SongMap Editor
-* VideoStick
+* OctoBeat
 * Music Catalog
 
 From an architectural perspective, each component could exist as an independent repository.
@@ -53,7 +53,7 @@ Examples include:
 
 * evolving the SongMap specification;
 * updating BeatEngine;
-* adapting VideoStick.
+* adapting OctoBeat.
 
 ---
 
@@ -108,7 +108,7 @@ These costs outweigh the benefits while the architecture is still evolving.
 
 ## Single Application Repository
 
-Another option would be to develop VideoStick as a single application without separating internal components.
+Another option would be to develop OctoBeat as a single application without separating internal components.
 
 This option was rejected because the ecosystem is intentionally designed around independent responsibilities.
 
@@ -145,7 +145,7 @@ Such a migration should not require architectural changes, only repository restr
 
 # Scope
 
-This decision applies to the entire VideoStick ecosystem during the proof-of-concept and early development phases.
+This decision applies to the entire OctoBeat ecosystem during the proof-of-concept and early development phases.
 
 ---
 

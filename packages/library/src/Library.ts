@@ -7,7 +7,7 @@ import type {
 } from "./types";
 
 /**
- * VideoStick library.
+ * OctoBeat library.
  */
 export class Library {
     private readonly catalog: Catalog;

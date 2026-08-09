@@ -30,7 +30,7 @@ def write_resource(
     """
     Write a complete resource dataset into `dataset_dir`.
 
-    Produces the canonical VideoStick layout:
+    Produces the canonical OctoBeat layout:
 
         songmap.json
         metadata.json

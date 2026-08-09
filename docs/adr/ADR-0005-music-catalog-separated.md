@@ -152,7 +152,7 @@ SongMap should remain unchanged regardless of how much the catalog grows.
 
 # Scope
 
-This decision applies to the entire VideoStick ecosystem.
+This decision applies to the entire OctoBeat ecosystem.
 
 All current and future components should obtain descriptive metadata from the Music Catalog and temporal information from SongMap.
 

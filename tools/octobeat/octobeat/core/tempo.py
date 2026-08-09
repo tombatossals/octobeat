@@ -83,15 +83,21 @@ def estimate_tempo(
 #
 # The recording is scanned with a sliding window; each window is
 # scored against a set of candidate tempos and the best local tempo is
-# recorded. Contiguous windows with similar tempos are merged into
-# segments. To avoid false changes, a change only counts when the
-# tempo differs from the running segment by more than a relative
-# threshold AND persists across several windows.
+# recorded. The resulting (time, bpm) curve is simplified to a
+# polyline whose vertices become the tempo map anchors. Between
+# anchors the tempo is interpolated linearly, so the map represents
+# both constant passages and continuous ramps (accelerando,
+# ritardando).
 
 WINDOW_SECONDS = 4.0
 WINDOW_HOP_SECONDS = 2.0
-TEMPO_CHANGE_RATIO = 0.05
-MIN_WINDOWS_PER_SEGMENT = 2
+
+# RDP simplification tolerance (in BPM), relative to the global tempo.
+TEMPO_MAP_TOLERANCE = 0.03
+
+# BPM difference below which two consecutive anchors are collapsed
+# into a single constant segment.
+TEMPO_COLLAPSE_RATIO = 0.01
 
 
 def estimate_tempo_map(
@@ -101,10 +107,11 @@ def estimate_tempo_map(
     hop_length: int = DEFAULT_HOP_LENGTH,
     global_bpm: float | None = None,
 ) -> list[tuple[float, float]]:
-    """Detect tempo segments as ``(start_time, bpm)`` pairs.
+    """Detect the tempo curve as ``(time, bpm)`` anchors.
 
-    The map always starts at 0.0. A single-entry map is returned for
-    constant-tempo recordings.
+    The map is a polyline: between consecutive anchors the tempo is
+    interpolated linearly, supporting constant tempo, discrete changes
+    and gradual ramps. The map always starts at 0.0.
     """
 
     if global_bpm is None:
@@ -132,7 +139,7 @@ def estimate_tempo_map(
     if n < window_frames:
         return [(0.0, round(global_bpm, 2))]
 
-    windows: list[float] = []
+    points: list[tuple[float, float]] = []
 
     for start in range(
         0,
@@ -150,10 +157,30 @@ def estimate_tempo_map(
             hop_length=hop_length,
         )
 
-        windows.append(bpm)
+        if bpm <= 0:
+            continue
 
-    return _segment_windows(
-        windows,
+        time = start / frames_per_second
+
+        points.append(
+            (time, bpm),
+        )
+
+    if not points:
+        return [(0.0, round(global_bpm, 2))]
+
+    tolerance = max(
+        1.5,
+        global_bpm * TEMPO_MAP_TOLERANCE,
+    )
+
+    anchors = _rdp_simplify(
+        points,
+        tolerance,
+    )
+
+    return _finalize_anchors(
+        anchors,
         global_bpm,
     )
 
@@ -239,128 +266,114 @@ def _lock_to_octave(
     return bpm
 
 
-def _segment_windows(
-    windows: list[float],
-    global_bpm: float,
+def _rdp_simplify(
+    points: list[tuple[float, float]],
+    epsilon: float,
 ) -> list[tuple[float, float]]:
-    """Group window tempos into stable segments."""
+    """Ramer–Douglas–Peucker simplification of the tempo curve.
 
-    segments: list[tuple[float, float]] = []
+    Keeps the vertices that approximate the curve within ``epsilon``
+    BPM, producing a compact polyline that preserves both constant
+    passages and gradual ramps.
+    """
 
-    current_start = 0.0
-    current_bpm = 0.0
-    current_count = 0
+    if len(points) < 3:
+        return points
 
-    for index, bpm in enumerate(windows):
-        if bpm <= 0:
-            continue
+    start_time, start_bpm = points[0]
+    end_time, end_bpm = points[-1]
 
-        if current_bpm <= 0:
-            current_start = (
-                index * WINDOW_HOP_SECONDS
+    best_index = 1
+    best_distance = -1.0
+
+    for index in range(1, len(points) - 1):
+        time, bpm = points[index]
+
+        if end_time - start_time <= 0:
+            distance = abs(bpm - start_bpm)
+        else:
+            fraction = (
+                time - start_time
+            ) / (end_time - start_time)
+
+            line_bpm = (
+                start_bpm
+                + fraction
+                * (end_bpm - start_bpm)
             )
-            current_bpm = bpm
-            current_count = 1
-            continue
 
-        ratio = (
-            abs(bpm - current_bpm)
-            / current_bpm
-        )
+            distance = abs(
+                bpm - line_bpm,
+            )
 
-        if (
-            ratio <= TEMPO_CHANGE_RATIO
-            or current_count < MIN_WINDOWS_PER_SEGMENT
-        ):
-            current_bpm = (
-                current_bpm * current_count
-                + bpm
-            ) / (current_count + 1)
-            current_count += 1
-            continue
+        if distance > best_distance:
+            best_distance = distance
+            best_index = index
 
-        segments.append(
-            (
-                round(current_start, 3),
-                round(current_bpm, 2),
-            ),
-        )
+    if best_distance <= epsilon:
+        return [points[0], points[-1]]
 
-        current_start = (
-            index * WINDOW_HOP_SECONDS
-        )
-        current_bpm = bpm
-        current_count = 1
-
-    if current_bpm > 0:
-        segments.append(
-            (
-                round(current_start, 3),
-                round(current_bpm, 2),
-            ),
-        )
-
-    if not segments:
-        return [
-            (0.0, round(global_bpm, 2)),
-        ]
-
-    return _merge_short_segments(
-        segments,
-        WINDOW_HOP_SECONDS
-        * MIN_WINDOWS_PER_SEGMENT,
+    left = _rdp_simplify(
+        points[: best_index + 1],
+        epsilon,
     )
 
+    right = _rdp_simplify(
+        points[best_index:],
+        epsilon,
+    )
 
-def _merge_short_segments(
-    segments: list[tuple[float, float]],
-    min_duration: float,
+    return left[:-1] + right
+
+
+def _finalize_anchors(
+    anchors: list[tuple[float, float]],
+    global_bpm: float,
 ) -> list[tuple[float, float]]:
-    if len(segments) < 2:
-        return segments
+    """Normalise anchors: start at 0.0 and collapse flat regions."""
 
-    merged: list[tuple[float, float]] = []
+    if not anchors:
+        return []
 
-    for index, (start, bpm) in enumerate(
-        segments
-    ):
-        end = (
-            segments[index + 1][0]
-            if index + 1 < len(segments)
-            else float("inf")
+    first_time, first_bpm = anchors[0]
+
+    if first_time > 0:
+        anchors.insert(
+            0,
+            (0.0, first_bpm),
         )
 
-        duration = end - start
+    collapsed: list[tuple[float, float]] = []
 
-        if duration < min_duration and merged:
-            prev_start, prev_bpm = merged[-1]
-            merged[-1] = (
-                prev_start,
-                round(
-                    (prev_bpm + bpm) / 2,
-                    2,
-                ),
+    for time, bpm in anchors:
+        if not collapsed:
+            collapsed.append(
+                (round(time, 3), round(bpm, 2)),
             )
             continue
 
-        if (
-            duration < min_duration
-            and not merged
-            and index + 1 < len(segments)
-        ):
-            segments[index + 1] = (
-                start,
-                round(
-                    (bpm + segments[index + 1][1])
-                    / 2,
-                    2,
-                ),
-            )
+        _prev_time, prev_bpm = collapsed[-1]
+
+        ratio = (
+            abs(bpm - prev_bpm)
+            / max(prev_bpm, 1e-9)
+        )
+
+        if ratio < TEMPO_COLLAPSE_RATIO:
             continue
 
-        merged.append((start, bpm))
+        collapsed.append(
+            (round(time, 3), round(bpm, 2)),
+        )
 
-    return merged
+    if not collapsed:
+        return [(0.0, round(global_bpm, 2))]
+
+    # A single anchor means constant tempo throughout.
+    if len(collapsed) == 1:
+        return collapsed
+
+    return collapsed
 
 
 def _refine_tempo(

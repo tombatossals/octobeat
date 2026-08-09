@@ -25,6 +25,8 @@ CASE_NAMES = [
     "half-time",
     "double-time",
     "tempo-change",
+    "accelerando",
+    "ritardando",
     "syncopated",
     "intro",
     "silence",
@@ -61,6 +63,8 @@ def build_fixtures(
         _half_time(),
         _double_time(),
         _tempo_change(),
+        _accelerando(),
+        _ritardando(),
         _syncopated(),
         _intro(),
         _silence(),
@@ -146,6 +150,32 @@ def _tempo_change() -> Fixture:
     )
 
 
+def _accelerando() -> Fixture:
+    return Fixture(
+        name="accelerando",
+        bpm=None,
+        offset=0.0,
+        tempo_changes=[
+            {"time": 0.0, "bpm": 120.0},
+            {"time": 12.0, "bpm": 150.0},
+        ],
+        notes="Gradual speed-up from 120 to 150 BPM.",
+    )
+
+
+def _ritardando() -> Fixture:
+    return Fixture(
+        name="ritardando",
+        bpm=None,
+        offset=0.0,
+        tempo_changes=[
+            {"time": 0.0, "bpm": 150.0},
+            {"time": 12.0, "bpm": 120.0},
+        ],
+        notes="Gradual slow-down from 150 to 120 BPM.",
+    )
+
+
 def _syncopated() -> Fixture:
     return Fixture(
         name="syncopated",
@@ -197,6 +227,26 @@ def _render(
             signal,
             sr,
             [(0.0, 120.0), (6.0, 150.0)],
+        )
+
+        return signal
+
+    if fixture.name == "accelerando":
+        _render_tempo_ramp(
+            signal,
+            sr,
+            120.0,
+            150.0,
+        )
+
+        return signal
+
+    if fixture.name == "ritardando":
+        _render_tempo_ramp(
+            signal,
+            sr,
+            150.0,
+            120.0,
         )
 
         return signal
@@ -268,6 +318,39 @@ def _render_tempo_change(
             )
 
             time += interval
+
+
+def _render_tempo_ramp(
+    signal: np.ndarray,
+    sr: int,
+    start_bpm: float,
+    end_bpm: float,
+) -> None:
+    """Clicks whose tempo ramps linearly from ``start_bpm`` to
+    ``end_bpm`` across the whole recording."""
+
+    time = 0.0
+
+    while time < DURATION:
+        fraction = min(
+            1.0,
+            time / DURATION,
+        )
+
+        bpm = (
+            start_bpm
+            + (end_bpm - start_bpm) * fraction
+        )
+
+        interval = 60.0 / bpm
+
+        _add_click(
+            signal,
+            sr,
+            time,
+        )
+
+        time += interval
 
 
 def _render_syncopated(

@@ -12,177 +12,209 @@ A dataset contains everything required to reproduce and analyse a song:
 - video recording
 - SongMap
 
-The CLI automates the complete pipeline from a source (such as YouTube) to a fully reproducible dataset.
+The CLI automates the complete pipeline from a source (such as YouTube or a local file) to a fully reproducible dataset.
 
 ---
 
-# Vision
+# Installation
 
-The command line should make adding a new song as simple as:
+Requires Python 3.12+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-octobeat add https://youtu.be/KJamzD0KntE
+git clone git@github.com:tombatossals/octobeat.git
+cd octobeat/tools/octobeat
+uv sync
+uv run octobeat --version
 ```
 
-From that single command the CLI should:
+To install the command globally:
 
-- retrieve metadata;
-- download the cover artwork;
-- download the audio recording;
-- download the video;
-- decode the audio when necessary;
-- analyse the recording;
-- generate the SongMap;
-- build the dataset;
-- update the catalog.
-
-The user should never need to perform these steps manually.
-
----
-
-# Responsibilities
-
-The CLI is responsible for:
-
-- building datasets;
-- analysing recordings;
-- generating SongMaps;
-- validating SongMaps;
-- downloading media;
-- generating metadata;
-- maintaining the catalog;
-- validating datasets.
-
-It is **not** responsible for:
-
-- media playback;
-- exercise rendering;
-- user interface;
-- educational features.
-
-Those belong to the OctoBeat application.
-
----
-
-# Dataset
-
-Every dataset follows the same structure.
-
-```text
-dataset/
-
-├── metadata.json
-├── cover.jpg
-├── recording.webm
-├── video.webm
-└── recording.songmap.json
-```
-
-Future optional files may include:
-
-```text
-lyrics.txt
-notes.md
-thumbnail.jpg
+```bash
+cd octobeat/tools/octobeat
+uv tool install .
 ```
 
 ---
 
-# Architecture
+# Quick Start
 
-The project is organised into independent layers.
-
-```text
-CLI
- │
- ▼
-Commands
- │
- ▼
-Pipeline
- │
- ├── Metadata
- ├── Download
- ├── Decode
- ├── Analysis
- ├── Catalog
- │
- ▼
-Core
- │
- ▼
-IO
-```
-
----
-
-# Pipeline
-
-The analysis pipeline is intentionally modular.
-
-```text
-Source
-   │
-   ▼
-Metadata
-   │
-   ▼
-Download
-   │
-   ├── Audio
-   └── Video
-         │
-         ▼
-   Decode PCM
-         │
-         ▼
- Beat Detection
-         │
-         ▼
- SongMap
-         │
-         ▼
- Dataset
-         │
-         ▼
- Catalog
-```
-
-Each stage should be reusable independently.
-
----
-
-# Supported Sources
-
-Initially supported sources:
-
-- YouTube
-- Local audio files
-
-Future providers:
-
-- Spotify
-- Discogs
-- MusicBrainz
-- Local video files
-
----
-
-# Configuration
-
-The CLI maintains a workspace configuration.
+## 1. Initialize the workspace
 
 ```bash
 octobeat init
 ```
 
-Creates:
+Creates the default configuration:
 
 ```text
 ~/.config/octobeat/config.toml
 ```
 
-Example:
+The default datasets directory is `~/Music/OctoBeat`.
+
+## 2. Add a song from YouTube
+
+```bash
+octobeat add https://youtu.be/KJamzD0KntE
+```
+
+This single command:
+
+- retrieves metadata (from Deezer);
+- downloads the cover artwork;
+- downloads the audio recording;
+- downloads the video;
+- decodes the audio when necessary;
+- analyses the recording;
+- generates the SongMap;
+- builds the dataset;
+- updates the catalog.
+
+## 3. Analyse a local file
+
+```bash
+octobeat analyse /path/to/song.mp3 -o song.songmap.json
+```
+
+Add `--debug` to inspect the analysis:
+
+```bash
+octobeat analyse song.mp3 --debug
+```
+
+---
+
+# Commands
+
+## `init`
+
+Initialize the OctoBeat workspace and default configuration.
+
+```bash
+octobeat init
+```
+
+## `config`
+
+Manage configuration.
+
+```bash
+octobeat config show     # show the current configuration
+octobeat config edit     # edit the configuration file
+octobeat config set k v  # update a configuration value
+```
+
+## `add`
+
+Create a complete dataset from a source (YouTube URL or local file).
+
+```bash
+octobeat add <input> [--no-video] [--no-cover] [--offset SECONDS]
+```
+
+Options:
+
+- `-o, --output` — datasets directory (defaults to `paths.datasets`);
+- `--catalog` — catalog file (defaults to `<output>/catalog.json`);
+- `--id` — override the dataset identifier;
+- `--no-video` — skip downloading the video track;
+- `--no-cover` — skip downloading the cover artwork;
+- `--offset` — seconds into the media where the song begins.
+
+## `dataset`
+
+Manage datasets.
+
+```bash
+octobeat dataset create   # create a dataset interactively
+octobeat dataset update   # update an existing dataset
+octobeat dataset rebuild  # rebuild a dataset
+octobeat dataset verify   # verify datasets
+octobeat dataset clean    # remove temporary artefacts
+```
+
+## `analyse`
+
+Generate a SongMap from a recording.
+
+```bash
+octobeat analyse <input> [-o OUTPUT] [--offset SECONDS] [--debug]
+```
+
+The analyser (BeatEngine v2) detects:
+
+- tempo (resolving half-time/double-time);
+- a tempo map (constant tempo, discrete changes, accelerando/ritardando);
+- phase and a stable beat grid;
+- downbeats and bars;
+- overall, tempo, beat and grid confidence;
+- optional synced lyrics (from LRCLIB).
+
+## `metadata`
+
+Generate metadata.
+
+```bash
+octobeat metadata youtube <url>
+```
+
+## `extract`
+
+Extract media from a source.
+
+```bash
+octobeat extract audio <url>
+octobeat extract video <url>
+```
+
+## `cover`
+
+Download cover artwork.
+
+```bash
+octobeat cover <url>
+```
+
+## `catalog`
+
+Manage the catalog.
+
+```bash
+octobeat catalog build   # build catalog.json
+octobeat catalog verify  # verify the catalog
+octobeat catalog stats   # display catalog statistics
+```
+
+## `validate`
+
+Validate a SongMap.
+
+```bash
+octobeat validate <songmap.json>
+```
+
+## `info`
+
+Display information about a SongMap.
+
+```bash
+octobeat info <songmap.json>
+```
+
+## `export`
+
+Export a SongMap.
+
+```bash
+octobeat export <songmap.json> <destination>
+```
+
+---
+
+# Configuration
+
+The CLI maintains a workspace configuration at
+`~/.config/octobeat/config.toml`.
 
 ```toml
 [paths]
@@ -198,95 +230,34 @@ auto_rebuild = true
 
 ---
 
-# Planned Commands
+# Dataset Layout
 
-## Configuration
+Every dataset follows the same structure:
 
-```bash
-octobeat init
+```text
+dataset/
 
-octobeat config show
-
-octobeat config edit
-
-octobeat config set
+├── metadata.json
+├── cover.jpg
+├── recording.webm
+├── recording.wav
+├── video.mp4
+└── songmap.json
 ```
 
----
-
-## Dataset
-
-```bash
-octobeat add <youtube-url>
-
-octobeat dataset create
-
-octobeat dataset update
-
-octobeat dataset rebuild
-
-octobeat dataset verify
-
-octobeat dataset clean
-```
-
----
-
-## Analysis
-
-```bash
-octobeat analyse <recording>
-```
-
-Generates:
-
-```
-recording.songmap.json
-```
-
----
-
-## Metadata
-
-```bash
-octobeat metadata youtube <url>
-```
-
----
-
-## Media
-
-```bash
-octobeat extract audio <url>
-
-octobeat extract video <url>
-
-octobeat cover <url>
-```
-
----
-
-## Catalog
-
-```bash
-octobeat catalog build
-
-octobeat catalog verify
-
-octobeat catalog stats
-```
+The catalog (`catalog.json`) lists every dataset and is consumed by the
+OctoBeat web application.
 
 ---
 
 # Caching
 
-Temporary artefacts are stored in the local cache.
+Temporary artefacts are stored in the local cache
+(`~/.cache/octobeat/`):
 
 ```text
 cache/
-
     sources/
-
     decoded/
 ```
 
@@ -296,158 +267,57 @@ Cached data includes:
 - decoded PCM audio;
 - metadata.
 
-The cache should regenerate artefacts automatically whenever the source changes.
+The cache regenerates artefacts automatically whenever the source
+changes.
 
 ---
 
-# Reporting
+# Development
 
-Every command should produce a concise execution report.
+```bash
+# run the test suite
+uv run pytest
 
-Example:
+# lint
+uv run ruff check octobeat tests
 
-```text
-Dataset
--------
-
-Artist............. MxPx
-Title.............. Responsibility
-
-Resources
----------
-
-Audio.............. recording.webm
-Video.............. video.webm
-Cover.............. cover.jpg
-
-Analysis
---------
-
-Duration........... 159.2 s
-Tempo.............. 162 BPM
-Beats.............. 430
-Confidence......... 0.96
-
-Output
-------
-
-Dataset............ ~/Music/OctoBeat/mxpx-responsibility-kjamzd0knte
+# type-check
+uv run mypy octobeat
 ```
 
----
-
-# Guiding Principles
-
-The CLI follows a few simple principles:
-
-- one command should build a complete dataset;
-- deterministic output;
-- reproducible builds;
-- incremental updates whenever possible;
-- no manual editing of generated files;
-- modular pipeline;
-- provider-based architecture;
-- human-readable console output.
+The repository includes a set of synthetic fixtures
+(`octobeat/fixtures/`) covering constant tempo, half/double-time,
+tempo changes, accelerando, ritardando, syncopation, intros and
+silence. Each fixture has an expected ground truth recorded in its
+`manifest.json`.
 
 ---
 
-# Repository Layout
+# Architecture
+
+The analysis engine (BeatEngine) is organised into independent
+modules:
 
 ```text
-octobeat/
-
-├── octobeat/
-│   ├── cli.py
-│   ├── commands/
-│   ├── config/
-│   ├── providers/
-│   ├── pipeline/
-│   ├── cache/
-│   ├── core/
-│   ├── io/
-│   └── ui/
-│
-├── tests/
-├── fixtures/
-└── pyproject.toml
+core/
+├── onset.py       onset envelope extraction
+├── tempo.py       tempo candidates, tempo map, half/double resolution
+├── phase.py       beat grid phase estimation
+├── grid.py        stable beat grid with snapping
+├── bars.py        downbeat detection and bars
+└── confidence.py  independent quality metrics
 ```
 
----
-
-# Relationship with the Ecosystem
-
-```text
-YouTube / Local Files
-          │
-          ▼
-     OctoBeat CLI
-          │
-          ▼
-      Datasets
-          │
-          ▼
-     catalog.json
-          │
-          ▼
-     OctoBeat App
-```
-
-The CLI is responsible for producing datasets.
-
-The application is responsible for consuming them.
+The detection provides evidence; the musical grid governs the SongMap.
 
 ---
 
 # Roadmap
 
-## Phase 1
+The CLI is the reference implementation of BeatEngine. Planned work
+includes:
 
-- Configuration
-- Workspace
-- Dataset Builder
-
-## Phase 2
-
-- Metadata providers
-- Media extraction
-- Cover download
-
-## Phase 3
-
-- Beat analysis
-- SongMap generation
-- Validation
-
-## Phase 4
-
-- Automatic catalog generation
-- Dataset verification
-- Statistics
-
-## Phase 5
-
-- Advanced tempo analysis
-- Downbeat detection
-- Time signature detection
-- Section analysis
-
-## Phase 6
-
-- Additional metadata providers
-- Plugin system
-- Dataset export/import
-
----
-
-# Current Status
-
-Current implementation includes:
-
-- Local file support
-- YouTube support
-- Audio decoding
-- SongMap generation
-- Dataset loading
-- Audio caching
-
-The next milestone is to transform the CLI into a complete dataset builder capable of constructing and maintaining the entire OctoBeat library from a single command.
+- alternative detection backends (e.g. madmom);
+- a graphical SongMap editor;
+- additional metadata providers;
+- dataset export/import.

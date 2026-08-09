@@ -7,9 +7,9 @@
 
 # Context
 
-VideoStick aims to synchronize educational content with real music.
+OctoBeat aims to synchronize educational content with real music.
 
-To achieve this, users need access to complete recordings that can be analyzed by BeatEngine and played back by VideoStick.
+To achieve this, users need access to complete recordings that can be analyzed by BeatEngine and played back by OctoBeat.
 
 Several potential sources were considered, including:
 
@@ -29,7 +29,7 @@ YouTube is selected as the initial recording source for the proof of concept.
 
 The ecosystem will initially assume that recordings originate from YouTube.
 
-BeatEngine will be capable of analyzing YouTube recordings, and VideoStick will synchronize its overlay with the YouTube player.
+BeatEngine will be capable of analyzing YouTube recordings, and OctoBeat will synchronize its overlay with the YouTube player.
 
 This decision is limited to the early stages of the project and does not define the long-term architecture.
 
@@ -107,7 +107,7 @@ This decision establishes the following principles:
 
 * SongMap remains independent of the recording source.
 * BeatEngine should be designed to support additional sources in the future.
-* VideoStick should synchronize using SongMaps rather than provider-specific information.
+* OctoBeat should synchronize using SongMaps rather than provider-specific information.
 * Playback providers are implementation details, not architectural concepts.
 
 ---

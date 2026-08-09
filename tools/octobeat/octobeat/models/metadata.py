@@ -8,7 +8,7 @@ class CatalogMetadata(BaseModel):
     Catalogue metadata describing a resource.
 
     This model matches the metadata.json/catalog.json documents
-    consumed by VideoStick (packages/library MetadataSchema).
+    consumed by OctoBeat (packages/library MetadataSchema).
     """
 
     model_config = ConfigDict(

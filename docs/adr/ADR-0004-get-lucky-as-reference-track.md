@@ -7,7 +7,7 @@
 
 # Context
 
-The primary objective of the proof of concept is to validate the synchronization capabilities of the VideoStick ecosystem.
+The primary objective of the proof of concept is to validate the synchronization capabilities of the OctoBeat ecosystem.
 
 At this stage, the project is not attempting to evaluate BeatEngine against arbitrary recordings or to support every musical style.
 
@@ -78,7 +78,7 @@ Examples include:
 * BeatEngine
 * SongMap validation
 * SongMap Viewer
-* VideoStick
+* OctoBeat
 * Overlay synchronization
 
 ---
@@ -188,6 +188,6 @@ Future versions of the project should maintain a growing library of reference re
 
 The reference recording is selected for its technical characteristics rather than personal preference.
 
-Its purpose is to provide a stable and reproducible baseline for validating synchronization across the entire VideoStick ecosystem.
+Its purpose is to provide a stable and reproducible baseline for validating synchronization across the entire OctoBeat ecosystem.
 
 As the project evolves, additional reference recordings should be incorporated to increase coverage while preserving **"Get Lucky"** as the canonical regression test.

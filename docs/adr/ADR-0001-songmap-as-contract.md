@@ -7,7 +7,7 @@
 
 # Context
 
-VideoStick was originally conceived as an application for practicing musical technique using real songs.
+OctoBeat was originally conceived as an application for practicing musical technique using real songs.
 
 During the initial design phase, it became clear that the true value of the project is not the application itself, but the ability to represent the temporal structure of an audio recording in an objective and reusable way.
 
@@ -15,7 +15,7 @@ Multiple tools within the ecosystem need to exchange this information:
 
 * BeatEngine analyzes an audio recording.
 * SongMap Editor allows manual corrections.
-* VideoStick synchronizes practice exercises.
+* OctoBeat synchronizes practice exercises.
 * A viewer can visualize the musical timeline.
 * Future AI-based tools may generate or enrich the analysis.
 
@@ -41,7 +41,7 @@ All communication between tools must take place through SongMap documents that c
 
 Each component can evolve independently.
 
-For example, BeatEngine may completely change its analysis algorithms without requiring any changes to VideoStick.
+For example, BeatEngine may completely change its analysis algorithms without requiring any changes to OctoBeat.
 
 ---
 
@@ -59,7 +59,7 @@ The same SongMap can be reused by multiple applications simultaneously.
 
 Examples include:
 
-* VideoStick
+* OctoBeat
 * SongMap Editor
 * SongMap Viewer
 * Analysis tools
@@ -131,13 +131,13 @@ This decision establishes the following architectural principles:
 
 # Scope
 
-This decision applies to the entire VideoStick ecosystem, including both current and future components.
+This decision applies to the entire OctoBeat ecosystem, including both current and future components.
 
 Examples include:
 
 * BeatEngine
 * SongMap Editor
-* VideoStick
+* OctoBeat
 * SongMap Viewer
 * Music Catalog
 * Future analysis and AI-based tools
@@ -155,6 +155,6 @@ Examples include:
 
 This ADR defines the fundamental architectural decision of the project.
 
-VideoStick is considered a consumer of SongMap rather than its owner.
+OctoBeat is considered a consumer of SongMap rather than its owner.
 
-SongMap is not an internal format used by VideoStick; it is an independent specification intended to support an entire ecosystem of interoperable tools.
+SongMap is not an internal format used by OctoBeat; it is an independent specification intended to support an entire ecosystem of interoperable tools.
