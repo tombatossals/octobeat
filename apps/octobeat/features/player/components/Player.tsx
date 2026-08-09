@@ -16,6 +16,7 @@ import { LyricsOverlay } from "@/features/lyrics/components/LyricsOverlay";
 import { SettingsToast } from "@/features/settings/components/SettingsToast";
 import { useSettingsHydration } from "@/features/settings/hooks/useSettingsHydration";
 import { NowPlayingCard } from "./NowPlayingCard";
+import { NowPlayingSummary } from "./NowPlayingSummary";
 import { PlayerControlsOverlay } from "./PlayerControlsOverlay";
 
 import {
@@ -154,6 +155,8 @@ export function Player() {
             <PlayerBackend />
 
             <Logo />
+
+            <NowPlayingSummary />
 
             <DifficultySwitcher />
 

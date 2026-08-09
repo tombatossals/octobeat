@@ -19,7 +19,7 @@ export function NowPlayingCard() {
     return (
         <div
             key={metadata.id}
-            className="pointer-events-none fixed left-4 top-28 z-40 flex animate-[slideIn_0.4s_ease-out] items-center gap-3 rounded-xl border border-border bg-background/70 p-2 text-foreground shadow-2xl backdrop-blur-md"
+            className="pointer-events-none fixed right-24 top-20 z-40 flex animate-[cardLife_5s_ease-in-out_forwards] items-center gap-3 rounded-xl border border-border bg-background/70 p-2 text-foreground shadow-2xl backdrop-blur-md"
         >
             <img
                 src={`/resources/${metadata.id}/cover.jpg`}
