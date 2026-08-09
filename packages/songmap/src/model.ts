@@ -11,7 +11,11 @@ import {
     previousBeat,
 } from "./beats";
 
-import { barAtTime } from "./bars";
+import {
+    barAtTime,
+    barIndexAtTime,
+    beatInBarAtTime,
+} from "./bars";
 
 export class SongMapModel {
     constructor(
@@ -80,5 +84,13 @@ export class SongMapModel {
 
     barAtTime(time: number): Bar | null {
         return barAtTime(this.songmap, time);
+    }
+
+    barIndexAtTime(time: number): number | null {
+        return barIndexAtTime(this.songmap, time);
+    }
+
+    beatInBarAtTime(time: number): number | null {
+        return beatInBarAtTime(this.songmap, time);
     }
 }

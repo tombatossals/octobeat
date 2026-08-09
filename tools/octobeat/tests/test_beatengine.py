@@ -3,6 +3,11 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from octobeat.core.bars import (
+    beats_per_bar,
+    build_bars,
+    detect_downbeat_shift,
+)
 from octobeat.core.grid import build_beat_grid
 from octobeat.core.onset import compute_onset_envelope
 from octobeat.core.phase import estimate_phase
@@ -331,3 +336,121 @@ def test_tempo_map_ignores_half_time_blip() -> None:
     _start, bpm = tempo_map[0]
 
     assert abs(bpm - 120) < 5
+
+
+def _accented_wave(
+    *,
+    beat_of_bar: int,
+    beats_per_bar: int = 4,
+) -> np.ndarray:
+    """Click track with a strong accent on ``beat_of_bar`` (0-based)."""
+
+    samples = int(SR * DURATION)
+
+    wave = np.zeros(samples)
+
+    interval = 60.0 / 120.0
+
+    beat = 0
+    time = 0.0
+
+    while time < DURATION:
+        index = int(time * SR)
+
+        if beat % beats_per_bar == beat_of_bar:
+            width = int(0.05 * SR)
+            amplitude = 1.0
+        else:
+            width = int(0.03 * SR)
+            amplitude = 0.3
+
+        wave[index : index + width] += amplitude
+
+        time += interval
+        beat += 1
+
+    return wave
+
+
+def test_detect_downbeat_shift() -> None:
+    envelope = compute_onset_envelope(
+        _accented_wave(beat_of_bar=2),
+        SR,
+    )
+
+    beat_times = np.arange(
+        0.0,
+        DURATION,
+        0.5,
+    )
+
+    shift = detect_downbeat_shift(
+        envelope,
+        SR,
+        beat_times,
+        4,
+    )
+
+    # The accent on beat 3 (0-based index 2) must be the downbeat.
+    assert shift == 2
+
+
+def test_detect_downbeat_shift_default_zero() -> None:
+    """Uniform clicks: no residue wins, shift defaults to 0."""
+
+    envelope = _envelope(120)
+
+    beat_times = np.arange(
+        0.0,
+        DURATION,
+        0.5,
+    )
+
+    shift = detect_downbeat_shift(
+        envelope,
+        SR,
+        beat_times,
+        4,
+    )
+
+    assert shift == 0
+
+
+def test_build_bars_starts_on_downbeat() -> None:
+    beat_indices = list(range(1, 17))
+
+    bars = build_bars(
+        beat_indices,
+        4,
+        downbeat_shift=2,
+    )
+
+    first_beats = [
+        bar.firstBeat
+        for bar in bars
+    ]
+
+    # Downbeats at 1-based indices 3, 7, 11, 15.
+    assert first_beats == [3, 7, 11, 15]
+
+
+def test_build_bars_default() -> None:
+    bars = build_bars(
+        list(range(1, 17)),
+        4,
+    )
+
+    first_beats = [
+        bar.firstBeat
+        for bar in bars
+    ]
+
+    assert first_beats == [1, 5, 9, 13]
+
+
+def test_beats_per_bar_by_signature() -> None:
+    assert beats_per_bar("4/4") == 4
+    assert beats_per_bar("3/4") == 3
+    assert beats_per_bar("6/8") == 6
+    assert beats_per_bar("7/8") == 7
+    assert beats_per_bar("unknown") == 4

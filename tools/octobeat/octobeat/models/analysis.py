@@ -49,6 +49,8 @@ class AnalysisReport:
 
     duplicate_beats: int = 0
 
+    downbeat_shift: int | None = None
+
     output: Path | None = None
 
 

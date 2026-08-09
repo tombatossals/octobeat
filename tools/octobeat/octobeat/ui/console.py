@@ -182,6 +182,15 @@ class Console:
             ),
         )
 
+        self.field(
+            "Downbeat shift",
+            (
+                str(report.downbeat_shift)
+                if report.downbeat_shift is not None
+                else "-"
+            ),
+        )
+
         if report.tempo_map:
             print()
 

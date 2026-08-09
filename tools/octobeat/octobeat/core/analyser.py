@@ -11,6 +11,7 @@ import librosa
 import numpy as np
 
 from octobeat.cache.audio import AudioCache
+from octobeat.core.bars import build_bars, detect_downbeat_shift
 from octobeat.core.confidence import analyse_confidence
 from octobeat.core.grid import build_beat_grid
 from octobeat.core.onset import compute_onset_envelope
@@ -29,7 +30,6 @@ from octobeat.models.recording import Recording
 from octobeat.models.songmap import (
     SCHEMA_ID,
     SONGMAP_VERSION,
-    Bar,
     Beat,
     LyricLine,
     SongMap,
@@ -185,6 +185,26 @@ def analyse_recording(
         and float(time) >= music_start
     ]
 
+    beat_indices = [
+        beat.index
+        for beat in beats
+    ]
+
+    downbeat_shift = detect_downbeat_shift(
+        onset_envelope,
+        sr,
+        np.asarray(
+            [beat.time for beat in beats],
+        ),
+        BEATS_PER_BAR,
+    )
+
+    bars = build_bars(
+        beat_indices,
+        BEATS_PER_BAR,
+        downbeat_shift,
+    )
+
     songmap = SongMap(
         version=SONGMAP_VERSION,
         schema=SCHEMA_ID,
@@ -224,10 +244,7 @@ def analyse_recording(
             ],
         ),
         beats=beats,
-        bars=_build_bars(
-            len(beats),
-            BEATS_PER_BAR,
-        ),
+        bars=bars,
         lyrics=_fetch_lrclib_lyrics(
             recording.artist or "",
             recording.title or "",
@@ -271,6 +288,7 @@ def analyse_recording(
                 60.0 / bpm,
                 3,
             ),
+            downbeat_shift=downbeat_shift,
         ),
     )
 
@@ -449,32 +467,6 @@ def _parse_lrc(lrc: str) -> list[LyricLine]:
         lines,
         key=lambda line: line.time,
     )
-
-
-def _build_bars(
-    n_beats: int,
-    beats_per_bar: int,
-) -> list[Bar]:
-    n_bars = (
-        n_beats
-        + beats_per_bar
-        - 1
-    ) // beats_per_bar
-
-    return [
-        Bar(
-            index=bar_index,
-            firstBeat=(
-                (bar_index - 1)
-                * beats_per_bar
-                + 1
-            ),
-        )
-        for bar_index in range(
-            1,
-            n_bars + 1,
-        )
-    ]
 
 
 def _fallback_grid(

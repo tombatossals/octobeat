@@ -41,3 +41,36 @@ export function barAtTime(
 
     return bars[Math.max(0, low - 1)] ?? null;
 }
+
+export function barIndexAtTime(
+    songmap: SongMap,
+    time: number,
+): number | null {
+    const bar = barAtTime(
+        songmap,
+        time,
+    );
+
+    return bar?.index ?? null;
+}
+
+export function beatInBarAtTime(
+    songmap: SongMap,
+    time: number,
+): number | null {
+    const beat = beatAtTime(
+        songmap,
+        time,
+    );
+
+    const bar = barAtTime(
+        songmap,
+        time,
+    );
+
+    if (!beat || !bar) {
+        return null;
+    }
+
+    return beat.index - bar.firstBeat + 1;
+}
