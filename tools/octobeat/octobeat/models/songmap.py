@@ -44,6 +44,19 @@ class SongMetadata(SongMapModel):
     source: Source
 
 
+class TempoSegment(SongMapModel):
+    """
+    A constant-tempo segment of the recording.
+
+    ``time`` is the start time (seconds) of the segment; ``bpm`` is
+    the tempo from that moment until the next segment (or the end of
+    the recording).
+    """
+
+    time: float = Field(ge=0.0)
+    bpm: float = Field(gt=0.0)
+
+
 class Timing(SongMapModel):
     """
     Global timing information for the recording.
@@ -53,6 +66,7 @@ class Timing(SongMapModel):
     offset: float = Field(ge=0.0)
     timeSignature: str
     confidence: float = Field(ge=0.0, le=1.0)
+    tempoMap: list[TempoSegment] | None = None
 
 
 class Beat(SongMapModel):

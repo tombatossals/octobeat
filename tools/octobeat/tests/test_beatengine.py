@@ -9,6 +9,7 @@ from octobeat.core.phase import estimate_phase
 from octobeat.core.tempo import (
     estimate_tempo,
     estimate_tempo_candidates,
+    estimate_tempo_map,
     score_tempo,
 )
 
@@ -231,3 +232,102 @@ def test_snap_is_limited() -> None:
     assert np.max(
         np.abs(diffs - interval),
     ) < 0.01
+
+
+def test_tempo_map_constant_single_segment() -> None:
+    envelope = _envelope(120)
+
+    tempo_map = estimate_tempo_map(
+        envelope,
+        SR,
+    )
+
+    assert len(tempo_map) == 1
+
+    start, bpm = tempo_map[0]
+
+    assert start == 0.0
+    assert abs(bpm - 120) < 5
+
+
+def test_tempo_map_detects_tempo_change() -> None:
+    """A 120 -> 150 BPM change must produce two segments."""
+
+    # Build a two-segment track: 120 BPM for 6s, 150 BPM for 6s.
+    samples = int(SR * DURATION)
+
+    wave = np.zeros(samples)
+
+    time = 0.0
+    while time < 6.0:
+        index = int(time * SR)
+        wave[
+            index : index + int(0.03 * SR)
+        ] += 0.8
+        time += 60.0 / 120.0
+
+    time = 6.0
+    while time < DURATION:
+        index = int(time * SR)
+        wave[
+            index : index + int(0.03 * SR)
+        ] += 0.8
+        time += 60.0 / 150.0
+
+    envelope = compute_onset_envelope(
+        wave,
+        SR,
+    )
+
+    tempo_map = estimate_tempo_map(
+        envelope,
+        SR,
+    )
+
+    assert len(tempo_map) == 2
+
+    first_start, first_bpm = tempo_map[0]
+    second_start, second_bpm = tempo_map[1]
+
+    assert first_start == 0.0
+    assert abs(first_bpm - 120) < 5
+    assert abs(second_bpm - 150) < 5
+
+
+def test_tempo_map_ignores_half_time_blip() -> None:
+    """A brief 120 -> 80 -> 120 fluctuation must not create segments."""
+
+    samples = int(SR * DURATION)
+
+    wave = np.zeros(samples)
+
+    # Mostly 120 BPM.
+    time = 0.0
+    while time < DURATION:
+        index = int(time * SR)
+        wave[
+            index : index + int(0.03 * SR)
+        ] += 0.8
+        time += 60.0 / 120.0
+
+    # A short quiet passage around 4s-5s (no clicks).
+    quiet_start = int(4.0 * SR)
+    quiet_end = int(5.0 * SR)
+    wave[quiet_start:quiet_end] = 0.0
+
+    envelope = compute_onset_envelope(
+        wave,
+        SR,
+    )
+
+    tempo_map = estimate_tempo_map(
+        envelope,
+        SR,
+    )
+
+    # No tempo change: still a single segment.
+    assert len(tempo_map) == 1
+
+    _start, bpm = tempo_map[0]
+
+    assert abs(bpm - 120) < 5

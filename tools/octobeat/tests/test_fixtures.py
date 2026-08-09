@@ -149,3 +149,89 @@ def test_fixture_confidence_metrics(
     assert report.tempo_confidence > 0.5
     assert report.beat_confidence > 0.5
     assert report.grid_stability > 0.5
+
+
+def test_fixture_constant_tempo_single_segment(
+    tmp_path,
+) -> None:
+    fixtures = _fixture_paths(tmp_path)
+
+    result = _analyse(
+        fixtures / "constant-tempo.wav",
+    )
+
+    assert len(result.report.tempo_map) == 1
+
+    start, bpm = result.report.tempo_map[0]
+
+    assert start == 0.0
+    assert abs(bpm - 120) < BPM_TOLERANCE
+
+
+def test_fixture_tempo_change_segments(
+    tmp_path,
+) -> None:
+    fixtures = _fixture_paths(tmp_path)
+
+    result = _analyse(
+        fixtures / "tempo-change.wav",
+    )
+
+    tempo_map = result.report.tempo_map
+
+    assert len(tempo_map) == 2
+
+    first_start, first_bpm = tempo_map[0]
+    second_start, second_bpm = tempo_map[1]
+
+    assert first_start == 0.0
+    assert abs(first_bpm - 120) < BPM_TOLERANCE
+    assert abs(second_bpm - 150) < BPM_TOLERANCE
+
+    # The songmap serialises the tempo map.
+    timing = result.songmap.timing
+
+    assert timing.tempoMap is not None
+    assert len(timing.tempoMap) == 2
+
+
+def test_fixture_tempo_change_beat_grid_continuous(
+    tmp_path,
+) -> None:
+    """Beat indices must stay continuous across a tempo change."""
+
+    fixtures = _fixture_paths(tmp_path)
+
+    result = _analyse(
+        fixtures / "tempo-change.wav",
+    )
+
+    beats = result.songmap.beats
+
+    indices = [beat.index for beat in beats]
+
+    assert indices == list(
+        range(1, len(indices) + 1)
+    )
+
+    # The spacing must shrink after the tempo change (6s).
+    times = [beat.time for beat in beats]
+
+    before = [
+        times[i + 1] - times[i]
+        for i in range(len(times) - 1)
+        if times[i] < 6.0
+    ]
+
+    after = [
+        times[i + 1] - times[i]
+        for i in range(len(times) - 1)
+        if times[i] >= 6.0
+    ]
+
+    assert before
+    assert after
+
+    import statistics
+
+    assert statistics.mean(before) > statistics.mean(after)

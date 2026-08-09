@@ -79,6 +79,290 @@ def estimate_tempo(
     return best_bpm
 
 
+# Tempo map estimation.
+#
+# The recording is scanned with a sliding window; each window is
+# scored against a set of candidate tempos and the best local tempo is
+# recorded. Contiguous windows with similar tempos are merged into
+# segments. To avoid false changes, a change only counts when the
+# tempo differs from the running segment by more than a relative
+# threshold AND persists across several windows.
+
+WINDOW_SECONDS = 4.0
+WINDOW_HOP_SECONDS = 2.0
+TEMPO_CHANGE_RATIO = 0.05
+MIN_WINDOWS_PER_SEGMENT = 2
+
+
+def estimate_tempo_map(
+    onset_envelope: np.ndarray,
+    sr: int,
+    *,
+    hop_length: int = DEFAULT_HOP_LENGTH,
+    global_bpm: float | None = None,
+) -> list[tuple[float, float]]:
+    """Detect tempo segments as ``(start_time, bpm)`` pairs.
+
+    The map always starts at 0.0. A single-entry map is returned for
+    constant-tempo recordings.
+    """
+
+    if global_bpm is None:
+        global_bpm = estimate_tempo(
+            onset_envelope,
+            sr,
+            hop_length=hop_length,
+        )
+
+    if global_bpm <= 0:
+        return []
+
+    n = int(onset_envelope.size)
+
+    frames_per_second = sr / hop_length
+
+    window_frames = int(
+        WINDOW_SECONDS * frames_per_second,
+    )
+
+    hop_frames = int(
+        WINDOW_HOP_SECONDS * frames_per_second,
+    )
+
+    if n < window_frames:
+        return [(0.0, round(global_bpm, 2))]
+
+    windows: list[float] = []
+
+    for start in range(
+        0,
+        n - window_frames + 1,
+        hop_frames,
+    ):
+        window = onset_envelope[
+            start : start + window_frames
+        ]
+
+        bpm = _window_tempo(
+            window,
+            sr,
+            global_bpm,
+            hop_length=hop_length,
+        )
+
+        windows.append(bpm)
+
+    return _segment_windows(
+        windows,
+        global_bpm,
+    )
+
+
+def _window_tempo(
+    window: np.ndarray,
+    sr: int,
+    global_bpm: float,
+    *,
+    hop_length: int,
+) -> float:
+    """Best-scoring tempo for a single window, octave-locked to the
+    global tempo.
+
+    Each window is resolved to the octave variant closest to
+    ``global_bpm``, so the tempo map never flickers between a tempo
+    and its half/double in adjacent windows.
+    """
+
+    candidates = estimate_tempo_candidates(
+        window,
+        sr,
+        hop_length=hop_length,
+    )
+
+    variants: set[float] = set()
+
+    for candidate in candidates:
+        variant = _lock_to_octave(
+            candidate,
+            global_bpm,
+        )
+
+        if MIN_BPM <= variant <= MAX_BPM:
+            variants.add(
+                round(variant, 2),
+            )
+
+    if not variants:
+        return 0.0
+
+    best_bpm = 0.0
+    best_score = -1.0
+
+    for variant in variants:
+        score = score_tempo(
+            window,
+            sr,
+            variant,
+            hop_length=hop_length,
+        )
+
+        if score > best_score:
+            best_bpm = variant
+            best_score = score
+
+    return best_bpm
+
+
+def _lock_to_octave(
+    bpm: float,
+    reference: float,
+) -> float:
+    """Fold ``bpm`` into the octave of ``reference``.
+
+    Repeatedly halves or doubles ``bpm`` until it lies within the
+    same octave as ``reference`` (between reference/1.4 and
+    reference*1.4).
+    """
+
+    if reference <= 0:
+        return bpm
+
+    lower = reference / 1.4
+    upper = reference * 1.4
+
+    while bpm > upper:
+        bpm /= 2.0
+
+    while bpm < lower:
+        bpm *= 2.0
+
+    return bpm
+
+
+def _segment_windows(
+    windows: list[float],
+    global_bpm: float,
+) -> list[tuple[float, float]]:
+    """Group window tempos into stable segments."""
+
+    segments: list[tuple[float, float]] = []
+
+    current_start = 0.0
+    current_bpm = 0.0
+    current_count = 0
+
+    for index, bpm in enumerate(windows):
+        if bpm <= 0:
+            continue
+
+        if current_bpm <= 0:
+            current_start = (
+                index * WINDOW_HOP_SECONDS
+            )
+            current_bpm = bpm
+            current_count = 1
+            continue
+
+        ratio = (
+            abs(bpm - current_bpm)
+            / current_bpm
+        )
+
+        if (
+            ratio <= TEMPO_CHANGE_RATIO
+            or current_count < MIN_WINDOWS_PER_SEGMENT
+        ):
+            current_bpm = (
+                current_bpm * current_count
+                + bpm
+            ) / (current_count + 1)
+            current_count += 1
+            continue
+
+        segments.append(
+            (
+                round(current_start, 3),
+                round(current_bpm, 2),
+            ),
+        )
+
+        current_start = (
+            index * WINDOW_HOP_SECONDS
+        )
+        current_bpm = bpm
+        current_count = 1
+
+    if current_bpm > 0:
+        segments.append(
+            (
+                round(current_start, 3),
+                round(current_bpm, 2),
+            ),
+        )
+
+    if not segments:
+        return [
+            (0.0, round(global_bpm, 2)),
+        ]
+
+    return _merge_short_segments(
+        segments,
+        WINDOW_HOP_SECONDS
+        * MIN_WINDOWS_PER_SEGMENT,
+    )
+
+
+def _merge_short_segments(
+    segments: list[tuple[float, float]],
+    min_duration: float,
+) -> list[tuple[float, float]]:
+    if len(segments) < 2:
+        return segments
+
+    merged: list[tuple[float, float]] = []
+
+    for index, (start, bpm) in enumerate(
+        segments
+    ):
+        end = (
+            segments[index + 1][0]
+            if index + 1 < len(segments)
+            else float("inf")
+        )
+
+        duration = end - start
+
+        if duration < min_duration and merged:
+            prev_start, prev_bpm = merged[-1]
+            merged[-1] = (
+                prev_start,
+                round(
+                    (prev_bpm + bpm) / 2,
+                    2,
+                ),
+            )
+            continue
+
+        if (
+            duration < min_duration
+            and not merged
+            and index + 1 < len(segments)
+        ):
+            segments[index + 1] = (
+                start,
+                round(
+                    (bpm + segments[index + 1][1])
+                    / 2,
+                    2,
+                ),
+            )
+            continue
+
+        merged.append((start, bpm))
+
+    return merged
+
+
 def _refine_tempo(
     onset_envelope: np.ndarray,
     sr: int,

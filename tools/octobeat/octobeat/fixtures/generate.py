@@ -276,11 +276,17 @@ def _render_syncopated(
     bpm: float,
     start: float,
 ) -> None:
-    """Regular beats plus extra off-beat accents."""
+    """Regular beats with a syncopated off-beat accent.
+
+    A single accent lands on the off-beat of the third beat of every
+    four-beat bar. It is too sparse to create a stable subdivision, so
+    a greedy detector must not lock onto a double-time pulse.
+    """
 
     interval = 60.0 / bpm
 
     time = start
+    beat = 0
 
     while time < DURATION:
         _add_click(
@@ -289,15 +295,17 @@ def _render_syncopated(
             time,
         )
 
-        # Off-beat accent halfway through the bar.
-        _add_click(
-            signal,
-            sr,
-            time + interval / 2,
-            amplitude=0.4,
-        )
+        # Syncopated accent: off-beat of the 3rd beat in the bar.
+        if beat % 4 == 2:
+            _add_click(
+                signal,
+                sr,
+                time + interval / 2,
+                amplitude=0.5,
+            )
 
         time += interval
+        beat += 1
 
 
 def _add_click(

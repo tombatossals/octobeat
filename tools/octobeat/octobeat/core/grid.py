@@ -29,28 +29,35 @@ def build_beat_grid(
     *,
     hop_length: int = DEFAULT_HOP_LENGTH,
     max_snap_distance: float = MAX_SNAP_DISTANCE,
+    tempo_map: list[tuple[float, float]] | None = None,
 ) -> np.ndarray:
     """Build the musical beat grid (seconds).
 
-    The grid is computed mathematically from ``bpm`` and ``phase``,
-    then each beat may be snapped towards the nearest onset, but only
-    within ``max_snap_distance``. Finally the grid is validated to
-    discard beats that are too close together.
+    The grid is computed mathematically from ``bpm`` and ``phase``
+    (optionally following a tempo map), then each beat may be snapped
+    towards the nearest onset, but only within ``max_snap_distance``.
+    Finally the grid is validated to discard beats that are too close
+    together.
     """
 
-    if bpm <= 0:
+    if bpm <= 0 and not tempo_map:
         return np.array([])
-
-    interval = 60.0 / bpm
 
     if duration <= 0:
         return np.array([])
 
-    grid = _math_grid(
-        phase,
-        interval,
-        duration,
-    )
+    if tempo_map:
+        grid = _tempo_map_grid(
+            tempo_map,
+            phase,
+            duration,
+        )
+    else:
+        grid = _math_grid(
+            phase,
+            60.0 / bpm,
+            duration,
+        )
 
     if grid.size == 0:
         return grid
@@ -69,10 +76,71 @@ def build_beat_grid(
 
     grid = _remove_close_beats(
         grid,
-        interval * MIN_GAP_RATIO,
+        _min_grid_gap(
+            bpm,
+            tempo_map,
+        ),
     )
 
     return grid
+
+
+def _tempo_map_grid(
+    tempo_map: list[tuple[float, float]],
+    phase: float,
+    duration: float,
+) -> np.ndarray:
+    """Beat grid that follows a tempo map.
+
+    The grid advances at each segment's interval, keeping the beat
+    index continuous across tempo changes (only the spacing changes).
+    """
+
+    if not tempo_map:
+        return np.array([])
+
+    times: list[float] = []
+
+    time = phase
+    segment_index = 0
+
+    while (
+        time <= duration
+        and segment_index < len(tempo_map)
+    ):
+        while (
+            segment_index + 1
+            < len(tempo_map)
+            and tempo_map[segment_index + 1][0]
+            <= time
+        ):
+            segment_index += 1
+
+        interval = (
+            60.0
+            / tempo_map[segment_index][1]
+        )
+
+        times.append(time)
+
+        time += interval
+
+    return np.asarray(times)
+
+
+def _min_grid_gap(
+    bpm: float,
+    tempo_map: list[tuple[float, float]] | None,
+) -> float:
+    if tempo_map:
+        interval = min(
+            60.0 / bpm_segment
+            for _time, bpm_segment in tempo_map
+        )
+    else:
+        interval = 60.0 / bpm
+
+    return interval * MIN_GAP_RATIO
 
 
 def _math_grid(

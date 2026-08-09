@@ -15,6 +15,11 @@ export const LyricLineSchema = z.object({
     text: z.string(),
 });
 
+export const TempoSegmentSchema = z.object({
+    time: z.number(),
+    bpm: z.number(),
+});
+
 export const TimingSchema = z.object({
     bpm: z.number(),
 
@@ -23,6 +28,10 @@ export const TimingSchema = z.object({
     timeSignature: z.string(),
 
     confidence: z.number(),
+
+    tempoMap: z
+        .array(TempoSegmentSchema)
+        .optional(),
 });
 
 export const SongMapSchema = z.object({
@@ -51,6 +60,10 @@ export type Bar = z.infer<typeof BarSchema>;
 
 export type LyricLine = z.infer<
     typeof LyricLineSchema
+>;
+
+export type TempoSegment = z.infer<
+    typeof TempoSegmentSchema
 >;
 
 export type Timing = z.infer<typeof TimingSchema>;

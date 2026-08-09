@@ -39,6 +39,10 @@ class AnalysisReport:
         default_factory=list,
     )
 
+    tempo_map: list[tuple[float, float]] = field(
+        default_factory=list,
+    )
+
     phase: float | None = None
 
     beat_interval: float | None = None

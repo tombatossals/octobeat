@@ -1,6 +1,7 @@
 import type {
     Beat,
     Bar,
+    TempoSegment,
     SongMap,
 } from "./types";
 
@@ -31,6 +32,22 @@ export class SongMapModel {
 
     get timeSignature(): string {
         return this.songmap.timing.timeSignature;
+    }
+
+    get tempoMap(): TempoSegment[] {
+        const map = this.songmap.timing.tempoMap;
+
+        // Retrocompatibilidad: sin tempoMap se asume tempo constante.
+        if (!map || map.length === 0) {
+            return [
+                {
+                    time: 0,
+                    bpm: this.bpm,
+                },
+            ];
+        }
+
+        return map;
     }
 
     //

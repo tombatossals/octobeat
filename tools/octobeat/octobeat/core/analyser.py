@@ -18,6 +18,7 @@ from octobeat.core.phase import estimate_phase
 from octobeat.core.tempo import (
     estimate_tempo,
     estimate_tempo_candidates,
+    estimate_tempo_map,
     score_tempo,
 )
 from octobeat.models.analysis import (
@@ -34,6 +35,7 @@ from octobeat.models.songmap import (
     SongMap,
     SongMetadata,
     Source,
+    TempoSegment,
     Timing,
 )
 from octobeat.version import __version__
@@ -110,6 +112,12 @@ def analyse_recording(
     if bpm <= 0 and duration > 0:
         bpm = 120.0
 
+    tempo_map = estimate_tempo_map(
+        onset_envelope,
+        sr,
+        global_bpm=bpm,
+    )
+
     phase = estimate_phase(
         onset_envelope,
         sr,
@@ -122,6 +130,7 @@ def analyse_recording(
         bpm,
         phase,
         duration,
+        tempo_map=tempo_map,
     )
 
     if (
@@ -206,6 +215,13 @@ def analyse_recording(
                 confidence.overall,
                 2,
             ),
+            tempoMap=[
+                TempoSegment(
+                    time=start,
+                    bpm=round(bpm_segment, 2),
+                )
+                for start, bpm_segment in tempo_map
+            ],
         ),
         beats=beats,
         bars=_build_bars(
@@ -249,6 +265,7 @@ def analyse_recording(
                 2,
             ),
             tempo_candidates=tempo_candidates,
+            tempo_map=tempo_map,
             phase=round(phase, 3),
             beat_interval=round(
                 60.0 / bpm,

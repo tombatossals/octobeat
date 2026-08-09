@@ -182,6 +182,18 @@ class Console:
             ),
         )
 
+        if report.tempo_map:
+            print()
+
+            self.section("Tempo map")
+            print()
+
+            for start, bpm in report.tempo_map:
+                self.field(
+                    f"{start:7.3f} s",
+                    f"{bpm:.2f} BPM",
+                )
+
         print()
 
         self.section("Confidence")
