@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from typing import Any
 
 from rich import box
@@ -50,6 +51,107 @@ class Console:
 
     def warning(self, message: str) -> None:
         print(f"⚠ {message}")
+
+    def prompt(
+        self,
+        message: str,
+        *,
+        default: str | None = None,
+        allow_empty: bool = False,
+    ) -> str:
+        """
+        Ask the user for a single line of input.
+
+        Returns the entered value, or the default when the input is
+        empty and a default is provided.
+        """
+
+        suffix = (
+            f" [{default}]"
+            if default is not None
+            else ""
+        )
+
+        while True:
+            value = input(
+                f"{message}{suffix}: ",
+            ).strip()
+
+            if value:
+                return value
+
+            if default is not None:
+                return default
+
+            if allow_empty:
+                return ""
+
+            print(
+                "Please enter a value.",
+            )
+
+    def choose(
+        self,
+        message: str,
+        options: list[str],
+        *,
+        allow_skip: bool = True,
+    ) -> int | None:
+        """
+        Let the user pick one option from a numbered list.
+
+        Returns the selected index, ``None`` when the user skips.
+        """
+
+        print()
+        print(message)
+
+        for index, option in enumerate(
+            options,
+            start=1,
+        ):
+            print(f"  {index}. {option}")
+
+        prompt_text = (
+            f"Select [1-{len(options)}"
+            f"{', 0 = skip' if allow_skip else ''}]"
+        )
+
+        while True:
+            value = input(
+                f"{prompt_text}: ",
+            ).strip()
+
+            if not value and allow_skip:
+                return None
+
+            if value == "0" and allow_skip:
+                return None
+
+            try:
+                choice = int(value)
+            except ValueError:
+                print(
+                    "Please enter a number.",
+                )
+                continue
+
+            if 1 <= choice <= len(options):
+                return choice - 1
+
+            print(
+                f"Select a number between 1 and {len(options)}.",
+            )
+
+    def interactive(self) -> bool:
+        """
+        Whether the terminal is interactive (stdin is a TTY).
+        """
+
+        return (
+            sys.stdin is not None
+            and sys.stdin.isatty()
+        )
 
     def report(
         self,

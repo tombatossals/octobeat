@@ -227,3 +227,183 @@ def test_download_cover_missing(
             "Responsibility",
             tmp_path / "cover.jpg",
         )
+
+
+def test_metadata_for_track(monkeypatch) -> None:
+    _fake_urlopen(monkeypatch)
+
+    provider = DeezerProvider()
+
+    track = provider.tracks(
+        "MxPx",
+        "Responsibility",
+    )[0]
+
+    metadata = provider.metadata_for_track(track)
+
+    assert metadata is not None
+    assert metadata.album == "Slowly Going the Way of the Buffalo"
+    assert metadata.year == 1998
+    assert metadata.genres == ["Rock", "Punk"]
+
+
+def test_cover_url_for_track(monkeypatch) -> None:
+    _fake_urlopen(monkeypatch)
+
+    provider = DeezerProvider()
+
+    track = provider.tracks(
+        "MxPx",
+        "Responsibility",
+    )[0]
+
+    url = provider.cover_url_for_track(track)
+
+    assert url is not None
+    assert "1200x1200" in url
+
+
+def test_download_cover_for_track(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    _fake_urlopen(monkeypatch)
+
+    provider = DeezerProvider()
+
+    track = provider.tracks(
+        "MxPx",
+        "Responsibility",
+    )[0]
+
+    destination = tmp_path / "cover.jpg"
+
+    result = provider.download_cover_for_track(
+        track,
+        destination,
+    )
+
+    assert result == destination
+    assert (
+        destination.read_bytes()
+        == b"fake-jpeg-bytes"
+    )
+
+
+def _tracks_payload() -> dict:
+    return {
+        "data": [
+            {
+                "id": 1,
+                "title": "Responsibility",
+                "artist": {"name": "MxPx"},
+                "album": {"title": "The Ever Passing Moment"},
+                "rank": 500000,
+            },
+            {
+                "id": 2,
+                "title": "Responsibility (Live)",
+                "artist": {"name": "MxPx"},
+                "album": {"title": "Left Coast Live"},
+                "rank": 100000,
+            },
+            {
+                "id": 3,
+                "title": "Responsibility (Remix)",
+                "artist": {"name": "MxPx Tribute"},
+                "album": {"title": "Tribute"},
+                "rank": 300000,
+            },
+            {
+                "id": 4,
+                "title": "Some Other Song",
+                "artist": {"name": "MxPx"},
+                "album": {"title": "Other"},
+                "rank": 900000,
+            },
+        ]
+    }
+
+
+def test_tracks_orders_by_rank_and_prefers_exact_artist(
+    monkeypatch,
+) -> None:
+    def open_url(url: str):
+        return _FakeResponse(_tracks_payload())
+
+    monkeypatch.setattr(
+        urllib.request,
+        "urlopen",
+        open_url,
+    )
+
+    tracks = DeezerProvider().tracks(
+        "MxPx",
+        "Responsibility",
+    )
+
+    titles = [
+        track["title"]
+        for track in tracks
+    ]
+
+    # The exact artist versions come first, ordered by rank; the
+    # tribute cover follows; the unrelated song is filtered out.
+    assert titles == [
+        "Responsibility",
+        "Responsibility (Live)",
+        "Responsibility (Remix)",
+    ]
+
+
+def test_tracks_merges_duplicates_by_id(
+    monkeypatch,
+) -> None:
+    seen = []
+
+    def open_url(url: str):
+        # Both the strict and the broad query return the same track.
+        if "track%3A" in url:
+            seen.append("strict")
+        else:
+            seen.append("broad")
+
+        return _FakeResponse(_tracks_payload())
+
+    monkeypatch.setattr(
+        urllib.request,
+        "urlopen",
+        open_url,
+    )
+
+    tracks = DeezerProvider().tracks(
+        "MxPx",
+        "Responsibility",
+    )
+
+    assert len(seen) == 2
+    assert "strict" in seen
+    assert "broad" in seen
+
+    # Duplicates are merged by id, so track 1 appears only once.
+    ids = [
+        track["id"]
+        for track in tracks
+    ]
+
+    assert ids == [1, 2, 3]
+
+
+def test_tracks_default_limit_is_ten() -> None:
+    # A guard against accidental regressions on the exposed limit.
+    import inspect
+
+    signature = inspect.signature(
+        DeezerProvider.tracks,
+    )
+
+    default = signature.parameters[
+        "limit"
+    ].default
+
+    assert default == 10

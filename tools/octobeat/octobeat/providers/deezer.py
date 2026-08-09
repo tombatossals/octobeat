@@ -74,6 +74,16 @@ class DeezerProvider:
         if track is None:
             return None
 
+        return self.metadata_for_track(track)
+
+    def metadata_for_track(
+        self,
+        track: dict[str, Any],
+    ) -> DeezerMetadata | None:
+        """
+        Return enriched metadata for a specific Deezer track.
+        """
+
         album_info = (
             track.get("album")
             or {}
@@ -104,12 +114,11 @@ class DeezerProvider:
             or {}
         ).get("name")
 
+        track_title = track.get("title")
+
         return DeezerMetadata(
-            artist=str(track_artist or artist),
-            title=str(
-                track.get("title")
-                or title
-            ),
+            artist=str(track_artist or ""),
+            title=str(track_title or ""),
             album=(
                 str(
                     album_details.get("title")
@@ -145,6 +154,16 @@ class DeezerProvider:
 
         if track is None:
             return None
+
+        return self.cover_url_for_track(track)
+
+    def cover_url_for_track(
+        self,
+        track: dict[str, Any],
+    ) -> str | None:
+        """
+        Return the highest-quality album cover for a Deezer track.
+        """
 
         cover = (
             track.get("album")
@@ -185,6 +204,108 @@ class DeezerProvider:
 
         return destination
 
+    def download_cover_for_track(
+        self,
+        track: dict[str, Any],
+        destination: Path,
+    ) -> Path:
+        """
+        Download the album artwork of a specific Deezer track.
+        """
+
+        url = self.cover_url_for_track(
+            track,
+        )
+
+        if url is None:
+            raise FileNotFoundError(
+                "No Deezer cover found for the selected track.",
+            )
+
+        artist = str(
+            (
+                track.get("artist")
+                or {}
+            ).get("name")
+            or "unknown"
+        )
+
+        download_url(
+            url,
+            destination,
+            description=f"Cover ({artist})",
+        )
+
+        return destination
+
+    #
+    # Candidates
+    #
+
+    def tracks(
+        self,
+        artist: str,
+        title: str,
+        limit: int = 10,
+    ) -> list[dict[str, Any]]:
+        """
+        Return Deezer track candidates for an artist/title.
+
+        Merges a strict ``artist:``/``track:`` query with a broader
+        ``artist:``/``title`` query so live, acoustic, demo and remix
+        versions are all surfaced. Results are filtered for relevance
+        and ordered by Deezer popularity (``rank``), preferring exact
+        artist matches, so the caller can present options to the user.
+        """
+
+        merged: dict[object, dict[str, Any]] = {}
+
+        for query in (
+            self.search(
+                artist,
+                title,
+                limit=limit * 2,
+            )
+            + self._search_broad(
+                artist,
+                title,
+                limit=limit * 2,
+            )
+        ):
+            merged[
+                query.get("id")
+            ] = query
+
+        candidates: list[
+            tuple[dict[str, Any], str]
+        ] = []
+
+        for track in merged.values():
+            kind = _candidate_kind(
+                track,
+                artist,
+                title,
+            )
+
+            if kind is not None:
+                candidates.append(
+                    (track, kind)
+                )
+
+        candidates.sort(
+            key=lambda item: (
+                # Exact artist matches come first.
+                0 if item[1] == "exact" else 1,
+                # Then most popular first.
+                -(int(item[0].get("rank") or 0)),
+            ),
+        )
+
+        return [
+            track
+            for track, _kind in candidates[:limit]
+        ]
+
     #
     # API
     #
@@ -203,6 +324,40 @@ class DeezerProvider:
             f'artist:"{artist}" '
             f'track:"{title}"'
         )
+
+        return self._raw_search(
+            query,
+            limit,
+        )
+
+    def _search_broad(
+        self,
+        artist: str,
+        title: str,
+        limit: int,
+    ) -> list[dict[str, Any]]:
+        """
+        Search Deezer for the artist and the plain quoted title.
+        """
+
+        query = (
+            f'artist:"{artist}" '
+            f'"{title}"'
+        )
+
+        return self._raw_search(
+            query,
+            limit,
+        )
+
+    def _raw_search(
+        self,
+        query: str,
+        limit: int,
+    ) -> list[dict[str, Any]]:
+        """
+        Run a raw Deezer search query.
+        """
 
         url = (
             f"{_SEARCH_URL}?q="
@@ -365,3 +520,99 @@ def _parse_year(
         return None
 
     return int(match.group(1))
+
+
+# Palabras vacías que no discriminan versiones de una canción.
+_STOP_WORDS = frozenset(
+    {
+        "a",
+        "an",
+        "and",
+        "at",
+        "for",
+        "from",
+        "i",
+        "in",
+        "is",
+        "it",
+        "me",
+        "of",
+        "on",
+        "or",
+        "the",
+        "to",
+        "with",
+        "you",
+    }
+)
+
+
+def _title_words(
+    text: str,
+) -> set[str]:
+    """
+    Return the significant words of a title.
+    """
+
+    return {
+        word
+        for word in text.lower().split()
+        if word not in _STOP_WORDS
+    }
+
+
+def _candidate_kind(
+    track: dict[str, Any],
+    artist: str,
+    title: str,
+) -> str | None:
+    """
+    Classify a Deezer track as an ``exact`` artist match, a ``cover``
+    or neither (``None``), based on title relevance.
+    """
+
+    track_artist = str(
+        (
+            track.get("artist")
+            or {}
+        ).get("name")
+        or ""
+    ).strip()
+
+    track_title = str(
+        track.get("title")
+        or ""
+    ).strip()
+
+    artist_lower = artist.lower()
+    track_artist_lower = track_artist.lower()
+
+    title_lower = title.lower().strip()
+    track_title_lower = track_title.lower()
+
+    exact = (
+        track_artist_lower == artist_lower
+    )
+
+    cover = (
+        artist_lower in track_artist_lower
+        or track_artist_lower in artist_lower
+    )
+
+    if not exact and not cover:
+        return None
+
+    substring = (
+        title_lower in track_title_lower
+        or track_title_lower in title_lower
+    )
+
+    overlap = len(
+        _title_words(title)
+        & _title_words(track_title)
+    )
+
+    if not (substring or overlap >= 2):
+        return None
+
+    return "exact" if exact else "cover"

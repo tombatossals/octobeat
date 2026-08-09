@@ -126,6 +126,7 @@ Options:
 Manage datasets.
 
 ```bash
+octobeat dataset list       # list all datasets
 octobeat dataset create     # create a dataset interactively
 octobeat dataset update     # update an existing dataset
 octobeat dataset rebuild    # rebuild a dataset
@@ -133,6 +134,19 @@ octobeat dataset reanalyse  # re-analyse all datasets with the current engine
 octobeat dataset verify     # verify datasets
 octobeat dataset clean      # remove temporary artefacts
 ```
+
+### `dataset list`
+
+List every dataset in the workspace with its artist, title, album and
+year when available.
+
+```bash
+octobeat dataset list [--output DIR] [--incomplete]
+```
+
+- `--incomplete` — list only datasets with missing essential files or
+  fields (metadata, cover, songmap, artist or title) and show what is
+  missing.
 
 ### `dataset reanalyse`
 
@@ -172,8 +186,31 @@ The analyser (BeatEngine v2) detects:
 Generate metadata.
 
 ```bash
+octobeat metadata fetch <dataset> [--no-interactive]
 octobeat metadata youtube <url>
 ```
+
+### `metadata fetch`
+
+Fetch Deezer metadata and the album cover for a dataset.
+
+```bash
+octobeat metadata fetch <dataset-id> [--output DIR] [--no-interactive]
+```
+
+- `dataset` — dataset id or a unique prefix;
+- `--no-interactive` — never ask questions; pick the best match.
+
+The dataset identity comes from its `metadata.json`. When the artist
+or title are missing, the CLI suggests them from the metadata title
+(e.g. "Artist: Title" is split into artist and title) and asks the
+user interactively to correct them when needed. The search surfaces
+all Deezer versions of the song (studio, live, acoustic, demo, remix,
+covers) — up to 10 candidates — ordered by popularity, so the most
+listened version usually comes first. When the search is ambiguous,
+the user picks the right track. The album cover is always preferred
+from Deezer (the LP artwork of the matching track) at maximum
+resolution.
 
 ## `extract`
 

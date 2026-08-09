@@ -12,6 +12,7 @@ from octobeat.commands.dataset import run as dataset
 from octobeat.commands.export import run as export
 from octobeat.commands.info import run as info
 from octobeat.commands.init import run as init
+from octobeat.commands.metadata import run as metadata
 from octobeat.commands.validate import run as validate
 from octobeat.version import __version__
 
@@ -165,6 +166,30 @@ def build_parser() -> argparse.ArgumentParser:
         )
     )
 
+    dataset_list = (
+        dataset_commands.add_parser(
+            "list",
+            help="List all datasets.",
+        )
+    )
+
+    dataset_list.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Datasets directory (defaults to paths.datasets).",
+    )
+
+    dataset_list.add_argument(
+        "--incomplete",
+        action="store_true",
+        help="List only datasets with missing essential files/fields.",
+    )
+
+    dataset_list.set_defaults(
+        func=dataset,
+    )
+
     dataset_commands.add_parser(
         "create",
         help="Create a dataset interactively.",
@@ -287,11 +312,44 @@ def build_parser() -> argparse.ArgumentParser:
         help="Generate metadata.",
     )
 
+    metadata_parser.set_defaults(
+        func=metadata,
+    )
+
     metadata_commands = (
         metadata_parser.add_subparsers(
             dest="metadata_command",
             required=True,
         )
+    )
+
+    metadata_fetch = (
+        metadata_commands.add_parser(
+            "fetch",
+            help="Fetch Deezer metadata and cover for a dataset.",
+        )
+    )
+
+    metadata_fetch.add_argument(
+        "dataset",
+        help="Dataset id or unique prefix.",
+    )
+
+    metadata_fetch.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Datasets directory (defaults to paths.datasets).",
+    )
+
+    metadata_fetch.add_argument(
+        "--no-interactive",
+        action="store_true",
+        help="Never ask questions; pick the best match automatically.",
+    )
+
+    metadata_fetch.set_defaults(
+        func=metadata,
     )
 
     metadata_youtube = (
@@ -306,7 +364,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     metadata_youtube.set_defaults(
-        func=not_implemented,
+        func=metadata,
     )
 
     #
