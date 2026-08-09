@@ -85,6 +85,18 @@ class Console:
                             "Confidence",
                             f"{report.confidence:.2%}",
                         ),
+                        (
+                            "Tempo confidence",
+                            f"{report.tempo_confidence:.2%}",
+                        ),
+                        (
+                            "Beat confidence",
+                            f"{report.beat_confidence:.2%}",
+                        ),
+                        (
+                            "Grid stability",
+                            f"{report.grid_stability:.2%}",
+                        ),
                     ],
                 ),
                 (
@@ -97,6 +109,105 @@ class Console:
         )
 
         self.success("Analysis completed.")
+
+    def debug_report(
+        self,
+        report: AnalysisReport,
+    ) -> None:
+        """
+        Render detailed diagnostics for an analysis.
+        """
+
+        print()
+
+        self.title("Diagnostics")
+
+        self.section("Tempo candidates")
+        print()
+
+        if report.tempo_candidates:
+            selected_bpm = min(
+                report.tempo_candidates,
+                key=lambda item: abs(
+                    item[0] - report.bpm
+                ),
+            )[0]
+
+            for bpm, score in sorted(
+                report.tempo_candidates,
+                key=lambda item: item[1],
+                reverse=True,
+            ):
+                marker = (
+                    "  ← selected"
+                    if abs(
+                        bpm - selected_bpm
+                    )
+                    < 0.05
+                    else ""
+                )
+
+                self.field(
+                    f"{bpm:.2f} BPM",
+                    f"{score:.2f}{marker}",
+                )
+        else:
+            self.info("(no candidates)")
+
+        print()
+
+        self.section("Phase / grid")
+        print()
+
+        self.field(
+            "Phase",
+            (
+                f"{report.phase:.3f} s"
+                if report.phase is not None
+                else "-"
+            ),
+        )
+
+        self.field(
+            "Beats",
+            report.beats,
+        )
+
+        self.field(
+            "Beat interval",
+            (
+                f"{report.beat_interval:.4f} s"
+                if report.beat_interval is not None
+                else "-"
+            ),
+        )
+
+        print()
+
+        self.section("Confidence")
+        print()
+
+        self.field(
+            "Tempo",
+            f"{report.tempo_confidence:.2%}",
+        )
+
+        self.field(
+            "Beats",
+            f"{report.beat_confidence:.2%}",
+        )
+
+        self.field(
+            "Grid",
+            f"{report.grid_stability:.2%}",
+        )
+
+        self.field(
+            "Overall",
+            f"{report.confidence:.2%}",
+        )
+
+        print()
 
     def table_report(
         self,

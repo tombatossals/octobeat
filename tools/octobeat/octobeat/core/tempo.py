@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .onset import onset_frames
+from .onset import onset_coverage, onset_frames
 from .phase import best_phase_frames
 
 DEFAULT_HOP_LENGTH = 512
@@ -356,7 +356,7 @@ def score_tempo(
     if beats.size == 0:
         return 0.0
 
-    coverage = _coverage(
+    coverage = onset_coverage(
         onsets,
         beats,
         period_frames * COVERAGE_WINDOW_RATIO,
@@ -394,54 +394,6 @@ def score_tempo(
     )
 
     return coverage * contrast
-
-
-def _coverage(
-    onsets: np.ndarray,
-    beats: np.ndarray,
-    window: float,
-) -> float:
-    """Fraction of onsets within ``window`` frames of a beat."""
-
-    if onsets.size == 0 or beats.size == 0:
-        return 0.0
-
-    positions = np.searchsorted(
-        beats,
-        onsets,
-    )
-
-    covered = 0
-
-    for index, onset in enumerate(
-        onsets,
-    ):
-        position = positions[index]
-
-        closest = np.inf
-
-        if position < beats.size:
-            closest = min(
-                closest,
-                abs(
-                    beats[position]
-                    - onset
-                ),
-            )
-
-        if position > 0:
-            closest = min(
-                closest,
-                abs(
-                    beats[position - 1]
-                    - onset
-                ),
-            )
-
-        if closest <= window:
-            covered += 1
-
-    return float(covered) / onsets.size
 
 
 def _local_maxima(

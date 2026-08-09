@@ -41,6 +41,9 @@ def run(args: argparse.Namespace) -> int:
 
         console.report(result.report)
 
+        if args.debug:
+            console.debug_report(result.report)
+
         return 0
 
     except Exception:

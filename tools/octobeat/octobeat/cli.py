@@ -236,6 +236,13 @@ def build_parser() -> argparse.ArgumentParser:
         "(overrides auto-detection).",
     )
 
+    analyse_parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Print detailed tempo, phase, grid and confidence "
+        "diagnostics.",
+    )
+
     analyse_parser.set_defaults(
         func=analyse,
     )

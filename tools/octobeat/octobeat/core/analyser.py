@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 from datetime import UTC, datetime
+from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
@@ -10,10 +11,15 @@ import librosa
 import numpy as np
 
 from octobeat.cache.audio import AudioCache
+from octobeat.core.confidence import analyse_confidence
 from octobeat.core.grid import build_beat_grid
 from octobeat.core.onset import compute_onset_envelope
 from octobeat.core.phase import estimate_phase
-from octobeat.core.tempo import estimate_tempo
+from octobeat.core.tempo import (
+    estimate_tempo,
+    estimate_tempo_candidates,
+    score_tempo,
+)
 from octobeat.models.analysis import (
     AnalysisReport,
     AnalysisResult,
@@ -85,6 +91,17 @@ def analyse_recording(
         sr=sr,
     )
 
+    if _is_silence(
+        onset_envelope,
+    ):
+        return _silence_result(
+            recording,
+            wav,
+            duration,
+            provider,
+            source,
+        )
+
     bpm = estimate_tempo(
         onset_envelope,
         sr,
@@ -116,10 +133,17 @@ def analyse_recording(
             bpm,
         )
 
-    confidence = _estimate_confidence(
+    confidence = analyse_confidence(
         onset_envelope,
-        beat_times,
         sr,
+        bpm,
+        beat_times,
+    )
+
+    tempo_candidates = _score_candidates(
+        onset_envelope,
+        sr,
+        bpm,
     )
 
     music_start = (
@@ -179,7 +203,7 @@ def analyse_recording(
             offset=round(music_start, 3),
             timeSignature=DEFAULT_TIME_SIGNATURE,
             confidence=round(
-                confidence,
+                confidence.overall,
                 2,
             ),
         ),
@@ -209,8 +233,26 @@ def analyse_recording(
             bpm=round(bpm, 2),
             beats=len(beats),
             confidence=round(
-                confidence,
+                confidence.overall,
                 2,
+            ),
+            tempo_confidence=round(
+                confidence.tempo,
+                2,
+            ),
+            beat_confidence=round(
+                confidence.beat,
+                2,
+            ),
+            grid_stability=round(
+                confidence.grid,
+                2,
+            ),
+            tempo_candidates=tempo_candidates,
+            phase=round(phase, 3),
+            beat_interval=round(
+                60.0 / bpm,
+                3,
             ),
         ),
     )
@@ -431,6 +473,124 @@ def _fallback_grid(
     )
 
 
+def _score_candidates(
+    onset_envelope: np.ndarray,
+    sr: int,
+    bpm: float,
+) -> list[tuple[float, float]]:
+    """Tempo candidates with their scores, for diagnostics."""
+
+    candidates = set(
+        estimate_tempo_candidates(
+            onset_envelope,
+            sr,
+        ),
+    )
+
+    for factor in (0.5, 1.0, 2.0):
+        candidates.add(
+            bpm * factor,
+        )
+
+    scored = []
+
+    for candidate in sorted(
+        candidates,
+    ):
+        if candidate <= 0:
+            continue
+
+        scored.append(
+            (
+                round(candidate, 2),
+                round(
+                    score_tempo(
+                        onset_envelope,
+                        sr,
+                        candidate,
+                    ),
+                    3,
+                ),
+            )
+        )
+
+    return scored
+
+
+def _is_silence(
+    onset_envelope: np.ndarray,
+    *,
+    peak_ratio: float = 0.02,
+) -> bool:
+    """True when there is no meaningful onset energy."""
+
+    if onset_envelope.size == 0:
+        return True
+
+    return float(
+        np.max(onset_envelope),
+    ) < peak_ratio
+
+
+def _silence_result(
+    recording: Recording,
+    wav: Path,
+    duration: float,
+    provider: str,
+    source: str,
+) -> AnalysisResult:
+    """Build a SongMap for a silent recording (no beats)."""
+
+    songmap = SongMap(
+        version=SONGMAP_VERSION,
+        schema=SCHEMA_ID,
+        generatedBy=f"octobeat {__version__}",
+        createdAt=datetime.now(
+            UTC,
+        ).isoformat(),
+        metadata=SongMetadata(
+            title=recording.title
+            or recording.path.stem,
+            duration=round(
+                duration,
+                3,
+            ),
+            source=recording.source
+            or Source(
+                type="file",
+                id=str(
+                    recording.path.resolve(),
+                ),
+            ),
+        ),
+        timing=Timing(
+            bpm=120.0,
+            offset=0.0,
+            timeSignature=DEFAULT_TIME_SIGNATURE,
+            confidence=0.0,
+        ),
+        beats=[],
+        bars=[],
+    )
+
+    return AnalysisResult(
+        songmap=songmap,
+        report=AnalysisReport(
+            provider=provider,
+            source=source,
+            recording=recording.path,
+            decoded=wav,
+            duration=round(
+                duration,
+                3,
+            ),
+            bpm=0.0,
+            beats=0,
+            confidence=0.0,
+        ),
+    )
+
+
 def _detect_music_start(
     onset_envelope: np.ndarray,
     sr: int,
@@ -486,75 +646,4 @@ def _detect_music_start(
             start,
             sr=sr,
         )
-    )
-
-
-def _estimate_confidence(
-    onset_envelope: np.ndarray,
-    beat_times: np.ndarray,
-    sr: int,
-) -> float:
-    if len(beat_times) == 0:
-        return 0.0
-
-    if len(onset_envelope) == 0:
-        return 0.0
-
-    beat_frames = librosa.time_to_frames(
-        beat_times,
-        sr=sr,
-    )
-
-    peak_energy = float(
-        np.percentile(
-            onset_envelope,
-            95,
-        ),
-    )
-
-    if peak_energy <= 0:
-        return 0.0
-
-    # Sample the maximum onset energy in a small window around each
-    # beat: onset detection backtracks to the start of the attack,
-    # where the envelope may still be near zero.
-    window = 2
-
-    energies: list[float] = []
-
-    for frame in beat_frames:
-        low = max(
-            0,
-            int(frame) - window,
-        )
-
-        high = min(
-            len(onset_envelope),
-            int(frame) + window + 1,
-        )
-
-        if low >= high:
-            continue
-
-        energies.append(
-            float(
-                np.max(
-                    onset_envelope[low:high],
-                ),
-            ),
-        )
-
-    if not energies:
-        return 0.0
-
-    beat_energy = float(
-        np.mean(energies),
-    )
-
-    return max(
-        0.0,
-        min(
-            1.0,
-            beat_energy / peak_energy,
-        ),
     )

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from octobeat.models.songmap import SongMap
@@ -27,6 +27,23 @@ class AnalysisReport:
     beats: int
 
     confidence: float
+
+    tempo_confidence: float = 0.0
+
+    beat_confidence: float = 0.0
+
+    grid_stability: float = 0.0
+
+    # Debug diagnostics.
+    tempo_candidates: list[tuple[float, float]] = field(
+        default_factory=list,
+    )
+
+    phase: float | None = None
+
+    beat_interval: float | None = None
+
+    duplicate_beats: int = 0
 
     output: Path | None = None
 

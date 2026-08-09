@@ -107,3 +107,51 @@ def envelope_energy_at_frames(
             onset_envelope[clipped],
         ),
     )
+
+
+def onset_coverage(
+    onsets: np.ndarray,
+    beats: np.ndarray,
+    window: float,
+) -> float:
+    """Fraction of ``onsets`` within ``window`` frames of a beat."""
+
+    if onsets.size == 0 or beats.size == 0:
+        return 0.0
+
+    positions = np.searchsorted(
+        beats,
+        onsets,
+    )
+
+    covered = 0
+
+    for index, onset in enumerate(
+        onsets,
+    ):
+        position = positions[index]
+
+        closest = np.inf
+
+        if position < beats.size:
+            closest = min(
+                closest,
+                abs(
+                    beats[position]
+                    - onset
+                ),
+            )
+
+        if position > 0:
+            closest = min(
+                closest,
+                abs(
+                    beats[position - 1]
+                    - onset
+                ),
+            )
+
+        if closest <= window:
+            covered += 1
+
+    return float(covered) / onsets.size
