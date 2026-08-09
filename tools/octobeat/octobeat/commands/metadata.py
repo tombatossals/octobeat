@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 from pathlib import Path
 from typing import Any
 
@@ -254,28 +255,33 @@ def _identity(
     """
     Determine the artist and title to search for.
 
-    When the title contains a "Artist: Title" or "Artist - Title"
-    pattern, it is split into artist and title. Missing parts are
-    suggested to the user, who can accept with an empty input.
+    The artist field is authoritative when present; otherwise a
+    "Artist: Title" or "Artist - Title" title is split into parts.
+    Rip/quality suffixes (e.g. " - DVDrip") are stripped from the
+    title. Missing parts are suggested to the user, who can accept
+    with an empty input.
     """
 
-    artist = metadata.artist
-    title = metadata.title
-
-    suggested_artist, suggested_title = (
-        _suggest_identity(metadata)
+    artist = metadata.artist or ""
+    title = _strip_rip_suffix(
+        metadata.title or "",
     )
 
-    # Always prefer a clean split over the raw "Artist: Title" title.
-    if suggested_artist and suggested_title:
+    suggested_artist, suggested_title = (
+        _suggest_identity(
+            CatalogMetadata(
+                **{
+                    **metadata.model_dump(),
+                    "title": title,
+                }
+            )
+        )
+    )
+
+    # Only derive the artist from the title when it is missing.
+    if not artist and suggested_artist:
         artist = suggested_artist
-        title = suggested_title
-
-    if not artist:
-        artist = ""
-
-    if not title:
-        title = ""
+        title = suggested_title or title
 
     if (not artist or not title) and interactive:
         console.info(
@@ -293,6 +299,23 @@ def _identity(
         )
 
     return artist, title
+
+
+def _strip_rip_suffix(
+    title: str,
+) -> str:
+    """
+    Remove rip/quality suffixes from a title, e.g. the "DVDrip" in
+    "Anthem Of Our Dying Day - DVDrip".
+    """
+
+    return re.sub(
+        r"\s*[-–—]\s*(?:(?:DVD|BR|BD|HD|HDTV|WEB|WEBRip|BluRay|CAM|TS|R5)[- ]?Rip|"
+        r"1080p|720p|2160p|4K)\s*$",
+        "",
+        title,
+        flags=re.IGNORECASE,
+    ).strip()
 
 
 def _suggest_identity(

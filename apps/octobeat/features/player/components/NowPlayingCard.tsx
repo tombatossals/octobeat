@@ -19,26 +19,26 @@ export function NowPlayingCard() {
     return (
         <div
             key={metadata.id}
-            className="pointer-events-none fixed right-24 top-20 z-40 flex animate-[cardLife_5s_ease-in-out_forwards] items-center gap-3 rounded-xl border border-border bg-background/70 p-2 text-foreground shadow-2xl backdrop-blur-md"
+            className="pointer-events-none fixed right-24 top-20 z-40 flex animate-[cardLife_5s_ease-in-out_forwards] items-start gap-3 rounded-2xl border border-border bg-background/70 py-1 pl-1 pr-4 text-foreground shadow-2xl backdrop-blur-md"
         >
             <img
                 src={`/resources/${metadata.id}/cover.jpg`}
                 alt={`${metadata.title} cover`}
-                className="h-12 w-12 rounded-lg object-cover"
+                className="h-32 w-32 rounded-xl object-cover shadow-lg"
             />
 
-            <div className="min-w-0">
-                <div className="text-base font-bold leading-tight">
+            <div className="mt-1 min-w-0">
+                <div className="text-3xl font-bold leading-tight">
                     {metadata.title}
                 </div>
 
-                <div className="truncate text-xs text-muted-foreground">
+                <div className="truncate text-lg text-muted-foreground">
                     {metadata.artist}
                 </div>
 
                 {difficulty !==
                     undefined && (
-                    <div className="mt-1 flex items-center gap-1 text-xs">
+                    <div className="mt-1 flex items-center gap-1 text-xl">
                         <span className="font-semibold">
                             {Array.from(
                                 {

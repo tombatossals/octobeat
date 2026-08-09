@@ -2,7 +2,7 @@
 
 export function Logo() {
     return (
-        <div className="pointer-events-none fixed left-4 top-4 z-50 flex items-center rounded-2xl border-8 border-white/10 bg-white/5 pl-2 pr-4 shadow-2xl backdrop-blur-xl">
+        <div className="pointer-events-none fixed left-4 top-4 z-50 flex items-center rounded-full border border-white/60 bg-white/5 pl-0 pr-5 shadow-2xl backdrop-blur-xl">
             <img
                 src="/logo.png"
                 alt="Octobeat logo"

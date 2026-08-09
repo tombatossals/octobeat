@@ -85,6 +85,18 @@ cd tools/octobeat
 uv run octobeat --version
 ```
 
+> Tip: with [direnv](https://direnv.net/) installed, entering the repo
+> sets everything up automatically:
+>
+> ```bash
+> cd octobeat
+> direnv allow
+> ```
+>
+> The root `.envrc` runs `pnpm install`, `tools/octobeat/.envrc` syncs
+> and activates the uv environment, and `apps/octobeat/.envrc` puts the
+> Next.js binaries (`next`, `tsc`, `eslint`) on your `PATH`.
+
 ## 3. Initialize the workspace
 
 ```bash

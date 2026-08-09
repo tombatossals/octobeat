@@ -311,6 +311,91 @@ def test_suggest_identity_no_separator() -> None:
     assert parsed == (None, "My Song")
 
 
+def test_strip_rip_suffix() -> None:
+    assert (
+        metadata_cmd._strip_rip_suffix(
+            "Anthem Of Our Dying Day - DVDrip",
+        )
+        == "Anthem Of Our Dying Day"
+    )
+
+    assert (
+        metadata_cmd._strip_rip_suffix(
+            "My Song (Official Video)",
+        )
+        == "My Song (Official Video)"
+    )
+
+
+def test_identity_keeps_existing_artist(
+    monkeypatch,
+) -> None:
+    from octobeat.models.metadata import (
+        CatalogMetadata,
+        ResourceRefs,
+    )
+
+    monkeypatch.setattr(
+        metadata_cmd.console,
+        "info",
+        lambda *args, **kwargs: None,
+    )
+
+    metadata = CatalogMetadata(
+        id="song-a",
+        title="Anthem Of Our Dying Day - DVDrip",
+        artist="Story of the Year",
+        genres=[],
+        tags=[],
+        bpm=120.0,
+        duration=0.0,
+        resources=ResourceRefs(audio="recording.wav"),
+    )
+
+    artist, title = metadata_cmd._identity(
+        metadata,
+        interactive=False,
+    )
+
+    # The existing artist must win over the title split.
+    assert artist == "Story of the Year"
+    assert title == "Anthem Of Our Dying Day"
+
+
+def test_identity_splits_when_artist_missing(
+    monkeypatch,
+) -> None:
+    from octobeat.models.metadata import (
+        CatalogMetadata,
+        ResourceRefs,
+    )
+
+    monkeypatch.setattr(
+        metadata_cmd.console,
+        "info",
+        lambda *args, **kwargs: None,
+    )
+
+    metadata = CatalogMetadata(
+        id="song-a",
+        title="The Academy Is...: About A Girl",
+        artist="",
+        genres=[],
+        tags=[],
+        bpm=120.0,
+        duration=0.0,
+        resources=ResourceRefs(audio="recording.wav"),
+    )
+
+    artist, title = metadata_cmd._identity(
+        metadata,
+        interactive=False,
+    )
+
+    assert artist == "The Academy Is..."
+    assert title == "About A Girl"
+
+
 def test_dataset_incomplete_flags(
     tmp_path,
 ) -> None:

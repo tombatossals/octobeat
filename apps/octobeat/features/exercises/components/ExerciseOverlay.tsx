@@ -174,7 +174,7 @@ export function ExerciseOverlay(): JSX.Element | null {
         remaining <= 0;
 
     return (
-        <div className="pointer-events-none absolute inset-x-0 bottom-28 z-30 flex justify-center">
+        <div className="pointer-events-none absolute inset-x-0 bottom-24 z-30 flex justify-center">
             {musicStarted ? (
                 <ExerciseRenderer
                     exercise={exercise}
