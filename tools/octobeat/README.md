@@ -126,12 +126,29 @@ Options:
 Manage datasets.
 
 ```bash
-octobeat dataset create   # create a dataset interactively
-octobeat dataset update   # update an existing dataset
-octobeat dataset rebuild  # rebuild a dataset
-octobeat dataset verify   # verify datasets
-octobeat dataset clean    # remove temporary artefacts
+octobeat dataset create     # create a dataset interactively
+octobeat dataset update     # update an existing dataset
+octobeat dataset rebuild    # rebuild a dataset
+octobeat dataset reanalyse  # re-analyse all datasets with the current engine
+octobeat dataset verify     # verify datasets
+octobeat dataset clean      # remove temporary artefacts
 ```
+
+### `dataset reanalyse`
+
+Re-analyse every dataset in the workspace with the current analysis
+engine, then refresh each `songmap.json`, `metadata.json` and the
+catalog. Existing resources (audio, video, cover) are preserved.
+
+```bash
+octobeat dataset reanalyse [--output DIR] [--offset SECONDS]
+```
+
+- `--output` — datasets directory (defaults to `paths.datasets`);
+- `--offset` — override the music start for every dataset.
+
+Useful after upgrading BeatEngine to regenerate all SongMaps in one
+step.
 
 ## `analyse`
 

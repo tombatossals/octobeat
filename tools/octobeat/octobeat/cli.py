@@ -8,6 +8,7 @@ from typing import cast
 from octobeat.commands.add import run as add
 from octobeat.commands.analyse import run as analyse
 from octobeat.commands.config import run as config
+from octobeat.commands.dataset import run as dataset
 from octobeat.commands.export import run as export
 from octobeat.commands.info import run as info
 from octobeat.commands.init import run as init
@@ -153,6 +154,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="Manage datasets.",
     )
 
+    dataset_parser.set_defaults(
+        func=dataset,
+    )
+
     dataset_commands = (
         dataset_parser.add_subparsers(
             dest="dataset_command",
@@ -204,6 +209,32 @@ def build_parser() -> argparse.ArgumentParser:
         "clean",
         help="Remove temporary artefacts.",
     ).set_defaults(func=not_implemented)
+
+    dataset_reanalyse = (
+        dataset_commands.add_parser(
+            "reanalyse",
+            help="Re-analyse all datasets with the current engine.",
+        )
+    )
+
+    dataset_reanalyse.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Datasets directory (defaults to paths.datasets).",
+    )
+
+    dataset_reanalyse.add_argument(
+        "--offset",
+        type=float,
+        default=None,
+        help="Seconds into the media where the song begins "
+        "(overrides auto-detection for all datasets).",
+    )
+
+    dataset_reanalyse.set_defaults(
+        func=dataset,
+    )
 
     #
     # analyse

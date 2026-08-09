@@ -163,6 +163,7 @@ with the music. Hold `Ctrl`/`Cmd` to reveal the keyboard shortcuts.
 octobeat init                    # initialize the workspace
 octobeat add <youtube-or-file>   # build a complete dataset
 octobeat analyse <file> [--debug]
+octobeat dataset reanalyse       # re-analyse every dataset
 octobeat dataset verify
 octobeat catalog build           # rebuild catalog.json
 octobeat validate <songmap.json>
