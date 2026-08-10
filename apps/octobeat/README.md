@@ -80,6 +80,22 @@ pnpm start
 - fullscreen toggle (`F`);
 - auto-advances to the next song when playback ends.
 
+### Song timeline
+
+- section bars proportional to each section's duration, always in
+  **song time** (unaffected by the video offset);
+- active section highlighted with a live position marker and current
+  time;
+- click a section to seek to its start.
+
+### Video synchronization
+
+When a dataset has a synced video (`SongMap.media.video`), the video is
+muted and follows the audio in `videoTime = songTime + videoOffset`. A
+**Video offset** control (shown in the transport overlay) lets you fine
+tune the offset in ±10 ms steps and save the correction; the correction
+persists in `localStorage` for that dataset and is marked as "manual".
+
 ## Exercises
 
 - Stick Control exercises synchronized with the beat grid;

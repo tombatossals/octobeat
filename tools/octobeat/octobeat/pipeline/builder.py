@@ -24,6 +24,7 @@ from octobeat.models.metadata import (
     TimingProvenance,
 )
 from octobeat.models.recording import Recording
+from octobeat.models.songmap import SongMap
 from octobeat.naming import dataset_slug
 from octobeat.providers.deezer import (
     DeezerMetadata,
@@ -143,6 +144,15 @@ def build_dataset(
                     deezer,
                 )
 
+        songmap = result.songmap
+
+        if video_path is not None:
+            songmap = _sync_video(
+                songmap,
+                video_path,
+                reference_audio=recording.path,
+            )
+
         metadata = _build_metadata(
             recording,
             dataset_id,
@@ -153,7 +163,7 @@ def build_dataset(
 
         write_resource(
             dataset_dir,
-            songmap=result.songmap,
+            songmap=songmap,
             metadata=metadata,
             audio=recording.path,
             video=video_path,
@@ -274,6 +284,69 @@ def _chart_kind(chart: Path) -> str:
         return "chart"
 
     return "sng"
+
+
+def _sync_video(
+    songmap: SongMap,
+    video_path: Path,
+    *,
+    reference_audio: Path,
+) -> SongMap:
+    """
+    Detect the video offset against the reference audio and attach the
+    video to the SongMap. Never fails the dataset: on sync errors or low
+    confidence, the SongMap is returned unchanged with a warning.
+    """
+
+    import tempfile
+
+    from octobeat.sync import (
+        AUTO_CONFIDENCE,
+        VideoSyncError,
+        compute_features,
+        extract_video_audio,
+        sync_video,
+    )
+    from octobeat.sync.engine import attach_video_to_songmap
+
+    try:
+        with tempfile.TemporaryDirectory(
+            prefix="octobeat-sync-",
+        ) as tmp:
+            video_audio = extract_video_audio(
+                video_path,
+                Path(tmp) / "video.wav",
+            )
+
+            reference = compute_features(reference_audio)
+            video = compute_features(video_audio)
+
+            result = sync_video(reference, video)
+
+        console.info(
+            f"Video offset: {result.offset:.2f} s "
+            f"(confidence {result.confidence:.2f})",
+        )
+
+        if result.confidence >= AUTO_CONFIDENCE:
+            console.success("Video synchronized.")
+        else:
+            console.warning(
+                "Video synchronization has low confidence; "
+                "use 'octobeat sync-video --offset' to correct it.",
+            )
+
+        return attach_video_to_songmap(
+            songmap,
+            video_file=video_path.name,
+            video_offset=result.offset,
+            sync_confidence=result.confidence,
+        )
+    except (VideoSyncError, FileNotFoundError) as error:
+        console.warning(
+            f"Video synchronization skipped ({error}).",
+        )
+        return songmap
 
 
 def _default_config() -> Config:

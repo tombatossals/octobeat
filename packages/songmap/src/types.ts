@@ -5,5 +5,7 @@ export type {
     TempoSegment,
     Timing,
     Section,
+    VideoMedia,
+    Media,
     SongMap,
 } from "./schema";

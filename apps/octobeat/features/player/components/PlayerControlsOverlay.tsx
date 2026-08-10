@@ -17,6 +17,8 @@ import { ShortcutBadge } from "@/features/library/components/ShortcutBadge";
 import { useLibraryStore } from "@/features/library/store";
 import { useUiStore } from "@/features/ui/store";
 
+import { VideoOffsetControl } from "./VideoOffsetControl";
+
 const SEEK_SECONDS = 5;
 
 const ICON_OUTLINE =
@@ -243,6 +245,10 @@ export function PlayerControlsOverlay(): JSX.Element {
                     <span className="tabular-nums">
                         {percentage}%
                     </span>
+                </div>
+
+                <div className="mt-3 flex justify-center">
+                    <VideoOffsetControl />
                 </div>
             </div>
         </div>

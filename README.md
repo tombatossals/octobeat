@@ -177,6 +177,7 @@ octobeat add <youtube-or-file>   # build a complete dataset
 octobeat analyse <file> [--debug]
 octobeat analyse <file> --chart song.sng   # use a community chart for timing
 octobeat inspect <song.sng>      # show a chart's timing without building
+octobeat sync-video <songmap.json> <video.mp4>   # sync a video with a SongMap
 octobeat dataset reanalyse       # re-analyse every dataset
 octobeat dataset verify
 octobeat catalog build           # rebuild catalog.json

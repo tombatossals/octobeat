@@ -116,13 +116,25 @@ export function SectionTimeline({
             </div>
 
             {active && (
-                <div
-                    className="pointer-events-none absolute inset-y-2 w-px bg-background"
-                    style={{
-                        left: `${progress * 100}%`,
-                    }}
-                    aria-hidden="true"
-                />
+                <>
+                    <div
+                        className="pointer-events-none absolute inset-y-2 w-px bg-background"
+                        style={{
+                            left: `${progress * 100}%`,
+                        }}
+                        aria-hidden="true"
+                    />
+
+                    <span
+                        className="pointer-events-none absolute -top-3 z-10 -translate-x-1/2 text-[10px] font-semibold text-foreground tabular-nums"
+                        style={{
+                            left: `${progress * 100}%`,
+                        }}
+                        aria-hidden="true"
+                    >
+                        {formatTime(currentTime)}
+                    </span>
+                </>
             )}
 
             {hovered && (

@@ -18,9 +18,84 @@ export function LocalVideoPlayer({
         (state) => state.currentTime,
     );
 
+    const videoOffset = usePlayerStore(
+        (state) => state.videoOffset,
+    );
+
     const playing = usePlayerStore(
         (state) => state.playing,
     );
+
+    // The store time is always song time; the video element advances in
+    // video time.
+    const videoTime =
+        currentTime + videoOffset;
+
+    // Position the video at the correct video time once its metadata is
+    // available (handles switching datasets and videos with an intro).
+    useEffect(() => {
+        const video = videoRef.current;
+
+        if (!video) {
+            return;
+        }
+
+        const handleLoadedMetadata = () => {
+            const drift = Math.abs(
+                video.currentTime -
+                videoTime,
+            );
+
+            if (drift > 0.03) {
+                video.currentTime =
+                    videoTime;
+            }
+        };
+
+        video.addEventListener(
+            "loadedmetadata",
+            handleLoadedMetadata,
+        );
+
+        return () => {
+            video.removeEventListener(
+                "loadedmetadata",
+                handleLoadedMetadata,
+            );
+        };
+    }, [videoTime]);
+
+    // Re-sync after the source changes (new dataset) so the video does
+    // not keep a stale position or show a black frame: reload the
+    // element and position it at the correct video time once ready.
+    useEffect(() => {
+        const video = videoRef.current;
+
+        if (!video) {
+            return;
+        }
+
+        video.load();
+
+        const sync = () => {
+            video.currentTime =
+                videoTime;
+        };
+
+        video.addEventListener(
+            "loadedmetadata",
+            sync,
+            { once: true },
+        );
+
+        return () => {
+            video.removeEventListener(
+                "loadedmetadata",
+                sync,
+            );
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [src]);
 
     useEffect(() => {
         const video = videoRef.current;
@@ -52,15 +127,15 @@ export function LocalVideoPlayer({
 
         const drift = Math.abs(
             video.currentTime -
-            currentTime,
+            videoTime,
         );
 
         // Sólo corregimos si existe una desviación apreciable.
         if (drift > 0.03) {
             video.currentTime =
-                currentTime;
+                videoTime;
         }
-    }, [currentTime]);
+    }, [videoTime]);
 
     return (
         <video

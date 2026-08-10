@@ -277,3 +277,126 @@ def test_build_dataset_tolerates_deezer_failure(
     assert metadata["genres"] == []
     assert metadata["tags"] == []
 
+
+def test_build_dataset_syncs_video(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    """When a video is downloaded, its offset is detected and stored."""
+
+    from octobeat.fixtures.video_sync import build_video_sync_fixtures
+
+    fixtures = tmp_path / "video-fx"
+    build_video_sync_fixtures(fixtures)
+
+    # Build a fake "video" (mp4 with audio) from the intro fixture.
+    import subprocess
+
+    video_mp4 = tmp_path / "video.mp4"
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-y",
+            "-i",
+            str(fixtures / "intro" / "video.wav"),
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-f",
+            "mp4",
+            str(video_mp4),
+        ],
+        check=True,
+    )
+
+    reference = fixtures / "intro" / "reference.wav"
+
+    class _VideoSourceProvider(builder_module.YouTubeProvider):
+        def __init__(self) -> None:
+            self.video = video_mp4
+            self._path = reference
+
+        def load(self, source: str) -> Recording:
+            return Recording(
+                path=reference,
+                artist="MxPx",
+                title="Responsibility",
+                source=Source(type="file", id="fixture"),
+            )
+
+        def download_video(
+            self,
+            source: str,
+            destination: Path,
+        ) -> Path:
+            import shutil
+
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(self.video, destination)
+            return destination
+
+    class _BrokenDeezer:
+        def metadata(self, artist, title):
+            raise RuntimeError("network down")
+
+    monkeypatch.setattr(
+        builder_module,
+        "get_provider",
+        lambda _: _VideoSourceProvider(),
+    )
+    monkeypatch.setattr(
+        builder_module,
+        "DeezerProvider",
+        lambda: _BrokenDeezer(),
+    )
+
+    # The reference audio must be the analysis source.
+    monkeypatch.setattr(
+        builder_module,
+        "_analyse",
+        lambda recording, source, offset, **kwargs: _analyse_result(
+            recording,
+        ),
+    )
+
+    result = build_dataset(
+        "fake-youtube",
+        output=tmp_path / "datasets",
+        include_video=True,
+        include_cover=False,
+    )
+
+    songmap = json.loads(
+        (
+            tmp_path
+            / "datasets"
+            / result.dataset_id
+            / "songmap.json"
+        ).read_text(
+            encoding="utf-8",
+        )
+    )
+
+    media = songmap.get("media")
+    assert media is not None
+    video = media["video"]
+
+    assert video["file"] == "video.mp4"
+    assert abs(video["offset"] - 2.0) < 0.2
+
+
+def _analyse_result(recording: Recording):
+    """A trivial AnalysisResult whose audio matches the reference."""
+
+    from octobeat.core.analyser import analyse_recording
+
+    return analyse_recording(
+        recording,
+        provider="test",
+        source=str(recording.path),
+    )
+
