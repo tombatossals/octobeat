@@ -91,6 +91,21 @@ def extract_file(data: bytes, name: str) -> bytes:
     return _unmask_file(data, listing)
 
 
+def extract_cover(data: bytes) -> bytes | None:
+    """Extract the album artwork from the container, if present.
+
+    Returns the raw image bytes (JPEG/PNG) or ``None`` when the
+    container has no cover.
+    """
+
+    for name in ("album.jpg", "album.png", "album.jpeg"):
+        listing = parse_sng_container(data).files.get(name)
+        if listing is not None:
+            return _unmask_file(data, listing)
+
+    return None
+
+
 # Preferred audio files inside an SNG, in priority order.
 PREFERRED_AUDIO = (
     "song.opus",
@@ -100,6 +115,55 @@ PREFERRED_AUDIO = (
     "guitar.opus",
     "guitar.ogg",
 )
+
+# Individual instrument stems that make up the full mix.
+STEM_TRACKS = (
+    "guitar",
+    "rhythm",
+    "bass",
+    "vocals",
+    "keys",
+    "drums",
+)
+
+
+def extract_stems(data: bytes) -> list[tuple[str, bytes]]:
+    """
+    Extract the instrument stems that make up the full mix.
+
+    Returns ``[(name, bytes)]`` for every stem present in the container
+    (guitar, rhythm, bass, vocals, keys and drums — including the
+    ``drums_1/2/3`` variants), or an empty list when the container only
+    carries a single audio track.
+    """
+
+    sng = parse_sng_container(data)
+
+    stems: list[tuple[str, bytes]] = []
+
+    for filename in sorted(sng.files):
+        name, dot, ext = filename.rpartition(".")
+
+        if not dot or ext not in ("opus", "ogg", "mp3", "wav"):
+            continue
+
+        if name not in STEM_TRACKS and not (
+            name.startswith("drums_")
+            and name[6:].isdigit()
+        ):
+            continue
+
+        stems.append(
+            (
+                filename,
+                _unmask_file(
+                    data,
+                    sng.files[filename],
+                ),
+            )
+        )
+
+    return stems
 
 
 def extract_audio(data: bytes) -> tuple[str, bytes]:

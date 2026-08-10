@@ -24,6 +24,16 @@ class Recording:
 
     chart_path: Path | None = None
 
+    # Optional musical metadata carried by the source (e.g. an SNG
+    # container). Used to enrich dataset metadata without a network
+    # provider.
+    album: str | None = None
+    year: int | None = None
+    genres: list[str] | None = None
+
+    # Raw cover artwork bytes extracted from the source, if any.
+    cover_bytes: bytes | None = None
+
     def cleanup(self) -> None:
         if self.cleanup_dir is not None:
             self.cleanup_dir.cleanup()

@@ -47,8 +47,9 @@ export function PlayerBackend() {
     }
 
     return (
-        <div className="flex h-full items-center justify-center text-white">
-            No video source available.
-        </div>
+        <LocalAudioPlayer
+            key={`audio-${id}`}
+            src={resources.audio}
+        />
     );
 }

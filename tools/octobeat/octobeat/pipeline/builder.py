@@ -144,6 +144,18 @@ def build_dataset(
                     deezer,
                 )
 
+        cover_path = (
+            _write_embedded_cover(
+                recording,
+                dataset_dir / "cover.jpg",
+            )
+            if recording.cover_bytes is not None
+            else None
+        )
+
+        if cover_path is not None:
+            cover_source = "sng"
+
         songmap = result.songmap
 
         if video_path is not None:
@@ -167,6 +179,7 @@ def build_dataset(
             metadata=metadata,
             audio=recording.path,
             video=video_path,
+            cover=cover_path,
         )
 
         catalog_path = (
@@ -355,6 +368,30 @@ def _default_config() -> Config:
     return ensure_workspace()
 
 
+def _write_embedded_cover(
+    recording: Recording,
+    destination: Path,
+) -> Path | None:
+    """Write the cover embedded in the source (SNG) as cover.jpg.
+
+    Returns the destination path, or ``None`` when there is no cover.
+    """
+
+    if recording.cover_bytes is None:
+        return None
+
+    destination.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    destination.write_bytes(
+        recording.cover_bytes,
+    )
+
+    return destination
+
+
 def _build_metadata(
     recording: Recording,
     dataset_id: str,
@@ -392,17 +429,20 @@ def _build_metadata(
         album=(
             enriched.album
             if enriched is not None
-            else None
+            and enriched.album
+            else recording.album
         ),
         year=(
             enriched.year
             if enriched is not None
-            else None
+            and enriched.year is not None
+            else recording.year
         ),
         genres=(
             enriched.genres
             if enriched is not None
-            else []
+            and enriched.genres
+            else (recording.genres or [])
         ),
         bpm=songmap.timing.bpm,
         duration=songmap.metadata.duration,

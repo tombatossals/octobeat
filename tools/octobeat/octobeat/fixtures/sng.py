@@ -117,11 +117,15 @@ def build_sng_bytes(fixture: SngFixture) -> bytes:
     files = {
         "notes.mid": chart,
         "song.wav": _fixture_audio(fixture),
+        "album.jpg": _fixture_cover(),
     }
 
     metadata = {
         "name": _song_title(fixture.name),
         "artist": "Fixture Band",
+        "album": "Fixture Album",
+        "year": "1994",
+        "genre": "Alternative",
         "charter": "octobeat-fixtures",
         "song_length": str(_chart_duration_ms(fixture)),
     }
@@ -273,6 +277,24 @@ def _corrupt_chart() -> SngFixture:
 
 def _song_title(name: str) -> str:
     return name.replace("-", " ").title()
+
+
+# Minimal valid 1x1 JPEG embedded as bytes so the container ships a
+# decodable album cover without requiring image libraries.
+_TINY_JPEG = bytes.fromhex(
+    "ffd8ffe000104a46494600010200000100010000fffe00104c61766336322e"
+    "32382e31303200ffdb0043000804040404040505050505050606060606060606"
+    "0606060607070708080807070706060707080808080909090808080809090a0a"
+    "0a0c0c0b0b0e0e0e111114ffc4004c0001010000000000000000000000000000"
+    "0601010100000000000000000000000000000607100100000000000000000000"
+    "0000000000110100000000000000000000000000000000ffc000110800010001"
+    "03012200021100031100ffda000c03010002110311003f008b004d7f7fffd9"
+)
+
+
+def _fixture_cover() -> bytes:
+    """Return a tiny valid JPEG to act as the fixture album cover."""
+    return _TINY_JPEG
 
 
 def _fixture_audio(fixture: SngFixture) -> bytes:
