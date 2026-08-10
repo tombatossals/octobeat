@@ -8,6 +8,13 @@ export const ResourcesSchema = z.object({
         .optional(),
 });
 
+export const TimingProvenanceSchema =
+    z.object({
+        source: z.string(),
+
+        confidence: z.number(),
+    });
+
 export const MetadataSchema =
     z.object({
         id: z.string(),
@@ -44,6 +51,9 @@ export const MetadataSchema =
 
         timeSignature: z
             .string()
+            .optional(),
+
+        timing: TimingProvenanceSchema
             .optional(),
 
         youtube: z

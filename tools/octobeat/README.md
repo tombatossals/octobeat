@@ -82,6 +82,32 @@ Add `--debug` to inspect the analysis:
 octobeat analyse song.mp3 --debug
 ```
 
+Use a community chart (SNG/MIDI/CHART) as the timing source, with the
+audio used for validation:
+
+```bash
+octobeat analyse song.wav --chart song.sng
+```
+
+## 4. Inspect a structured timing source
+
+Show the timing information of an SNG (or future MIDI/CHART) source
+without building a dataset:
+
+```bash
+octobeat inspect "sng/Weezer - Say It Ain't So (Harmonix).sng"
+```
+
+## 5. Build a dataset from an SNG
+
+`octobeat add` also accepts `.sng` containers directly. The audio track
+is extracted from the container, decoded, and the embedded chart is used
+as the timing source (with audio validation):
+
+```bash
+octobeat add "sng/Weezer - Say It Ain't So (Harmonix).sng"
+```
+
 ---
 
 # Commands
@@ -169,7 +195,7 @@ step.
 Generate a SongMap from a recording.
 
 ```bash
-octobeat analyse <input> [-o OUTPUT] [--offset SECONDS] [--debug]
+octobeat analyse <input> [-o OUTPUT] [--offset SECONDS] [--chart CHART] [--debug]
 ```
 
 The analyser (BeatEngine v2) detects:
@@ -180,6 +206,24 @@ The analyser (BeatEngine v2) detects:
 - downbeats and bars;
 - overall, tempo, beat and grid confidence;
 - optional synced lyrics (from LRCLIB).
+
+With `--chart <file>` the timing comes from a structured community
+chart (`.sng`/`.mid`/`.chart`); the audio is used to validate offset,
+duration, BPM and tempo changes. When the chart is missing or unusable
+the command falls back to audio analysis with a warning.
+
+## `inspect`
+
+Show the timing structure of a structured source without building a
+dataset.
+
+```bash
+octobeat inspect <file.sng>
+```
+
+Prints the BPM segments, time signatures, beat count, offset and the
+section list. Currently supports `.sng`; `.mid`/`.chart` are added as
+providers land.
 
 ## `metadata`
 

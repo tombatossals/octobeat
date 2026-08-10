@@ -24,9 +24,26 @@ class PathsConfig(BaseModel):
         default=DEFAULT_DATASETS_DIR,
     )
 
+    charts: str | None = Field(
+        default=None,
+        description=(
+            "Directory searched for community charts (SNG/MIDI/CHART) "
+            "when building datasets. Falls back to the repo's sng/ "
+            "directory when unset."
+        ),
+    )
+
     def datasets_dir(self) -> Path:
         return Path(
             self.datasets,
+        ).expanduser().resolve()
+
+    def charts_dir(self) -> Path | None:
+        if self.charts is None:
+            return None
+
+        return Path(
+            self.charts,
         ).expanduser().resolve()
 
 

@@ -150,6 +150,9 @@ importers:
       '@octobeat/player':
         specifier: workspace:*
         version: link:../player
+      '@octobeat/songmap':
+        specifier: workspace:*
+        version: link:../songmap
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1

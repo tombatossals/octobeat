@@ -21,6 +21,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - Optional `lyrics` block with time-synchronized lyric lines.
 - Confidence is documented as a combination of tempo confidence, beat
   confidence and grid stability.
+- Optional `sections` block describing the musical form (intro, verse,
+  chorus, bridge, solo, outro, ...). Sections reference beats
+  preferentially (`startBeat`) and keep `startTime` for convenience;
+  `sourceName` preserves the original chart label. This is an additive
+  change to `songmap/v1` (see the versioning rules: optional blocks may
+  be added without a new schema).
+- Optional `timing.source` field recording where the timing came from
+  (`sng`, `midi`, `chart`, `audio-analysis`, `manual`).
 
 ## [1.0] — 2026-08-02
 

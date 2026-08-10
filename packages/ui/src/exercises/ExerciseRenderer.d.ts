@@ -6,5 +6,10 @@ export interface ExerciseRendererProps {
      * Índice absoluto del beat actual.
      */
     currentBeat: number;
+    /**
+     * Repetición actual del ejercicio. Arranca en 1 y al llegar a 20
+     * vuelve a empezar.
+     */
+    repetition?: number;
 }
-export declare function ExerciseRenderer({ exercise, currentBeat, }: ExerciseRendererProps): JSX.Element;
+export declare function ExerciseRenderer({ exercise, currentBeat, repetition, }: ExerciseRendererProps): JSX.Element;

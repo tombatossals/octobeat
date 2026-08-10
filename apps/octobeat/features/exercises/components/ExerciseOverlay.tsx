@@ -48,6 +48,19 @@ export function ExerciseOverlay(): JSX.Element | null {
     const factor =
         DIFFICULTY_FACTOR[difficulty];
 
+    const beatsPerPass =
+        exercise.beats.length * factor;
+
+    const repetition =
+        currentBeat > 0
+            ? ((Math.floor(
+                      (currentBeat - 1) /
+                          beatsPerPass,
+                  ) %
+                    20) +
+                  1)
+            : 1;
+
     useEffect(() => {
         const map = dataset?.songmap;
         const adapter = player;
@@ -179,6 +192,7 @@ export function ExerciseOverlay(): JSX.Element | null {
                 <ExerciseRenderer
                     exercise={exercise}
                     currentBeat={currentBeat}
+                    repetition={repetition}
                 />
             ) : (
                 <div className="flex flex-col items-center gap-1 rounded-lg border border-white/10 bg-gray-800/60 px-6 py-3 shadow-2xl backdrop-blur-md">

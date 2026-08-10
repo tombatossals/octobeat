@@ -67,6 +67,7 @@ class Timing(SongMapModel):
     timeSignature: str
     confidence: float = Field(ge=0.0, le=1.0)
     tempoMap: list[TempoSegment] | None = None
+    source: str | None = None
 
 
 class Beat(SongMapModel):
@@ -88,6 +89,22 @@ class Bar(SongMapModel):
 
     index: int = Field(ge=1)
     firstBeat: int = Field(ge=1)
+
+
+class Section(SongMapModel):
+    """
+    A musical section.
+
+    startBeat references the first beat of the section; startTime is
+    kept for convenience. sourceName preserves the original chart label
+    when the name has been normalized.
+    """
+
+    index: int = Field(ge=1)
+    name: str
+    startBeat: int = Field(ge=1)
+    startTime: float = Field(ge=0.0)
+    sourceName: str | None = None
 
 
 class LyricLine(SongMapModel):
@@ -120,3 +137,4 @@ class SongMap(SongMapModel):
     bars: list[Bar]
 
     lyrics: list[LyricLine] | None = None
+    sections: list[Section] | None = None

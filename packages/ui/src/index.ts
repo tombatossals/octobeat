@@ -7,6 +7,15 @@ export * from "./player/TimeDisplay";
 export * from "./player/SeekBar";
 
 //
+// Timeline
+//
+
+export * from "./timeline/SectionTimeline";
+export * from "./timeline/SongTimeline";
+export * from "./timeline/useSectionPractice";
+export * from "./timeline/model";
+
+//
 // Exercises
 //
 

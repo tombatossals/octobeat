@@ -12,6 +12,9 @@
         },
         {
             "path": "../exercises"
+        },
+        {
+            "path": "../songmap"
         }
     ],
     "include": [

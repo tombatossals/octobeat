@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from octobeat.providers.base import SourceProvider
 from octobeat.providers.local import LocalFileProvider
+from octobeat.providers.sng import SngSourceProvider
 from octobeat.providers.youtube import YouTubeProvider
 
 _PROVIDERS: list[type[SourceProvider]] = [
+    SngSourceProvider,
     LocalFileProvider,
     YouTubeProvider,
 ]

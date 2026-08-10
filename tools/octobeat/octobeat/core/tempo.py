@@ -471,6 +471,35 @@ def estimate_tempo_candidates(
     half and its double as candidates.
     """
 
+    return [
+        bpm
+        for bpm, _score in estimate_tempo_candidates_scored(
+            onset_envelope,
+            sr,
+            hop_length=hop_length,
+            min_bpm=min_bpm,
+            max_bpm=max_bpm,
+            top_n=top_n,
+        )
+    ]
+
+
+def estimate_tempo_candidates_scored(
+    onset_envelope: np.ndarray,
+    sr: int,
+    *,
+    hop_length: int = DEFAULT_HOP_LENGTH,
+    min_bpm: float = MIN_BPM,
+    max_bpm: float = MAX_BPM,
+    top_n: int = 6,
+) -> list[tuple[float, float]]:
+    """Tempo candidates with their autocorrelation score (0..1).
+
+    The score is the normalised autocorrelation at the candidate's lag:
+    how much the onset envelope repeats at that period. A weak score
+    means the audio is not clearly periodic at that tempo.
+    """
+
     n = int(onset_envelope.size)
 
     if n < 4:
@@ -548,10 +577,7 @@ def estimate_tempo_candidates(
         reverse=True,
     )
 
-    return [
-        bpm
-        for bpm, _score in scored[:top_n]
-    ]
+    return scored[:top_n]
 
 
 def _refine_lag(

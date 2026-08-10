@@ -4,7 +4,12 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from octobeat.core.analyser import analyse_recording
+from octobeat.charts import find_chart
+from octobeat.config.model import Config
+from octobeat.core.analyser import (
+    analyse_recording,
+    analyse_with_chart,
+)
 from octobeat.io.resource import (
     CATALOG_FILE,
     METADATA_FILE,
@@ -16,6 +21,7 @@ from octobeat.models.analysis import AnalysisResult
 from octobeat.models.metadata import (
     CatalogMetadata,
     ResourceRefs,
+    TimingProvenance,
 )
 from octobeat.models.recording import Recording
 from octobeat.naming import dataset_slug
@@ -25,6 +31,13 @@ from octobeat.providers.deezer import (
 )
 from octobeat.providers.factory import get_provider
 from octobeat.providers.youtube import YouTubeProvider
+from octobeat.timing import (
+    TimingData,
+    TimingError,
+    TimingProvider,
+    get_timing_provider,
+)
+from octobeat.ui import console
 
 
 @dataclass(slots=True)
@@ -97,12 +110,7 @@ def build_dataset(
     deezer = DeezerProvider()
 
     try:
-        result = analyse_recording(
-            recording,
-            provider=type(provider).__name__,
-            source=source,
-            offset=offset,
-        )
+        result = _analyse(recording, source, offset)
 
         dataset_id = (
             dataset_id
@@ -195,6 +203,85 @@ def build_dataset(
         recording.cleanup()
 
 
+def _analyse(
+    recording: Recording,
+    source: str,
+    offset: float | None,
+    *,
+    config: Config | None = None,
+) -> AnalysisResult:
+    """
+    Analyse a recording, preferring a community chart when one matches.
+
+    Falls back to audio analysis when no chart is found or the chart is
+    unusable (the dataset must still build from audio).
+    """
+
+    # A provider may attach a chart directly (e.g. an SNG container).
+    chart = recording.chart_path
+
+    if chart is None:
+        chart = find_chart(
+            recording,
+            config=config
+            or _default_config(),
+        )
+
+    if chart is not None:
+        console.info(
+            f"Found community chart: {chart.name}",
+        )
+
+        try:
+            chart_timing = _load_chart_timing(chart)
+            return analyse_with_chart(
+                recording,
+                chart_timing,
+                provider="chart",
+                source=str(chart),
+                chart_source=_chart_kind(chart),
+            )
+        except (TimingError, FileNotFoundError) as error:
+            console.warning(
+                f"Community chart could not be parsed ({error}); "
+                "falling back to audio analysis.",
+            )
+    else:
+        console.info(
+            "No community chart found; using audio analysis.",
+        )
+
+    return analyse_recording(
+        recording,
+        provider="local",
+        source=source,
+        offset=offset,
+    )
+
+
+def _load_chart_timing(chart: Path) -> TimingData:
+    provider: TimingProvider = get_timing_provider(str(chart))
+    return provider.load(str(chart))
+
+
+def _chart_kind(chart: Path) -> str:
+    suffix = chart.suffix.lower()
+
+    if suffix == ".mid":
+        return "midi"
+
+    if suffix == ".chart":
+        return "chart"
+
+    return "sng"
+
+
+def _default_config() -> Config:
+    from octobeat.config import ensure_workspace
+
+    return ensure_workspace()
+
+
 def _build_metadata(
     recording: Recording,
     dataset_id: str,
@@ -246,6 +333,11 @@ def _build_metadata(
         ),
         bpm=songmap.timing.bpm,
         duration=songmap.metadata.duration,
+        timeSignature=songmap.timing.timeSignature,
+        timing=TimingProvenance(
+            source=songmap.timing.source or "audio-analysis",
+            confidence=songmap.timing.confidence,
+        ),
         tags=(
             enriched.tags
             if enriched is not None

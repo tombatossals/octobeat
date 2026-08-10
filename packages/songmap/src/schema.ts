@@ -32,6 +32,37 @@ export const TimingSchema = z.object({
     tempoMap: z
         .array(TempoSegmentSchema)
         .optional(),
+
+    source: z
+        .string()
+        .optional(),
+});
+
+export const SectionSchema = z.object({
+    index: z.number().int(),
+
+    name: z.string(),
+
+    startBeat: z.number().int(),
+
+    startTime: z.number(),
+
+    sourceName: z
+        .string()
+        .optional(),
+});
+
+export const SourceSchema = z.object({
+    type: z.string(),
+    id: z.string(),
+});
+
+export const SongMetadataSchema = z.object({
+    title: z.string(),
+
+    duration: z.number(),
+
+    source: SourceSchema,
 });
 
 export const SongMapSchema = z.object({
@@ -43,6 +74,8 @@ export const SongMapSchema = z.object({
 
     createdAt: z.string(),
 
+    metadata: SongMetadataSchema,
+
     timing: TimingSchema,
 
     beats: z.array(BeatSchema),
@@ -51,6 +84,10 @@ export const SongMapSchema = z.object({
 
     lyrics: z
         .array(LyricLineSchema)
+        .optional(),
+
+    sections: z
+        .array(SectionSchema)
         .optional(),
 });
 
@@ -67,6 +104,8 @@ export type TempoSegment = z.infer<
 >;
 
 export type Timing = z.infer<typeof TimingSchema>;
+
+export type Section = z.infer<typeof SectionSchema>;
 
 export type SongMap = z.infer<typeof SongMapSchema>;
 

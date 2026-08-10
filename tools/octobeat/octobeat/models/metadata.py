@@ -42,9 +42,25 @@ class CatalogMetadata(BaseModel):
 
     timeSignature: str | None = None
 
+    timing: TimingProvenance | None = None
+
     youtube: str | None = None
 
     resources: ResourceRefs
+
+
+class TimingProvenance(BaseModel):
+    """
+    Where the timing information came from and how reliable it is.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+
+    source: str
+
+    confidence: float = Field(ge=0.0, le=1.0)
 
 
 class ResourceRefs(BaseModel):

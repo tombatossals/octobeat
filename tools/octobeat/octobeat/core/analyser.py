@@ -11,11 +11,12 @@ import librosa
 import numpy as np
 
 from octobeat.cache.audio import AudioCache
-from octobeat.core.bars import build_bars, detect_downbeat_shift
+from octobeat.core.bars import detect_downbeat_shift
 from octobeat.core.confidence import analyse_confidence
 from octobeat.core.grid import build_beat_grid
 from octobeat.core.onset import compute_onset_envelope
 from octobeat.core.phase import estimate_phase
+from octobeat.core.songmap_builder import build_songmap
 from octobeat.core.tempo import (
     estimate_tempo,
     estimate_tempo_candidates,
@@ -28,20 +29,25 @@ from octobeat.models.analysis import (
 )
 from octobeat.models.recording import Recording
 from octobeat.models.songmap import (
-    SCHEMA_ID,
-    SONGMAP_VERSION,
-    Beat,
     LyricLine,
-    SongMap,
-    SongMetadata,
     Source,
-    TempoSegment,
-    Timing,
+)
+from octobeat.models.timing import (
+    Beat as TimingBeat,
+)
+from octobeat.models.timing import (
+    TempoSegment as TimingTempoSegment,
+)
+from octobeat.models.timing import (
+    TimeSignature,
+    TimingData,
 )
 from octobeat.version import __version__
 
 DEFAULT_TIME_SIGNATURE = "4/4"
 BEATS_PER_BAR = 4
+
+AUDIO_SOURCE_KIND = "audio-analysis"
 
 LRCLIB_API = "https://lrclib.net/api"
 LRCLIB_TIMEOUT = 8
@@ -173,7 +179,7 @@ def analyse_recording(
     )
 
     beats = [
-        Beat(
+        TimingBeat(
             index=index,
             time=round(float(time), 3),
         )
@@ -185,8 +191,8 @@ def analyse_recording(
         and float(time) >= music_start
     ]
 
-    beat_indices = [
-        beat.index
+    beat_times_for_bars = [
+        beat.time
         for beat in beats
     ]
 
@@ -194,57 +200,45 @@ def analyse_recording(
         onset_envelope,
         sr,
         np.asarray(
-            [beat.time for beat in beats],
+            beat_times_for_bars,
         ),
         BEATS_PER_BAR,
     )
 
-    bars = build_bars(
-        beat_indices,
-        BEATS_PER_BAR,
-        downbeat_shift,
-    )
-
-    songmap = SongMap(
-        version=SONGMAP_VERSION,
-        schema=SCHEMA_ID,
-        generatedBy=f"octobeat {__version__}",
-        createdAt=datetime.now(
-            UTC,
-        ).isoformat(),
-        metadata=SongMetadata(
-            title=recording.title
-            or recording.path.stem,
-            duration=round(
-                duration,
-                3,
-            ),
-            source=recording.source
-            or Source(
-                type="file",
-                id=str(
-                    recording.path.resolve(),
-                ),
-            ),
-        ),
-        timing=Timing(
-            bpm=round(bpm, 2),
-            offset=round(music_start, 3),
-            timeSignature=DEFAULT_TIME_SIGNATURE,
-            confidence=round(
-                confidence.overall,
-                2,
-            ),
-            tempoMap=[
-                TempoSegment(
-                    time=start,
-                    bpm=round(bpm_segment, 2),
-                )
-                for start, bpm_segment in tempo_map
-            ],
+    timing_data = TimingData(
+        tempos=_tempo_segments(
+            tempo_map,
+            beats,
         ),
         beats=beats,
-        bars=bars,
+        time_signatures=[
+            _time_signature_at(
+                start_beat=1,
+            ),
+        ],
+        sections=[],
+    )
+
+    songmap = build_songmap(
+        timing_data,
+        title=recording.title
+        or recording.path.stem,
+        duration=duration,
+        source=recording.source
+        or Source(
+            type="file",
+            id=str(
+                recording.path.resolve(),
+            ),
+        ),
+        source_kind=AUDIO_SOURCE_KIND,
+        generated_by=f"octobeat {__version__}",
+        created_at=datetime.now(
+            UTC,
+        ).isoformat(),
+        offset=music_start,
+        confidence=confidence.overall,
+        downbeat_shift=downbeat_shift,
         lyrics=_fetch_lrclib_lyrics(
             recording.artist or "",
             recording.title or "",
@@ -289,6 +283,136 @@ def analyse_recording(
                 3,
             ),
             downbeat_shift=downbeat_shift,
+        ),
+    )
+
+
+def _tempo_segments(
+    tempo_map: list[tuple[float, float]],
+    beats: list[TimingBeat],
+) -> list[TimingTempoSegment]:
+    """Map audio tempo-map segments to canonical TimingData segments.
+
+    Each segment's ``start_beat`` is the first detected beat at or after
+    its start time.
+    """
+
+    beat_times = [beat.time for beat in beats]
+    segments: list[TimingTempoSegment] = []
+
+    for start, bpm_value in tempo_map:
+        start_beat = _first_beat_after(beat_times, start)
+
+        segments.append(
+            TimingTempoSegment(
+                start_beat=start_beat,
+                start_time=round(start, 3),
+                bpm=round(bpm_value, 2),
+            ),
+        )
+
+    return segments
+
+
+def _first_beat_after(
+    beat_times: list[float],
+    time: float,
+) -> int:
+    for index, beat_time in enumerate(beat_times, start=1):
+        if beat_time >= time:
+            return index
+    return len(beat_times) if beat_times else 1
+
+
+def _time_signature_at(
+    start_beat: int,
+    *,
+    numerator: int = 4,
+    denominator: int = 4,
+) -> TimeSignature:
+    """Build a canonical time signature (default 4/4)."""
+
+    return TimeSignature(
+        start_beat=start_beat,
+        numerator=numerator,
+        denominator=denominator,
+    )
+
+
+def analyse_with_chart(
+    recording: Recording,
+    chart_timing: TimingData,
+    *,
+    provider: str,
+    source: str,
+    chart_source: str = "sng",
+) -> AnalysisResult:
+    """
+    Build a SongMap from a structured chart, validated against the audio.
+
+    The chart provides the timing; the audio is used as a validator
+    (offset, duration, BPM, tempo changes, drift). The chart's own
+    offset is kept as the SongMap offset: the chart defines the musical
+    structure, and re-writing its offset from audio analysis would
+    desynchronise the beats. The validation confidence reflects how
+    well the chart matches the audio.
+    """
+
+    from octobeat.validation.timing import (
+        analyse_audio,
+        validate_chart,
+    )
+
+    if not recording.path.exists():
+        raise FileNotFoundError(recording.path)
+
+    audio = analyse_audio(recording.path)
+
+    validation = validate_chart(
+        chart_timing,
+        audio,
+    )
+
+    songmap = build_songmap(
+        chart_timing,
+        title=recording.title
+        or recording.path.stem,
+        duration=audio.duration,
+        source=recording.source
+        or Source(
+            type="file",
+            id=str(
+                recording.path.resolve(),
+            ),
+        ),
+        source_kind=chart_source,
+        generated_by=f"octobeat {__version__}",
+        created_at=datetime.now(
+            UTC,
+        ).isoformat(),
+        offset=chart_timing.offset,
+        confidence=validation.confidence,
+        lyrics=_fetch_lrclib_lyrics(
+            recording.artist or "",
+            recording.title or "",
+            audio.duration,
+        ),
+    )
+
+    return AnalysisResult(
+        songmap=songmap,
+        report=AnalysisReport(
+            provider=provider,
+            source=source,
+            recording=recording.path,
+            decoded=recording.path,
+            duration=round(audio.duration, 3),
+            bpm=round(audio.bpm, 2),
+            beats=len(chart_timing.beats),
+            confidence=round(
+                validation.confidence,
+                2,
+            ),
         ),
     )
 
@@ -396,8 +520,8 @@ def _search_synced_lyrics(
         key=lambda result: abs(
             float(
                 result.get(
-                    "duration", 0
-                )
+                    "duration"
+                ) or 0
             )
             - duration
         ),
@@ -550,36 +674,29 @@ def _silence_result(
 ) -> AnalysisResult:
     """Build a SongMap for a silent recording (no beats)."""
 
-    songmap = SongMap(
-        version=SONGMAP_VERSION,
-        schema=SCHEMA_ID,
-        generatedBy=f"octobeat {__version__}",
-        createdAt=datetime.now(
+    songmap = build_songmap(
+        TimingData(
+            tempos=[],
+            beats=[],
+            time_signatures=[],
+            sections=[],
+        ),
+        title=recording.title
+        or recording.path.stem,
+        duration=duration,
+        source=recording.source
+        or Source(
+            type="file",
+            id=str(
+                recording.path.resolve(),
+            ),
+        ),
+        source_kind=AUDIO_SOURCE_KIND,
+        generated_by=f"octobeat {__version__}",
+        created_at=datetime.now(
             UTC,
         ).isoformat(),
-        metadata=SongMetadata(
-            title=recording.title
-            or recording.path.stem,
-            duration=round(
-                duration,
-                3,
-            ),
-            source=recording.source
-            or Source(
-                type="file",
-                id=str(
-                    recording.path.resolve(),
-                ),
-            ),
-        ),
-        timing=Timing(
-            bpm=120.0,
-            offset=0.0,
-            timeSignature=DEFAULT_TIME_SIGNATURE,
-            confidence=0.0,
-        ),
-        beats=[],
-        bars=[],
+        confidence=0.0,
     )
 
     return AnalysisResult(

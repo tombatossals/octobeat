@@ -22,6 +22,8 @@ class Recording:
 
     cleanup_dir: tempfile.TemporaryDirectory[str] | None = None
 
+    chart_path: Path | None = None
+
     def cleanup(self) -> None:
         if self.cleanup_dir is not None:
             self.cleanup_dir.cleanup()

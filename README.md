@@ -42,7 +42,7 @@ octobeat/
 │   ├── library/           # catalog + dataset loading
 │   ├── player/            # media abstraction + shortcuts
 │   ├── songmap/           # SongMap schema, model, beat/bar helpers
-│   └── ui/                # shared UI components
+│   └── ui/                # shared UI components (incl. SongTimeline)
 │
 ├── tools/
 │   └── octobeat/          # BeatEngine CLI (Python)
@@ -175,6 +175,8 @@ with the music. Hold `Ctrl`/`Cmd` to reveal the keyboard shortcuts.
 octobeat init                    # initialize the workspace
 octobeat add <youtube-or-file>   # build a complete dataset
 octobeat analyse <file> [--debug]
+octobeat analyse <file> --chart song.sng   # use a community chart for timing
+octobeat inspect <song.sng>      # show a chart's timing without building
 octobeat dataset reanalyse       # re-analyse every dataset
 octobeat dataset verify
 octobeat catalog build           # rebuild catalog.json

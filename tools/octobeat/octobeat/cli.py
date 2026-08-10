@@ -12,6 +12,7 @@ from octobeat.commands.dataset import run as dataset
 from octobeat.commands.export import run as export
 from octobeat.commands.info import run as info
 from octobeat.commands.init import run as init
+from octobeat.commands.inspect import run as inspect
 from octobeat.commands.metadata import run as metadata
 from octobeat.commands.validate import run as validate
 from octobeat.version import __version__
@@ -293,6 +294,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     analyse_parser.add_argument(
+        "--chart",
+        type=Path,
+        default=None,
+        help="Structured timing source (.sng/.mid/.chart); the audio "
+        "is used for validation and the chart for timing.",
+    )
+
+    analyse_parser.add_argument(
         "--debug",
         action="store_true",
         help="Print detailed tempo, phase, grid and confidence "
@@ -495,6 +504,24 @@ def build_parser() -> argparse.ArgumentParser:
 
     info_parser.set_defaults(
         func=info,
+    )
+
+    #
+    # inspect
+    #
+
+    inspect_parser = commands.add_parser(
+        "inspect",
+        help="Inspect a structured timing source (SNG/MIDI/CHART).",
+    )
+
+    inspect_parser.add_argument(
+        "input",
+        type=Path,
+    )
+
+    inspect_parser.set_defaults(
+        func=inspect,
     )
 
     #

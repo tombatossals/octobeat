@@ -180,6 +180,8 @@ SongMap
 
 ├── bars
 
+├── sections (optional)
+
 └── lyrics (optional)
 ```
 
@@ -221,10 +223,33 @@ It contains:
 * beat offset
 * analysis confidence
 * optional tempo map
+* optional source
 
 Applications should use this information only as a global reference.
 
 Precise synchronization should always rely on the beat list.
+
+## 7.0 Source
+
+The optional `source` field records where the timing information came
+from, so consumers know why a SongMap has a given quality:
+
+```json
+{ "source": "sng" }
+{ "source": "audio-analysis" }
+```
+
+Known values:
+
+* `sng` — community chart (Clone Hero / YARG)
+* `midi` — MIDI chart
+* `chart` — `.chart` text format
+* `audio-analysis` — BeatEngine audio detection
+* `manual` — manually authored/edited
+
+The `confidence` field reflects how reliable the timing is. A chart
+whose timing matches the audio closely receives a high confidence; an
+offset-corrected chart or a pure audio analysis receives a lower one.
 
 ## 7.1 Tempo map
 
@@ -295,7 +320,58 @@ on a pickup or an off-beat is represented correctly.
 
 ---
 
-# 10. Versioning
+# 10. Sections
+
+The optional `sections` collection describes the musical form of the
+recording (intro, verse, chorus, bridge, solo, outro, ...).
+
+Each section references the beat collection preferentially:
+
+```json
+{
+  "sections": [
+    { "index": 1, "name": "Intro",  "startBeat": 1,  "startTime": 0.0 },
+    { "index": 2, "name": "Verse",  "startBeat": 33, "startTime": 11.8 },
+    { "index": 3, "name": "Chorus", "startBeat": 65, "startTime": 23.6 }
+  ]
+}
+```
+
+Fields:
+
+* `index` — 1-based, continuous section number;
+* `name` — normalized section name (see normalization below);
+* `startBeat` — index of the first beat of the section (preferred);
+* `startTime` — seconds into the recording (convenience);
+* `sourceName` (optional) — the original label from the chart.
+
+Sections reference **beats preferentially** and keep `startTime` for
+convenience (`Section → startBeat → SongMap → timestamp`), so the UI
+timeline, navigation and practice-by-section features can rely on the
+same structure.
+
+## 10.1 Name normalization
+
+Chart labels vary widely (`"section Chorus"`, `"verse 1"`, `"hook"`,
+`"Solo 2"`). The `name` field uses normalized, predictable names:
+
+```
+intro   → Intro
+verse   → Verse
+verse 1 → Verse
+chorus  → Chorus
+hook    → Chorus
+bridge  → Bridge
+solo    → Solo
+outro   → Outro
+```
+
+Unrecognized labels are kept, normalized to Title Case. The original
+chart label is preserved in `sourceName` when it differs from `name`.
+
+---
+
+# 11. Versioning
 
 Every SongMap declares:
 
@@ -315,7 +391,7 @@ Breaking compatibility requires a new schema identifier.
 
 ---
 
-# 11. Compatibility
+# 12. Compatibility
 
 SongMap follows a forward-compatible design whenever possible.
 
@@ -331,7 +407,7 @@ Applications must ignore unknown optional fields.
 
 ---
 
-# 12. Lyrics
+# 13. Lyrics
 
 The `lyrics` block is optional and contains time-synchronized lyrics.
 
@@ -356,13 +432,12 @@ provider.
 
 ---
 
-# 13. Future evolution
+# 14. Future evolution
 
 Version 1 intentionally keeps the model minimal.
 
 Future versions may introduce optional blocks such as:
 
-* sections
 * markers
 * cues
 * chords
@@ -374,7 +449,7 @@ without modifying the existing contract.
 
 ---
 
-# 14. Future timeline model
+# 15. Future timeline model
 
 Although version 1 uses dedicated collections, the long-term conceptual model is an event timeline.
 
@@ -410,7 +485,7 @@ Applications should not assume that future SongMaps will always be organised usi
 
 ---
 
-# 15. Design goals
+# 16. Design goals
 
 SongMap has four primary goals.
 
@@ -448,7 +523,7 @@ BeatEngine and OctoBeat are consumers of SongMap, not its definition.
 
 ---
 
-# 16. Non-goals
+# 17. Non-goals
 
 SongMap is not:
 
@@ -463,7 +538,7 @@ Those concerns belong to independent specifications.
 
 ---
 
-# 17. Ecosystem
+# 18. Ecosystem
 
 SongMap is intended to become the common contract of the OctoBeat ecosystem.
 
@@ -486,7 +561,7 @@ Every component communicates exclusively through SongMap.
 
 ---
 
-# 18. Guiding principle
+# 19. Guiding principle
 
 > **A SongMap is a deterministic temporal description of a specific audio recording.**
 
