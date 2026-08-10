@@ -252,6 +252,8 @@ Confidence.......... 0.98
 
 - The detected offset is stored in `SongMap.media.video` (`videoTime =
   songTime + offset`); the timing is never modified.
+- When a dataset is targeted, `metadata.json` and `catalog.json` are
+  also updated (`resources.video`) so the web app renders the video.
 - The first argument may be a `songmap.json` path or a dataset id /
   unique prefix resolved inside the datasets directory.
 - The video may be a local file or a **YouTube URL** — in that case it
@@ -309,6 +311,19 @@ octobeat cover <url>
 ```
 
 ## `catalog`
+
+Manage the catalog document.
+
+```bash
+octobeat catalog build    # rebuild catalog.json from the datasets
+octobeat catalog verify   # check every dataset has a catalog entry
+octobeat catalog stats    # count datasets vs catalog entries
+```
+
+`catalog build` scans the datasets directory and rewrites
+`catalog.json` from scratch — run it after adding, moving or removing
+datasets. `verify` reports datasets missing from the catalog and stale
+entries whose directory no longer exists.
 
 Manage the catalog.
 

@@ -37,7 +37,9 @@ export function NowPlayingCard() {
                 </div>
 
                 {difficulty !==
-                    undefined && (
+                    undefined &&
+                    difficulty !==
+                        null && (
                     <div className="mt-1 flex items-center gap-1 text-xl">
                         <span className="font-semibold">
                             {Array.from(

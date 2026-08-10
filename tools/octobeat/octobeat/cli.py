@@ -7,6 +7,7 @@ from typing import cast
 
 from octobeat.commands.add import run as add
 from octobeat.commands.analyse import run as analyse
+from octobeat.commands.catalog import run as catalog
 from octobeat.commands.config import run as config
 from octobeat.commands.dataset import run as dataset
 from octobeat.commands.export import run as export
@@ -456,20 +457,56 @@ def build_parser() -> argparse.ArgumentParser:
         )
     )
 
-    catalog_commands.add_parser(
+    catalog_build = catalog_commands.add_parser(
         "build",
         help="Build catalog.json.",
-    ).set_defaults(func=not_implemented)
+    )
+    catalog_build.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Datasets directory (defaults to paths.datasets).",
+    )
+    catalog_build.add_argument(
+        "--catalog",
+        type=Path,
+        help="Catalog file (defaults to <output>/catalog.json).",
+    )
+    catalog_build.set_defaults(func=catalog)
 
-    catalog_commands.add_parser(
+    catalog_verify = catalog_commands.add_parser(
         "verify",
         help="Verify the catalog.",
-    ).set_defaults(func=not_implemented)
+    )
+    catalog_verify.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Datasets directory (defaults to paths.datasets).",
+    )
+    catalog_verify.add_argument(
+        "--catalog",
+        type=Path,
+        help="Catalog file (defaults to <output>/catalog.json).",
+    )
+    catalog_verify.set_defaults(func=catalog)
 
-    catalog_commands.add_parser(
+    catalog_stats = catalog_commands.add_parser(
         "stats",
         help="Display catalog statistics.",
-    ).set_defaults(func=not_implemented)
+    )
+    catalog_stats.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Datasets directory (defaults to paths.datasets).",
+    )
+    catalog_stats.add_argument(
+        "--catalog",
+        type=Path,
+        help="Catalog file (defaults to <output>/catalog.json).",
+    )
+    catalog_stats.set_defaults(func=catalog)
 
     #
     # validate
@@ -536,12 +573,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     sync_video_parser.add_argument(
         "songmap",
-        type=Path,
+        help="Dataset id/prefix or songmap.json path.",
     )
 
     sync_video_parser.add_argument(
         "video",
-        type=Path,
+        help="Local video file or YouTube URL.",
     )
 
     sync_video_parser.add_argument(

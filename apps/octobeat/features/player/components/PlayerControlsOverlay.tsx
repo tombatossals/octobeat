@@ -229,7 +229,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                 )}
             </div>
 
-            <div className="pointer-events-auto absolute bottom-10 left-1/2 w-[min(80vw,36rem)] -translate-x-1/2">
+            <div className="pointer-events-auto absolute bottom-0 left-0 right-0 px-6 pb-4">
                 {dataset?.songmap && (
                     <SongTimeline
                         songmap={dataset.songmap}

@@ -5,7 +5,7 @@ export const ResourcesSchema = z.object({
 
     video: z
         .string()
-        .optional(),
+        .nullish(),
 });
 
 export const TimingProvenanceSchema =
@@ -25,12 +25,12 @@ export const MetadataSchema =
 
         album: z
             .string()
-            .optional(),
+            .nullish(),
 
         year: z
             .number()
             .int()
-            .optional(),
+            .nullish(),
 
         genres: z.array(
             z.string(),
@@ -43,7 +43,7 @@ export const MetadataSchema =
         difficulty: z
             .number()
             .int()
-            .optional(),
+            .nullish(),
 
         tags: z.array(
             z.string(),
@@ -51,14 +51,14 @@ export const MetadataSchema =
 
         timeSignature: z
             .string()
-            .optional(),
+            .nullish(),
 
         timing: TimingProvenanceSchema
-            .optional(),
+            .nullish(),
 
         youtube: z
             .string()
-            .optional(),
+            .nullish(),
 
         resources:
             ResourcesSchema,

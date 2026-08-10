@@ -7,7 +7,6 @@ import { PlayerBackend } from "../backends/PlayerBackend";
 
 import { usePlayerStore } from "@octobeat/player";
 
-import { DebugHud } from "@/features/overlay/components/DebugHud";
 import { Logo } from "@/features/overlay/components/Logo";
 import { ExerciseOverlay } from "@/features/exercises/components/ExerciseOverlay";
 import { DifficultySwitcher } from "@/features/exercises/components/DifficultySwitcher";
@@ -165,8 +164,6 @@ export function Player() {
             <ExerciseOverlay />
 
             <LyricsOverlay />
-
-            <DebugHud />
 
             <HeaderActions />
 

@@ -96,7 +96,66 @@ def run(args: argparse.Namespace) -> int:
 
     console.success("SongMap updated.")
 
+    if dataset_dir is not None:
+        _update_dataset_metadata(
+            dataset_dir,
+            video_file=video_path.name,
+        )
+
     return 0
+
+
+def _update_dataset_metadata(
+    dataset_dir: Path,
+    *,
+    video_file: str,
+) -> None:
+    """Reflect the new video in metadata.json and the catalog.
+
+    The frontend decides whether to render a video player from
+    ``metadata.resources.video``, so attaching a video must update it
+    too (the SongMap alone is not enough).
+    """
+
+    from octobeat.io.resource import (
+        CATALOG_FILE,
+        METADATA_FILE,
+        upsert_catalog,
+        write_metadata,
+    )
+    from octobeat.pipeline.datasets import _read_metadata
+
+    metadata = _read_metadata(dataset_dir)
+
+    if metadata is None:
+        return
+
+    from octobeat.models.metadata import ResourceRefs
+
+    metadata = metadata.model_copy(
+        update={
+            "resources": ResourceRefs(
+                audio=metadata.resources.audio,
+                video=video_file,
+            ),
+        },
+    )
+
+    write_metadata(
+        metadata,
+        dataset_dir / METADATA_FILE,
+    )
+
+    catalog = (
+        dataset_dir.parent
+        / CATALOG_FILE
+    )
+
+    if catalog.exists():
+        upsert_catalog(
+            catalog,
+            metadata,
+        )
 
 
 def _resolve_songmap(

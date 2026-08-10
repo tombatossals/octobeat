@@ -137,7 +137,7 @@ apps/octobeat/
 │   ├── exercises/          # exercise overlay + difficulty
 │   ├── library/            # catalog, search, filter
 │   ├── lyrics/             # synced lyrics
-│   ├── overlay/            # logo, debug HUD
+│   ├── overlay/            # logo
 │   ├── player/             # player, controls, now playing
 │   ├── settings/           # settings dialog + toast
 │   └── ui/                 # UI visibility levels

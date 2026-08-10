@@ -203,3 +203,69 @@ def test_sync_video_dataset_not_found(tmp_path, capsys):
     assert run(args) == 1
     out = capsys.readouterr().out
     assert "not found" in out.lower()
+
+
+def test_sync_video_updates_metadata_and_catalog(tmp_path):
+    """Attaching a video must also reflect in metadata.json + catalog."""
+
+    import shutil
+
+    from octobeat.models.metadata import CatalogMetadata, ResourceRefs
+
+    build_video_sync_fixtures(tmp_path / "fx")
+
+    dataset = tmp_path / "mxpx-responsibility-abcd123456"
+    dataset.mkdir(parents=True)
+
+    shutil.copy(
+        tmp_path / "fx" / "intro" / "reference.wav",
+        dataset / "recording.wav",
+    )
+
+    _minimal_songmap(dataset / "songmap.json")
+
+    # Write metadata without a video.
+    metadata = CatalogMetadata(
+        id="mxpx-responsibility-abcd123456",
+        title="Responsibility",
+        artist="MxPx",
+        bpm=120.0,
+        duration=6.0,
+        resources=ResourceRefs(
+            audio="recording.webm",
+        ),
+    )
+
+    (dataset / "metadata.json").write_text(
+        metadata.model_dump_json(indent=2),
+        encoding="utf-8",
+    )
+
+    from octobeat.io.resource import upsert_catalog
+
+    upsert_catalog(
+        tmp_path / "catalog.json",
+        metadata,
+    )
+
+    video = tmp_path / "fx" / "intro" / "video.wav"
+
+    args = argparse.Namespace(
+        songmap="mxpx-responsibility",
+        video=str(video),
+        offset=None,
+        reference=None,
+        output=tmp_path,
+    )
+
+    assert run(args) == 0
+
+    md = json.loads(
+        (dataset / "metadata.json").read_text(encoding="utf-8"),
+    )
+    assert md["resources"]["video"] == "video.wav"
+
+    catalog = json.loads(
+        (tmp_path / "catalog.json").read_text(encoding="utf-8"),
+    )
+    assert catalog[0]["resources"]["video"] == "video.wav"
