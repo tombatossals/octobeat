@@ -221,15 +221,17 @@ export function PlayerControlsOverlay(): JSX.Element {
                 )}
             </div>
 
-            <div className="pointer-events-auto absolute bottom-0 left-0 right-0 px-6 pb-4">
-                <SeekBar />
+            <div className="pointer-events-auto absolute bottom-0 left-0 right-0 flex justify-center px-6 pb-4">
+                <div className="w-full max-w-md">
+                    <SeekBar />
 
-                <div className="mt-2 flex items-center justify-between text-sm text-white">
-                    <TimeDisplay />
+                    <div className="mt-2 flex items-center justify-between text-sm text-white">
+                        <TimeDisplay />
 
-                    <span className="tabular-nums">
-                        {percentage}%
-                    </span>
+                        <span className="tabular-nums">
+                            {percentage}%
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
