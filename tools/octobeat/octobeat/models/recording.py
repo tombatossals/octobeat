@@ -40,6 +40,10 @@ class Recording:
     count_in_start: float | None = None
     song_start: float | None = None
 
+    # Times (seconds into the audio) of the individual count-in clicks,
+    # when the source carries a click reference track (e.g. song.opus).
+    count_in_clicks: list[float] | None = None
+
     def cleanup(self) -> None:
         if self.cleanup_dir is not None:
             self.cleanup_dir.cleanup()

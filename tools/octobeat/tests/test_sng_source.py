@@ -72,8 +72,8 @@ def test_cleanup_removes_temp(tmp_path):
 
 
 def _make_wav(amplitude: float) -> bytes:
-    """Build a tiny constant-amplitude mono WAV."""
-    sr = 22050
+    """Build a tiny constant-amplitude mono WAV (48 kHz)."""
+    sr = 48000
     frames = int(sr * 0.1)
     buffer = BytesIO()
 
@@ -86,6 +86,28 @@ def _make_wav(amplitude: float) -> bytes:
                 struct.pack("<h", int(amplitude * 32767))
                 for _ in range(frames)
             )
+        )
+
+    return buffer.getvalue()
+
+
+def _make_wav_lead(amplitude: float) -> bytes:
+    """Constant-amplitude burst followed by silence (like a count-in)."""
+    sr = 48000
+    frames = int(sr * 0.1)
+    burst = frames // 2
+    buffer = BytesIO()
+
+    with wave.open(buffer, "wb") as file:
+        file.setnchannels(1)
+        file.setsampwidth(2)
+        file.setframerate(sr)
+        file.writeframes(
+            b"".join(
+                struct.pack("<h", int(amplitude * 32767))
+                for _ in range(burst)
+            )
+            + b"\x00\x00" * (frames - burst)
         )
 
     return buffer.getvalue()
@@ -108,7 +130,7 @@ def _multitrack_sng() -> bytes:
             "notes.mid": _build_notes_mid(_constant_tempo()),
             "guitar.opus": _make_wav(0.5),
             "vocals.opus": _make_wav(0.3),
-            "song.wav": _make_wav(0.1),
+            "song.wav": _make_wav_lead(0.1),
         },
     )
 
@@ -124,6 +146,39 @@ def test_extract_stems_lists_instrument_tracks():
     ]
 
 
+def test_extract_full_mix_returns_song_track():
+    from octobeat.timing.sng import extract_full_mix
+
+    name, audio = extract_full_mix(_multitrack_sng())
+
+    assert name == "song.wav"
+    assert audio
+
+
+def test_extract_full_mix_none_without_song_track():
+    from octobeat.fixtures.sng import (
+        _build_notes_mid,
+        _build_sng_container,
+        _constant_tempo,
+    )
+    from octobeat.timing.sng import extract_full_mix
+
+    data = _build_sng_container(
+        {
+            "name": "No Mix",
+            "artist": "Fixture Band",
+            "song_length": "5000",
+        },
+        {
+            "notes.mid": _build_notes_mid(_constant_tempo()),
+            "guitar.opus": _make_wav(0.5),
+            "vocals.opus": _make_wav(0.3),
+        },
+    )
+
+    assert extract_full_mix(data) is None
+
+
 def test_extract_stems_empty_for_single_track(tmp_path):
     from octobeat.fixtures.sng import _constant_tempo, build_sng_fixture
     from octobeat.timing.sng import extract_stems
@@ -134,7 +189,7 @@ def test_extract_stems_empty_for_single_track(tmp_path):
     assert extract_stems(path.read_bytes()) == []
 
 
-def test_load_mixes_stems_ignoring_song_track(tmp_path):
+def test_load_mixes_stems_with_song_track(tmp_path):
     import subprocess
 
     path = tmp_path / "multi.sng"
@@ -162,12 +217,15 @@ def test_load_mixes_stems_ignoring_song_track(tmp_path):
         ).stdout
 
         samples = np.frombuffer(pcm, dtype=np.float32)
+        half = len(samples) // 2
 
-        # guitar (0.5) + vocals (0.3) summed and peak-normalised to
-        # 0.95 -> constant tone, well above the 0.1 `song.wav` level.
-        expected = 0.95
+        # guitar (0.5) + vocals (0.3) + song (0.1 burst then silence),
+        # summed and peak-normalised to 0.95. The `song.wav` full-mix
+        # track is part of the mix, so the trailing half stays below the
+        # stems-only level while the leading half peaks at 0.95.
         assert samples.min() > 0
-        assert abs(float(samples.mean()) - expected) < expected * 0.01
+        assert abs(float(samples[:half].mean()) - 0.95) < 0.01
+        assert 0.80 <= float(samples[half:].mean()) <= 0.90
     finally:
         recording.cleanup()
 
@@ -193,5 +251,145 @@ def test_load_detects_count_in_and_song_start(tmp_path):
         )
         assert count_in >= 0.0
         assert song_start >= count_in
+    finally:
+        recording.cleanup()
+
+
+# --------------------------------------------------------------------------
+# Count-in click detection
+# --------------------------------------------------------------------------
+
+
+def _write_wav(samples: np.ndarray, sr: int = 48000) -> bytes:
+    """Pack float samples into a mono 16-bit WAV."""
+    buffer = BytesIO()
+
+    with wave.open(buffer, "wb") as file:
+        file.setnchannels(1)
+        file.setsampwidth(2)
+        file.setframerate(sr)
+        pcm = np.clip(
+            samples * 32767,
+            -32768,
+            32767,
+        ).astype(np.int16)
+        file.writeframes(
+            pcm.tobytes(),
+        )
+
+    return buffer.getvalue()
+
+
+def _clicks_wav() -> bytes:
+    """Silence, sparse quiet clicks, then a loud sustained tone.
+
+    Mimics an SNG mix where the count-in clicks are buried under the
+    song's dynamic range (the blur/Beetlebum case).
+    """
+
+    sr = 48000
+    duration = 4.0
+    samples = np.zeros(
+        int(sr * duration),
+        dtype=np.float64,
+    )
+
+    for time in (0.5, 1.0, 1.5):
+        start = int(time * sr)
+        samples[
+            start : start + int(0.05 * sr)
+        ] = 0.05
+
+    samples[int(2.5 * sr):] = 1.0
+
+    return _write_wav(samples)
+
+
+def test_detect_music_lead_in_catches_quiet_count_in(tmp_path):
+    from octobeat.core.analyser import detect_music_lead_in
+
+    path = tmp_path / "lead.wav"
+    path.write_bytes(_clicks_wav())
+
+    count_in, song_start = detect_music_lead_in(
+        path,
+    )
+
+    # The quiet clicks are the first audible content; the song starts at
+    # the loud sustained tone.
+    assert 0.4 <= count_in <= 0.6
+    assert 2.4 <= song_start <= 2.6
+
+
+def test_detect_count_in_clicks_finds_click_times(tmp_path):
+    from octobeat.core.analyser import detect_count_in_clicks
+
+    path = tmp_path / "clicks.wav"
+    path.write_bytes(_clicks_wav())
+
+    clicks = detect_count_in_clicks(
+        path,
+        limit=2.0,
+    )
+
+    assert len(clicks) == 3
+    assert 0.48 <= clicks[0] <= 0.53
+    assert 0.98 <= clicks[1] <= 1.03
+    assert 1.48 <= clicks[2] <= 1.53
+
+
+def test_load_records_count_in_clicks(tmp_path):
+    """The provider records the individual count-in clicks from song.*."""
+
+    from octobeat.fixtures.sng import (
+        _build_notes_mid,
+        _build_sng_container,
+        _constant_tempo,
+    )
+
+    path = tmp_path / "clicks.sng"
+    path.write_bytes(
+        _build_sng_container(
+            {
+                "name": "Clicks",
+                "artist": "Fixture Band",
+                "song_length": "4000",
+            },
+            {
+                "notes.mid": _build_notes_mid(_constant_tempo()),
+                "guitar.opus": _write_wav(
+                    np.concatenate(
+                        [
+                            np.zeros(
+                                int(48000 * 2.5),
+                                dtype=np.float64,
+                            ),
+                            np.full(
+                                int(48000 * 1.5),
+                                0.5,
+                                dtype=np.float64,
+                            ),
+                        ]
+                    )
+                ),
+                "song.wav": _clicks_wav(),
+            },
+        )
+    )
+
+    recording = SngSourceProvider().load(str(path))
+
+    try:
+        clicks = recording.count_in_clicks
+
+        assert clicks is not None
+        assert len(clicks) == 3
+        assert 0.48 <= clicks[0] <= 0.53
+        assert 0.98 <= clicks[1] <= 1.03
+        assert 1.48 <= clicks[2] <= 1.53
+        assert (
+            recording.count_in_start
+            == clicks[0]
+        )
     finally:
         recording.cleanup()

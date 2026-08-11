@@ -47,6 +47,7 @@ def build_songmap(
     lyrics: list[LyricLine] | None = None,
     count_in_start: float | None = None,
     song_start: float | None = None,
+    count_in_clicks: list[float] | None = None,
 ) -> SongMap:
     """
     Build a complete SongMap from canonical ``TimingData``.
@@ -92,6 +93,14 @@ def build_songmap(
                 round(song_start, 3)
                 if song_start is not None
                 else round(offset, 3)
+            ),
+            countInClicks=(
+                [
+                    round(time, 3)
+                    for time in count_in_clicks
+                ]
+                if count_in_clicks
+                else None
             ),
         ),
         beats=beats,

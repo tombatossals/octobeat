@@ -44,6 +44,10 @@ export const TimingSchema = z.object({
     songStart: z
         .number()
         .optional(),
+
+    countInClicks: z
+        .array(z.number())
+        .optional(),
 });
 
 export const SectionSchema = z.object({

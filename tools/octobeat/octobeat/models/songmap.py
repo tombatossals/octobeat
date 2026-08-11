@@ -71,9 +71,12 @@ class Timing(SongMapModel):
 
     # Count-in and song start (seconds into the audio). ``songStart`` is
     # where the music really kicks in after any count-in; ``countInStart``
-    # is the first audible content of that count-in.
+    # is the first audible content of that count-in. ``countInClicks``
+    # lists the time of each individual count-in click so the UI can stay
+    # in sync with the stick clicks.
     countInStart: float | None = Field(default=None, ge=0.0)
     songStart: float | None = Field(default=None, ge=0.0)
+    countInClicks: list[float] | None = None
 
 
 class Beat(SongMapModel):

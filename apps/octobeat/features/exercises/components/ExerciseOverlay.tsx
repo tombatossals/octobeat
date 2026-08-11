@@ -19,6 +19,17 @@ import {
     useDifficultyStore,
 } from "../store";
 
+// Secuencia del count-in de entrada (la típica "1, 2, 1, 2, 3, 4" de
+// Rock Band): 2 golpes de anacrusa más el compás completo de 4.
+const COUNT_IN_PATTERN = [
+    1,
+    2,
+    1,
+    2,
+    3,
+    4,
+];
+
 export function ExerciseOverlay(): JSX.Element | null {
     const dataset = useLibraryStore(
         (state) => state.dataset,
@@ -179,16 +190,161 @@ export function ExerciseOverlay(): JSX.Element | null {
         return null;
     }
 
-    const remaining =
-        songmap.timing.offset -
-        currentTime;
+    const timing = songmap.timing;
+
+    const countInStart =
+        timing.countInStart;
+
+    const songStart =
+        timing.songStart;
+
+    // Fuentes con count-in (p.ej. SNG): la rejilla arranca con los
+    // golpes de baqueta antes de que empiece la canción. En ese caso la
+    // línea del ejercicio se muestra desde el principio.
+    const hasCountIn =
+        countInStart !==
+            undefined &&
+        songStart !==
+            undefined;
+
+    // El arranque de la música: para fuentes con count-in (SNG) es
+    // `songStart`; en el resto, el offset detectado.
+    const musicStart =
+        songStart ??
+        timing.offset;
 
     const musicStarted =
-        remaining <= 0;
+        currentTime >= musicStart;
+
+    // Count-in activo: los golpes de baqueta entre `countInStart` y el
+    // arranque real de la canción.
+    const countInActive =
+        !musicStarted &&
+        countInStart !==
+            undefined &&
+        currentTime >=
+            countInStart;
+
+    // Golpes de baqueta individuales (cuando la fuente los lleva, p.ej.
+    // el song.opus de un SNG). El contador se sincroniza con ellos.
+    const countInClicks =
+        timing.countInClicks;
+
+    const countInNumber =
+        countInActive &&
+        countInStart !==
+            undefined
+            ? (() => {
+                  if (
+                      countInClicks &&
+                      countInClicks.length
+                  ) {
+                      // Último click <= tiempo actual: cada golpe avanza
+                      // la secuencia "1, 2, 1, 2, 3, 4".
+                      let clickIndex = -1;
+
+                      for (
+                          let index = 0;
+                          index <
+                          countInClicks.length;
+                          index++
+                      ) {
+                          if (
+                              countInClicks[index]! <=
+                              currentTime
+                          ) {
+                              clickIndex =
+                                  index;
+                          } else {
+                              break;
+                          }
+                      }
+
+                      if (clickIndex < 0) {
+                          return null;
+                      }
+
+                      return COUNT_IN_PATTERN[
+                          clickIndex %
+                              COUNT_IN_PATTERN.length
+                      ]!;
+                  }
+
+                  // Sin clicks detectados: ancla la cuenta al beat grid
+                  // desde el primer golpe audible.
+                  const current =
+                      beatAtTime(
+                          songmap,
+                          currentTime,
+                      );
+
+                  const first =
+                      songmap.beats.find(
+                          (beat) =>
+                              beat.time >=
+                              countInStart,
+                      );
+
+                  if (
+                      !current ||
+                      !first
+                  ) {
+                      return null;
+                  }
+
+                  const position =
+                      current.index -
+                      first.index;
+
+                  return COUNT_IN_PATTERN[
+                      ((position %
+                          COUNT_IN_PATTERN.length) +
+                          COUNT_IN_PATTERN.length) %
+                          COUNT_IN_PATTERN.length
+                  ]!;
+              })()
+            : null;
+
+    const remaining =
+        musicStart - currentTime;
 
     return (
         <div className="pointer-events-none absolute inset-x-0 bottom-24 z-30 flex justify-center">
-            {musicStarted ? (
+            {hasCountIn ? (
+                <div className="flex items-center gap-4">
+                    {countInActive &&
+                        countInNumber !==
+                            null && (
+                            <div className="flex flex-col items-center gap-1 rounded-lg border border-white/10 bg-gray-800/60 px-5 py-3 shadow-2xl backdrop-blur-md">
+                                <span
+                                    className="text-xs uppercase tracking-widest text-white"
+                                    style={{
+                                        textShadow:
+                                            "1px 1px 0 #374151, -1px -1px 0 #374151, 1px -1px 0 #374151, -1px 1px 0 #374151, 1px 0 0 #374151, -1px 0 0 #374151, 0 1px 0 #374151, 0 -1px 0 #374151",
+                                    }}
+                                >
+                                    Empieza en
+                                </span>
+
+                                <span
+                                    className="font-mono text-5xl font-black leading-none text-white"
+                                    style={{
+                                        textShadow:
+                                            "1px 1px 0 #374151, -1px -1px 0 #374151, 1px -1px 0 #374151, -1px 1px 0 #374151, 1px 0 0 #374151, -1px 0 0 #374151, 0 1px 0 #374151, 0 -1px 0 #374151",
+                                    }}
+                                >
+                                    {countInNumber}
+                                </span>
+                            </div>
+                        )}
+
+                    <ExerciseRenderer
+                        exercise={exercise}
+                        currentBeat={currentBeat}
+                        repetition={repetition}
+                    />
+                </div>
+            ) : musicStarted ? (
                 <ExerciseRenderer
                     exercise={exercise}
                     currentBeat={currentBeat}
@@ -207,8 +363,9 @@ export function ExerciseOverlay(): JSX.Element | null {
                     </span>
 
                     <span
-                        className="font-mono text-3xl font-black leading-none text-white"
+                        className="font-mono font-black leading-none text-white"
                         style={{
+                            fontSize: "1.875rem",
                             textShadow:
                                 "1px 1px 0 #374151, -1px -1px 0 #374151, 1px -1px 0 #374151, -1px 1px 0 #374151, 1px 0 0 #374151, -1px 0 0 #374151, 0 1px 0 #374151, 0 -1px 0 #374151",
                         }}

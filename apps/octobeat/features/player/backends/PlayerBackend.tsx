@@ -4,6 +4,7 @@ import { useLibraryStore } from "@/features/library/store";
 
 import { LocalAudioPlayer } from "./audio";
 import { LocalVideoPlayer } from "./video";
+import { WaveformPlayer } from "./waveform";
 import { YouTubePlayer } from "./youtube/YouTubePlayer";
 
 export function PlayerBackend() {
@@ -47,9 +48,20 @@ export function PlayerBackend() {
     }
 
     return (
-        <LocalAudioPlayer
-            key={`audio-${id}`}
-            src={resources.audio}
-        />
+        <>
+            <WaveformPlayer
+                key={`waveform-${id}`}
+                src={resources.audio}
+                sections={
+                    dataset.songmap
+                        .sections
+                }
+            />
+
+            <LocalAudioPlayer
+                key={`audio-${id}`}
+                src={resources.audio}
+            />
+        </>
     );
 }

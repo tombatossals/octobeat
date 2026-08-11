@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { usePlayerStore } from "@octobeat/player";
-import { SeekBar, SongTimeline, TimeDisplay } from "@octobeat/ui";
+import { SeekBar, TimeDisplay } from "@octobeat/ui";
 
 import { ShortcutBadge } from "@/features/library/components/ShortcutBadge";
 import { useLibraryStore } from "@/features/library/store";
@@ -54,12 +54,6 @@ export function PlayerControlsOverlay(): JSX.Element {
     const previous =
         useLibraryStore(
             (state) => state.previous,
-        );
-
-    const dataset =
-        useLibraryStore(
-            (state) =>
-                state.dataset,
         );
 
     const revealed = useUiStore(
@@ -230,13 +224,6 @@ export function PlayerControlsOverlay(): JSX.Element {
             </div>
 
             <div className="pointer-events-auto absolute bottom-0 left-0 right-0 px-6 pb-4">
-                {dataset?.songmap && (
-                    <SongTimeline
-                        songmap={dataset.songmap}
-                        className="mb-3"
-                    />
-                )}
-
                 <SeekBar />
 
                 <div className="mt-2 flex items-center justify-between text-sm text-white">

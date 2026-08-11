@@ -7,13 +7,17 @@ from pathlib import Path
 import numpy as np
 
 from octobeat.audio.decoder import decode_to_wav
-from octobeat.core.analyser import detect_music_lead_in
+from octobeat.core.analyser import (
+    detect_count_in_clicks,
+    detect_music_lead_in,
+)
 from octobeat.models.recording import Recording
 from octobeat.models.songmap import Source
 from octobeat.providers.base import SourceProvider
 from octobeat.timing.sng import (
     extract_audio,
     extract_cover,
+    extract_full_mix,
     extract_stems,
     parse_sng_container,
 )
@@ -51,8 +55,11 @@ class SngSourceProvider(SourceProvider):
         genre = metadata.get("genre")
 
         # Multitrack containers ship the instrument stems; mix them into
-        # the full mix. Otherwise fall back to the single audio track.
+        # the full mix together with the `song.*` track, which carries
+        # the stick-click count-in the chart grid is anchored to.
+        # Otherwise fall back to the single audio track.
         stems = extract_stems(data)
+        full_mix = extract_full_mix(data)
 
         cleanup = tempfile.TemporaryDirectory(
             prefix="octobeat-sng-",
@@ -62,14 +69,25 @@ class SngSourceProvider(SourceProvider):
 
         try:
             if stems:
+                tracks = list(stems)
+
+                if full_mix is not None:
+                    tracks.append(full_mix)
+
                 mix_stems_to_wav(
-                    stems,
+                    tracks,
                     audio_path,
+                )
+
+                label = (
+                    "tracks"
+                    if full_mix is not None
+                    else "stems"
                 )
 
                 console.info(
                     "SNG is multitrack; mixed "
-                    + f"{len(stems)} stems into the full mix.",
+                    + f"{len(tracks)} {label} into the full mix.",
                 )
             else:
                 _name, audio_bytes = extract_audio(data)
@@ -84,6 +102,35 @@ class SngSourceProvider(SourceProvider):
                     audio_path,
                 )
             )
+
+            # The stick clicks are prominent on the full-mix track
+            # (song.opus); in the mixed stems they are buried. Detect the
+            # individual clicks from that track so the count-in counter
+            # can stay in sync with each click.
+            click_wav = audio_path
+
+            if full_mix is not None and stems:
+                _mix_name, mix_bytes = full_mix
+
+                click_wav = (
+                    Path(cleanup.name)
+                    / "click.wav"
+                )
+
+                decode_to_wav_from_bytes(
+                    mix_bytes,
+                    click_wav,
+                )
+
+            clicks = detect_count_in_clicks(
+                click_wav,
+                limit=song_start,
+            )
+
+            if clicks and len(clicks) <= 8:
+                count_in_start = clicks[0]
+            else:
+                clicks = []
         except Exception:
             cleanup.cleanup()
             raise
@@ -108,6 +155,11 @@ class SngSourceProvider(SourceProvider):
             cover_bytes=extract_cover(data),
             count_in_start=count_in_start,
             song_start=song_start,
+            count_in_clicks=(
+                clicks
+                if clicks
+                else None
+            ),
         )
 
 
@@ -147,14 +199,16 @@ def decode_to_wav_from_bytes(
 
 
 def mix_stems_to_wav(
-    stems: list[tuple[str, bytes]],
+    tracks: list[tuple[str, bytes]],
     destination: Path,
 ) -> None:
     """
-    Decode the instrument stems and sum them into a single mix WAV.
+    Decode the audio tracks and sum them into a single mix WAV.
 
-    Each stem is decoded to 48 kHz mono float32 PCM, then all of them are
-    added together and peak-normalised so the full mix does not clip.
+    Each track (the instrument stems plus, when present, the full-mix
+    ``song.*`` track that carries the count-in) is decoded to 48 kHz
+    mono float32 PCM, then all of them are added together and
+    peak-normalised so the full mix does not clip.
     """
 
     destination.parent.mkdir(
@@ -169,7 +223,7 @@ def mix_stems_to_wav(
 
         decoded: list[np.ndarray] = []
 
-        for name, audio_bytes in stems:
+        for name, audio_bytes in tracks:
             source = tmp_dir / f"{name}.ogg"
             source.write_bytes(audio_bytes)
 

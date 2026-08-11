@@ -126,6 +126,35 @@ STEM_TRACKS = (
     "drums",
 )
 
+# Full-mix audio tracks. The full mix carries the stick-click count-in
+# that the chart's beat grid is anchored to, which the instrument stems
+# do not.
+FULL_MIX_TRACKS = (
+    "song.opus",
+    "song.ogg",
+    "song.wav",
+    "song.mp3",
+)
+
+
+def extract_full_mix(data: bytes) -> tuple[str, bytes] | None:
+    """
+    Extract the full-mix track (``song.*``), if the container has one.
+
+    Returns ``(name, bytes)`` or ``None``. The full mix includes the
+    stick-click count-in the chart grid is anchored to, so it is mixed
+    together with the instrument stems.
+    """
+
+    sng = parse_sng_container(data)
+
+    for name in FULL_MIX_TRACKS:
+        listing = sng.files.get(name)
+        if listing is not None:
+            return name, _unmask_file(data, listing)
+
+    return None
+
 
 def extract_stems(data: bytes) -> list[tuple[str, bytes]]:
     """

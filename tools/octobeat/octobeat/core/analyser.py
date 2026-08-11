@@ -394,6 +394,7 @@ def analyse_with_chart(
         confidence=validation.confidence,
         count_in_start=recording.count_in_start,
         song_start=recording.song_start,
+        count_in_clicks=recording.count_in_clicks,
         lyrics=_fetch_lrclib_lyrics(
             recording.artist or "",
             recording.title or "",
@@ -787,8 +788,10 @@ def detect_music_lead_in(
     ``count_in_start`` is the first audible content (typically the first
     stick click of a Rock Band count-in) and ``song_start`` is where the
     music truly kicks in — the first sustained burst of energy after any
-    quiet count-in, using a running minimum so the intermittent clicks do
-    not count as the band entry.
+    quiet count-in. The thresholds are relative to the quiet tail of the
+    signal so that faint stick-click count-ins (and quiet intros) are
+    still detected; the clicks themselves are transient and never form a
+    sustained run, so they do not count as the band entry.
     """
 
     y, sr_raw = librosa.load(
@@ -821,9 +824,11 @@ def detect_music_lead_in(
         np.percentile(rms, 98),
     )
 
+    # Low threshold (2% of the 98th percentile) so quiet count-in clicks
+    # buried under the mix are still caught as the first audible content.
     count_threshold = max(
-        0.01,
-        peak * 0.08,
+        0.002,
+        peak * 0.02,
     )
 
     first_audible = np.flatnonzero(
@@ -840,42 +845,17 @@ def detect_music_lead_in(
         else 0.0
     )
 
-    # The band keeps the energy up between beats; the count-in clicks
-    # fall back to silence. A running minimum over ~0.5 s separates the
-    # two.
-    window = 5
-
-    running_min = np.array(
-        [
-            float(
-                np.min(
-                    rms[
-                        max(0, index - window): index + window + 1
-                    ]
-                )
-            )
-            for index in range(rms.size)
-        ]
-    )
-
-    band_threshold = (
-        float(
-            np.percentile(
-                running_min,
-                90,
-            )
-        )
-        * 0.25
-    )
-
+    # The count-in clicks are brief transients with silence between them;
+    # the band keeps a sustained run of frames above the threshold. The
+    # first sustained run after the clicks is the song start.
     sustain = 4
     run = 0
     song_start = 0.0
 
     for index, energy in enumerate(
-        running_min
+        rms
     ):
-        if energy >= band_threshold:
+        if energy >= count_threshold:
             run += 1
             if run >= sustain:
                 song_start = float(
@@ -894,3 +874,75 @@ def detect_music_lead_in(
             3,
         ),
     )
+
+
+def detect_count_in_clicks(
+    audio_path: Path,
+    *,
+    limit: float,
+) -> list[float]:
+    """
+    Detect the stick-click count-in transients before ``limit`` seconds.
+
+    Returns the onset times (seconds into the audio) of the count-in
+    clicks, in chronological order, or an empty list when the file has
+    no discernible click lead-in. ``limit`` bounds the search to the
+    lead-in region so the song's own onsets are not mistaken for clicks.
+    """
+
+    y, sr_raw = librosa.load(
+        str(audio_path),
+        sr=None,
+        mono=True,
+    )
+
+    sr = int(sr_raw)
+
+    hop = 512
+
+    envelope = librosa.onset.onset_strength(
+        y=y,
+        sr=sr,
+        hop_length=hop,
+    )
+
+    times = librosa.frames_to_time(
+        np.arange(envelope.size),
+        sr=sr,
+        hop_length=hop,
+    )
+
+    peak = float(np.max(envelope))
+
+    if peak <= 0:
+        return []
+
+    threshold = peak * 0.05
+
+    clicks: list[float] = []
+
+    for index in range(1, envelope.size - 1):
+        time = float(times[index])
+
+        if time >= limit:
+            break
+
+        if (
+            envelope[index] >= threshold
+            and envelope[index]
+            >= envelope[index - 1]
+            and envelope[index]
+            > envelope[index + 1]
+        ):
+            # A single click can ring into several adjacent onset frames;
+            # keep one hit per click.
+            if (
+                not clicks
+                or time - clicks[-1]
+                > 0.1
+            ):
+                clicks.append(
+                    round(time, 3),
+                )
+
+    return clicks
