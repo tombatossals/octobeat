@@ -125,33 +125,6 @@ class LyricLine(SongMapModel):
     text: str
 
 
-class VideoMedia(SongMapModel):
-    """
-    An external video associated with the recording.
-
-    ``offset`` is the video time at which the song begins:
-    ``videoTime = songTime + offset``. ``syncConfidence`` records how
-    reliably the offset was detected (0..1). The offset may be negative
-    when the recording starts with a count-in that the video does not
-    have: the video then waits at its first frame until the song starts.
-    """
-
-    file: str
-    offset: float = Field(ge=-3600.0)
-    syncConfidence: float = Field(ge=0.0, le=1.0)
-
-
-class Media(SongMapModel):
-    """
-    Audiovisual resources associated with the recording.
-
-    The media block is independent of the timing: it never modifies
-    beats, tempo or sections. Designed to grow (audio, video, cover).
-    """
-
-    video: VideoMedia | None = None
-
-
 class SongMap(SongMapModel):
     """
     Root SongMap document.
@@ -174,4 +147,3 @@ class SongMap(SongMapModel):
 
     lyrics: list[LyricLine] | None = None
     sections: list[Section] | None = None
-    media: Media | None = None

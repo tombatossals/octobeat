@@ -11,19 +11,13 @@ from octobeat.fixtures.sng import (
     build_sng_fixture,
     build_sng_fixtures,
 )
-from octobeat.fixtures.video_sync import (
-    VideoSyncFixture,
-    build_video_sync_fixtures,
-)
 
 __all__ = [
     "CASE_NAMES",
     "Fixture",
     "SNG_CASE_NAMES",
     "SngFixture",
-    "VideoSyncFixture",
     "build_fixtures",
     "build_sng_fixture",
     "build_sng_fixtures",
-    "build_video_sync_fixtures",
 ]

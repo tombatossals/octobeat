@@ -5,7 +5,7 @@
 OctoBeat is a Next.js application that consumes SongMaps to keep
 technical exercises synchronized with real recordings.
 
-It plays the recording (local audio/video or YouTube), renders a
+It plays the recording with a full-screen waveform, renders a
 synchronized exercise overlay, shows synced lyrics and provides a
 browsable catalog of datasets.
 
@@ -39,8 +39,8 @@ ln -s ~/Music/OctoBeat apps/octobeat/public/resources
 ```
 
 Each dataset must contain `catalog.json`, plus per-song directories
-with `metadata.json`, `songmap.json`, `recording.webm`, `video.mp4`
-and `cover.jpg`.
+with `metadata.json`, `songmap.json`, `recording.webm` and
+`cover.jpg`.
 
 ## Run the dev server
 
@@ -73,7 +73,7 @@ pnpm start
 
 ## Player
 
-- plays local audio + video, or YouTube;
+- plays local recordings with a full-screen waveform;
 - transport controls with keyboard shortcuts;
 - seek bar with elapsed time and percentage;
 - volume control (`↑`/`↓`) with a slider and percentage readout;
@@ -82,19 +82,9 @@ pnpm start
 
 ### Song timeline
 
-- section bars proportional to each section's duration, always in
-  **song time** (unaffected by the video offset);
-- active section highlighted with a live position marker and current
-  time;
-- click a section to seek to its start.
-
-### Video synchronization
-
-When a dataset has a synced video (`SongMap.media.video`), the video is
-muted and follows the audio in `videoTime = songTime + videoOffset`. A
-**Video offset** control (shown in the transport overlay) lets you fine
-tune the offset in ±10 ms steps and save the correction; the correction
-persists in `localStorage` for that dataset and is marked as "manual".
+The full-screen waveform shows the song structure (sections as colored
+regions) with a live progress playhead, always visible during playback.
+The transport overlay keeps a seek bar with elapsed time and percentage.
 
 ## Exercises
 
@@ -105,7 +95,7 @@ persists in `localStorage` for that dataset and is marked as "manual".
 
 ## Lyrics
 
-- synchronized lyrics rendered over the video;
+- synchronized lyrics rendered over the waveform;
 - embedded in the SongMap when available, with an LRCLIB fallback.
 
 ## Shortcuts

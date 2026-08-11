@@ -2,10 +2,6 @@ import { z } from "zod";
 
 export const ResourcesSchema = z.object({
     audio: z.string(),
-
-    video: z
-        .string()
-        .nullish(),
 });
 
 export const TimingProvenanceSchema =
@@ -54,10 +50,6 @@ export const MetadataSchema =
             .nullish(),
 
         timing: TimingProvenanceSchema
-            .nullish(),
-
-        youtube: z
-            .string()
             .nullish(),
 
         resources:

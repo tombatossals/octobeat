@@ -3,9 +3,7 @@
 import { useLibraryStore } from "@/features/library/store";
 
 import { LocalAudioPlayer } from "./audio";
-import { LocalVideoPlayer } from "./video";
 import { WaveformPlayer } from "./waveform";
-import { YouTubePlayer } from "./youtube/YouTubePlayer";
 
 export function PlayerBackend() {
     const dataset = useLibraryStore(
@@ -16,36 +14,8 @@ export function PlayerBackend() {
         return null;
     }
 
-    const {
-        resources,
-        youtube,
-        id,
-    } = dataset.metadata;
-
-    if (resources.video) {
-        return (
-            <>
-                <LocalVideoPlayer
-                    key={`video-${id}`}
-                    src={resources.video}
-                />
-
-                <LocalAudioPlayer
-                    key={`audio-${id}`}
-                    src={resources.audio}
-                />
-            </>
-        );
-    }
-
-    if (youtube) {
-        return (
-            <YouTubePlayer
-                key={`youtube-${id}`}
-                videoId={youtube}
-            />
-        );
-    }
+    const { resources, id } =
+        dataset.metadata;
 
     return (
         <>

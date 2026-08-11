@@ -4,7 +4,6 @@ import argparse
 from pathlib import Path
 
 from octobeat.io.songmap import read_songmap
-from octobeat.models.songmap import VideoMedia
 from octobeat.timing import (
     TimingData,
     TimingError,
@@ -74,31 +73,7 @@ def _inspect_songmap(path: Path) -> int:
         len(songmap.sections or []),
     )
 
-    _report_video(songmap.media.video if songmap.media else None)
-
     return 0
-
-
-def _report_video(video: VideoMedia | None) -> None:
-    """Print the video synchronization section, if present."""
-
-    console.blank()
-    console.section("Video")
-
-    if video is None:
-        console.info("(none)")
-        return
-
-    console.field("File", video.file)
-    console.field("Offset", f"{video.offset:.2f} s")
-    console.field("Confidence", f"{video.syncConfidence:.2f}")
-
-    if video.syncConfidence >= 0.90:
-        console.success("Audio/video synchronized.")
-    elif video.syncConfidence >= 0.70:
-        console.warning("Synchronization needs review.")
-    else:
-        console.warning("Synchronization unreliable.")
 
 
 def _report(

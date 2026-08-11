@@ -15,7 +15,6 @@ from octobeat.commands.info import run as info
 from octobeat.commands.init import run as init
 from octobeat.commands.inspect import run as inspect
 from octobeat.commands.metadata import run as metadata
-from octobeat.commands.sync_video import run as sync_video
 from octobeat.commands.validate import run as validate
 from octobeat.version import __version__
 
@@ -123,12 +122,6 @@ def build_parser() -> argparse.ArgumentParser:
     add_parser.add_argument(
         "--id",
         help="Override the dataset identifier.",
-    )
-
-    add_parser.add_argument(
-        "--no-video",
-        action="store_true",
-        help="Skip downloading the video track.",
     )
 
     add_parser.add_argument(
@@ -363,21 +356,6 @@ def build_parser() -> argparse.ArgumentParser:
         func=metadata,
     )
 
-    metadata_youtube = (
-        metadata_commands.add_parser(
-            "youtube",
-            help="Generate metadata from YouTube.",
-        )
-    )
-
-    metadata_youtube.add_argument(
-        "url",
-    )
-
-    metadata_youtube.set_defaults(
-        func=metadata,
-    )
-
     #
     # extract
     #
@@ -406,21 +384,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     extract_audio.set_defaults(
-        func=not_implemented,
-    )
-
-    extract_video = (
-        extract_commands.add_parser(
-            "video",
-            help="Extract video.",
-        )
-    )
-
-    extract_video.add_argument(
-        "input",
-    )
-
-    extract_video.set_defaults(
         func=not_implemented,
     )
 
@@ -560,51 +523,6 @@ def build_parser() -> argparse.ArgumentParser:
 
     inspect_parser.set_defaults(
         func=inspect,
-    )
-
-    #
-    # sync-video
-    #
-
-    sync_video_parser = commands.add_parser(
-        "sync-video",
-        help="Synchronize a video with a SongMap (detect video offset).",
-    )
-
-    sync_video_parser.add_argument(
-        "songmap",
-        help="Dataset id/prefix or songmap.json path.",
-    )
-
-    sync_video_parser.add_argument(
-        "video",
-        help="Local video file or YouTube URL.",
-    )
-
-    sync_video_parser.add_argument(
-        "--offset",
-        type=float,
-        default=None,
-        help="Manual video offset in seconds (overrides detection).",
-    )
-
-    sync_video_parser.add_argument(
-        "--reference",
-        type=Path,
-        default=None,
-        help="Reference audio the SongMap was built from.",
-    )
-
-    sync_video_parser.add_argument(
-        "-o",
-        "--output",
-        type=Path,
-        default=None,
-        help="Datasets directory (defaults to paths.datasets).",
-    )
-
-    sync_video_parser.set_defaults(
-        func=sync_video,
     )
 
     #

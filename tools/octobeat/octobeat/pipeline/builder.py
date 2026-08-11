@@ -24,7 +24,6 @@ from octobeat.models.metadata import (
     TimingProvenance,
 )
 from octobeat.models.recording import Recording
-from octobeat.models.songmap import SongMap
 from octobeat.naming import dataset_slug
 from octobeat.providers.deezer import (
     DeezerMetadata,
@@ -69,8 +68,6 @@ class BuildResult:
 
     audio: str
 
-    video: str | None
-
     cover_source: str | None
 
     duration: float
@@ -88,7 +85,6 @@ def build_dataset(
     output: Path,
     catalog: Path | None = None,
     dataset_id: str | None = None,
-    include_video: bool = True,
     include_cover: bool = True,
     update_catalog: bool = True,
     offset: float | None = None,
@@ -97,8 +93,8 @@ def build_dataset(
     Build a complete dataset from a recording source.
 
     Runs the full pipeline: acquire the recording, analyse it, fetch
-    the video and cover artwork when the source supports them, write
-    the dataset and update the catalog.
+    the cover artwork when the source supports them, write the dataset
+    and update the catalog.
 
     ``offset`` overrides the detected music start (seconds into the
     media where the actual song begins).
@@ -123,26 +119,19 @@ def build_dataset(
             / dataset_id
         )
 
-        video_path: Path | None = None
         cover_source: str | None = None
 
         if (
-            include_video
+            include_cover
             and isinstance(provider, YouTubeProvider)
         ):
-            video_path = provider.download_video(
+            cover_source = _download_cover(
+                recording,
+                dataset_dir / "cover.jpg",
+                provider,
                 source,
-                dataset_dir / "video.mp4",
+                deezer,
             )
-
-            if include_cover:
-                cover_source = _download_cover(
-                    recording,
-                    dataset_dir / "cover.jpg",
-                    provider,
-                    source,
-                    deezer,
-                )
 
         cover_path = (
             _write_embedded_cover(
@@ -158,22 +147,10 @@ def build_dataset(
 
         songmap = result.songmap
 
-        if video_path is not None:
-            songmap = _sync_video(
-                songmap,
-                video_path,
-                reference_audio=recording.path,
-                song_start=(
-                    recording.song_start
-                    or 0.0
-                ),
-            )
-
         metadata = _build_metadata(
             recording,
             dataset_id,
             result,
-            video_path,
             deezer,
         )
 
@@ -182,7 +159,6 @@ def build_dataset(
             songmap=songmap,
             metadata=metadata,
             audio=recording.path,
-            video=video_path,
             cover=cover_path,
         )
 
@@ -214,11 +190,6 @@ def build_dataset(
             artist=recording.artist,
             title=recording.title,
             audio="recording.webm",
-            video=(
-                video_path.name
-                if video_path is not None
-                else None
-            ),
             cover_source=cover_source,
             duration=result.report.duration,
             bpm=result.report.bpm,
@@ -303,74 +274,6 @@ def _chart_kind(chart: Path) -> str:
     return "sng"
 
 
-def _sync_video(
-    songmap: SongMap,
-    video_path: Path,
-    *,
-    reference_audio: Path,
-    song_start: float = 0.0,
-) -> SongMap:
-    """
-    Detect the video offset against the reference audio and attach the
-    video to the SongMap. Never fails the dataset: on sync errors or low
-    confidence, the SongMap is returned unchanged with a warning.
-    """
-
-    import tempfile
-
-    from octobeat.sync import (
-        AUTO_CONFIDENCE,
-        VideoSyncError,
-        compute_features,
-        extract_video_audio,
-        sync_video,
-    )
-    from octobeat.sync.engine import attach_video_to_songmap
-
-    try:
-        with tempfile.TemporaryDirectory(
-            prefix="octobeat-sync-",
-        ) as tmp:
-            video_audio = extract_video_audio(
-                video_path,
-                Path(tmp) / "video.wav",
-            )
-
-            reference = compute_features(reference_audio)
-            video = compute_features(video_audio)
-
-            result = sync_video(
-                reference,
-                video,
-                song_start=song_start,
-            )
-
-        console.info(
-            f"Video offset: {result.offset:.2f} s "
-            f"(confidence {result.confidence:.2f})",
-        )
-
-        if result.confidence >= AUTO_CONFIDENCE:
-            console.success("Video synchronized.")
-        else:
-            console.warning(
-                "Video synchronization has low confidence; "
-                "use 'octobeat sync-video --offset' to correct it.",
-            )
-
-        return attach_video_to_songmap(
-            songmap,
-            video_file=video_path.name,
-            video_offset=result.offset,
-            sync_confidence=result.confidence,
-        )
-    except (VideoSyncError, FileNotFoundError) as error:
-        console.warning(
-            f"Video synchronization skipped ({error}).",
-        )
-        return songmap
-
-
 def _default_config() -> Config:
     from octobeat.config import ensure_workspace
 
@@ -405,7 +308,6 @@ def _build_metadata(
     recording: Recording,
     dataset_id: str,
     result: AnalysisResult,
-    video_path: Path | None,
     deezer: DeezerProvider,
 ) -> CatalogMetadata:
     """
@@ -413,15 +315,6 @@ def _build_metadata(
     """
 
     songmap = result.songmap
-
-    youtube_id = (
-        songmap.metadata.source.id
-        if (
-            songmap.metadata.source.type
-            == "youtube"
-        )
-        else None
-    )
 
     enriched = _deezer_metadata(
         recording,
@@ -465,14 +358,8 @@ def _build_metadata(
             if enriched is not None
             else []
         ),
-        youtube=youtube_id,
         resources=ResourceRefs(
             audio="recording.webm",
-            video=(
-                video_path.name
-                if video_path is not None
-                else None
-            ),
         ),
     )
 

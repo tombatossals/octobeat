@@ -52,10 +52,6 @@ def _show() -> int:
         "audio_format",
         config.download.audio_format,
     )
-    console.field(
-        "video_format",
-        config.download.video_format,
-    )
 
     console.blank()
     console.section("[catalog]")

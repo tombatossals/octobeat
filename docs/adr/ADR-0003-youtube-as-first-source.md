@@ -29,7 +29,8 @@ YouTube is selected as the initial recording source for the proof of concept.
 
 The ecosystem will initially assume that recordings originate from YouTube.
 
-BeatEngine will be capable of analyzing YouTube recordings, and OctoBeat will synchronize its overlay with the YouTube player.
+BeatEngine will be capable of analyzing YouTube recordings (downloading
+the audio track only) to produce SongMaps.
 
 This decision is limited to the early stages of the project and does not define the long-term architecture.
 

@@ -116,7 +116,7 @@ Add a song from YouTube with a single command:
 uv run octobeat add https://youtu.be/KJamzD0KntE
 ```
 
-The command downloads metadata, artwork, audio and video, analyzes the
+The command downloads metadata, artwork and audio, analyzes the
 recording, generates the SongMap, builds the dataset and updates the
 catalog.
 
@@ -140,7 +140,6 @@ The result is a dataset directory like:
 ├── cover.jpg
 ├── recording.webm
 ├── recording.wav
-├── video.mp4
 └── songmap.json
 ```
 
@@ -177,7 +176,6 @@ octobeat add <youtube-or-file>   # build a complete dataset
 octobeat analyse <file> [--debug]
 octobeat analyse <file> --chart song.sng   # use a community chart for timing
 octobeat inspect <song.sng>      # show a chart's timing without building
-octobeat sync-video <songmap.json> <video.mp4>   # sync a video with a SongMap
 octobeat dataset reanalyse       # re-analyse every dataset
 octobeat dataset verify
 octobeat catalog build           # rebuild catalog.json

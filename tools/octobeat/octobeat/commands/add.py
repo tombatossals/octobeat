@@ -36,9 +36,6 @@ def run(args: argparse.Namespace) -> int:
             output=output,
             catalog=catalog,
             dataset_id=args.id,
-            include_video=(
-                not args.no_video
-            ),
             include_cover=(
                 not args.no_cover
             ),
@@ -54,11 +51,6 @@ def run(args: argparse.Namespace) -> int:
     resources: list[tuple[str, object]] = [
         ("Audio", result.audio),
     ]
-
-    if result.video is not None:
-        resources.append(
-            ("Video", result.video),
-        )
 
     if result.cover_source is not None:
         resources.append(

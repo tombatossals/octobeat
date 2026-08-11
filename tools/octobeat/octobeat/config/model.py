@@ -8,8 +8,6 @@ DEFAULT_DATASETS_DIR = "~/Music/OctoBeat"
 
 DEFAULT_AUDIO_FORMAT = "bestaudio"
 
-DEFAULT_VIDEO_FORMAT = "bestvideo"
-
 
 class PathsConfig(BaseModel):
     """
@@ -58,10 +56,6 @@ class DownloadConfig(BaseModel):
 
     audio_format: str = Field(
         default=DEFAULT_AUDIO_FORMAT,
-    )
-
-    video_format: str = Field(
-        default=DEFAULT_VIDEO_FORMAT,
     )
 
 

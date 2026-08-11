@@ -183,8 +183,6 @@ SongMap
 ├── sections (optional)
 
 ├── lyrics (optional)
-
-└── media (optional)
 ```
 
 ---
@@ -434,60 +432,7 @@ provider.
 
 ---
 
-# 14. Media
-
-The optional `media` block associates **audiovisual resources** with the
-recording. It is independent of the timing: it never modifies beats,
-tempo or sections. It is designed to grow (audio, video, cover).
-
-```json
-{
-  "media": {
-    "video": {
-      "file": "video.mp4",
-      "offset": 7.42,
-      "syncConfidence": 0.98
-    }
-  }
-}
-```
-
-## 14.1 Song time vs video time
-
-The SongMap always works in **song time**: beats, bars, sections,
-tempo map and lyrics are expressed in seconds of the analysed
-recording.
-
-A video is a separate timeline. The relationship is a pure
-transformation:
-
-```
-videoTime = songTime + videoOffset
-```
-
-For example, with `videoOffset = 7.42`:
-
-| Song time | Video time |
-| --------- | ---------- |
-| 0.00      | 7.42       |
-| 1.00      | 8.42       |
-| 10.00     | 17.42      |
-
-This keeps the exercise engine, timeline and navigation working
-exclusively in song time. The video offset only affects playback.
-
-## 14.2 Fields
-
-* `file` — relative file name of the video inside the dataset;
-* `offset` — the video time at which the song begins (≥ 0);
-* `syncConfidence` — reliability of the detected offset in `[0, 1]`.
-
-A video with no intro has `offset = 0` (the song starts at video 0:00).
-The offset may be detected automatically or set manually.
-
----
-
-# 15. Future evolution
+# 14. Future evolution
 
 Version 1 intentionally keeps the model minimal.
 

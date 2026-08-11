@@ -29,12 +29,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   be added without a new schema).
 - Optional `timing.source` field recording where the timing came from
   (`sng`, `midi`, `chart`, `audio-analysis`, `manual`).
-- Optional `media` block associating audiovisual resources with the
-  recording. `media.video` carries `file`, `offset` (the video time at
-  which the song begins: `videoTime = songTime + offset`) and
-  `syncConfidence`. The SongMap always works in song time; the video
-  offset is only a playback transformation and never modifies the
-  timing.
 
 ## [1.0] — 2026-08-02
 

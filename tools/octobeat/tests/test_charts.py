@@ -200,7 +200,6 @@ def test_build_dataset_uses_matching_chart(monkeypatch, tmp_path):
     result = build_dataset(
         "fixture",
         output=tmp_path / "datasets",
-        include_video=False,
         include_cover=False,
     )
 

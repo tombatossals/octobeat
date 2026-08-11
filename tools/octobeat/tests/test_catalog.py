@@ -19,7 +19,6 @@ def _make_dataset(
     dataset_id: str,
     title: str,
     artist: str = "Artist",
-    video: str | None = None,
 ) -> None:
     directory.mkdir(parents=True, exist_ok=True)
 
@@ -50,7 +49,6 @@ def _make_dataset(
         duration=10.0,
         resources=ResourceRefs(
             audio="recording.webm",
-            video=video,
         ),
     )
 
@@ -81,7 +79,6 @@ def test_catalog_build_scans_datasets(tmp_path):
         tmp_path / "bbb-song-two-2222222222",
         dataset_id="bbb-song-two-2222222222",
         title="Song Two",
-        video="video.mp4",
     )
 
     assert run(_args("build", tmp_path)) == 0
@@ -95,10 +92,6 @@ def test_catalog_build_scans_datasets(tmp_path):
         "bbb-song-two-2222222222",
     }
 
-    two = next(
-        e for e in entries if e["id"] == "bbb-song-two-2222222222"
-    )
-    assert two["resources"]["video"] == "video.mp4"
 
 
 def test_catalog_build_ignores_removed_datasets(tmp_path):

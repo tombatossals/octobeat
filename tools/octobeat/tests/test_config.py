@@ -32,7 +32,6 @@ def test_defaults() -> None:
 
     assert config.paths.datasets == "~/Music/OctoBeat"
     assert config.download.audio_format == "bestaudio"
-    assert config.download.video_format == "bestvideo"
     assert config.catalog.auto_rebuild is True
 
 

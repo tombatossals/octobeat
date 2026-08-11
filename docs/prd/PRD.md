@@ -197,7 +197,7 @@ ritardando), downbeats, bars and confidence metrics.
 Build a SongMap Viewer. ✅ Done
 
 The web interface (`apps/octobeat`) renders the catalog, plays
-recordings (local audio/video and YouTube) and displays synchronized
+recordings with a full-screen waveform and displays synchronized
 exercises, lyrics and a debugging HUD.
 
 ---

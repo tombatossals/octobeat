@@ -23,7 +23,6 @@ def write_resource(
     songmap: SongMap,
     metadata: CatalogMetadata,
     audio: Path,
-    video: Path | None = None,
     cover: Path | None = None,
     include_webm: bool = True,
 ) -> Path:
@@ -36,11 +35,10 @@ def write_resource(
         metadata.json
         recording.wav
         recording.webm
-        video.<ext>
         cover.jpg
 
     `audio` is copied as recording.wav and (optionally) encoded to
-    recording.webm. `video` and `cover` are copied when provided.
+    recording.webm. `cover` is copied when provided.
     """
 
     dataset_dir = dataset_dir.expanduser().resolve()
@@ -69,20 +67,6 @@ def write_resource(
             audio,
             dataset_dir / RECORDING_WEBM,
         )
-
-    if video is not None:
-        video_target = (
-            dataset_dir / video.name
-        )
-
-        if (
-            video.resolve()
-            != video_target.resolve()
-        ):
-            shutil.copy2(
-                video,
-                video_target,
-            )
 
     if cover is not None:
         cover_target = (

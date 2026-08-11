@@ -96,7 +96,6 @@ def config_to_toml(config: Config) -> str:
         "",
         "[download]",
         f'audio_format = "{_escape(config.download.audio_format)}"',
-        f'video_format = "{_escape(config.download.video_format)}"',
         "",
         "[catalog]",
         f'auto_rebuild = {"true" if config.catalog.auto_rebuild else "false"}',

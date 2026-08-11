@@ -29,12 +29,6 @@ interface PlayerStore {
     duration: number;
 
     /**
-     * Video offset: the video time at which the song begins
-     * (videoTime = songTime + videoOffset). 0 when no synced video.
-     */
-    videoOffset: number;
-
-    /**
      * Volume level (0..1).
      */
     volume: number;
@@ -48,11 +42,6 @@ interface PlayerStore {
      * Update the volume level.
      */
     setVolume(volume: number): void;
-
-    /**
-     * Update the video offset.
-     */
-    setVideoOffset(offset: number): void;
 
     /**
      * Update whether playback has started.
@@ -95,8 +84,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
     duration: 0,
 
-    videoOffset: 0,
-
     volume: 1,
 
     setPlayer(player) {
@@ -122,12 +109,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         get().player?.setVolume(
             clamped,
         );
-    },
-
-    setVideoOffset(videoOffset) {
-        set({
-            videoOffset,
-        });
     },
 
     setStarted(started) {

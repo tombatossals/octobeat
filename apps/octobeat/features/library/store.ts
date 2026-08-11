@@ -5,8 +5,6 @@ import { usePlayerStore } from "@octobeat/player";
 
 import { getLibrary } from "@/lib/library";
 
-import { getManualOffset } from "@/features/player/videoOffsetStorage";
-
 /**
  * Fisher-Yates shuffle. Returns a new array.
  */
@@ -100,32 +98,9 @@ export const useLibraryStore =
                 .getState()
                 .stop();
 
-            // Reset the video offset while the new dataset loads so a
-            // stale offset never positions the new video incorrectly.
-            usePlayerStore
-                .getState()
-                .setVideoOffset(0);
-
             const dataset =
                 await getLibrary().load(
                     id,
-                );
-
-            // A manual correction (made in the UI) overrides the SongMap
-            // offset; otherwise use the synced offset.
-            const manualOffset =
-                getManualOffset(id);
-
-            const videoOffset =
-                manualOffset
-                ?? dataset.songmap.media
-                    ?.video?.offset
-                ?? 0;
-
-            usePlayerStore
-                .getState()
-                .setVideoOffset(
-                    videoOffset,
                 );
 
             const index =

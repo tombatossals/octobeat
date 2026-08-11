@@ -64,19 +64,6 @@ export const SectionSchema = z.object({
         .optional(),
 });
 
-export const VideoMediaSchema = z.object({
-    file: z.string(),
-
-    offset: z.number(),
-
-    syncConfidence: z.number(),
-});
-
-export const MediaSchema = z.object({
-    video: VideoMediaSchema
-        .optional(),
-});
-
 export const SourceSchema = z.object({
     type: z.string(),
     id: z.string(),
@@ -114,9 +101,6 @@ export const SongMapSchema = z.object({
     sections: z
         .array(SectionSchema)
         .optional(),
-
-    media: MediaSchema
-        .optional(),
 });
 
 export type Beat = z.infer<typeof BeatSchema>;
@@ -134,10 +118,6 @@ export type TempoSegment = z.infer<
 export type Timing = z.infer<typeof TimingSchema>;
 
 export type Section = z.infer<typeof SectionSchema>;
-
-export type VideoMedia = z.infer<typeof VideoMediaSchema>;
-
-export type Media = z.infer<typeof MediaSchema>;
 
 export type SongMap = z.infer<typeof SongMapSchema>;
 

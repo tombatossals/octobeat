@@ -8,7 +8,7 @@ def decode_to_wav(
     output_path: Path,
 ) -> None:
     """
-    Decode an audio/video file to a
+    Decode an audio file to a
     48 kHz mono float32 WAV.
     """
 

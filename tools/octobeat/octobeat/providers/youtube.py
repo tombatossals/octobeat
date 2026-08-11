@@ -124,61 +124,6 @@ class YouTubeProvider(SourceProvider):
 
         return destination
 
-    #
-    # Video
-    #
-
-    def download_video(
-        self,
-        url: str,
-        destination: Path,
-    ) -> Path:
-        """
-        Download the video track into the destination directory.
-
-        Returns the path to the produced file (any extension).
-        """
-
-        destination = destination.expanduser().resolve()
-        destination.parent.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
-
-        output_template = str(
-            destination.with_suffix(".%(ext)s"),
-        )
-
-        with download_bar(
-            None,
-            "Video",
-        ) as bar:
-            options = {
-                **_DOWNLOADER_OPTIONS,
-                "format": "bestvideo+bestaudio/best",
-                "outtmpl": output_template,
-                "merge_output_format": "mp4",
-                "progress_hooks": [
-                    yt_dlp_progress_hook(bar),
-                ],
-                "postprocessors": [
-                    {
-                        "key": "FFmpegVideoConvertor",
-                        "preferedformat": "mp4",
-                    },
-                ],
-            }
-
-            with _downloader(options) as downloader:
-                downloader.download([url])
-
-        if not destination.exists():
-            raise RuntimeError(
-                "yt-dlp did not produce a video file.",
-            )
-
-        return destination
-
     def download_thumbnail(
         self,
         url: str,

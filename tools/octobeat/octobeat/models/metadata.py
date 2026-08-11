@@ -44,8 +44,6 @@ class CatalogMetadata(BaseModel):
 
     timing: TimingProvenance | None = None
 
-    youtube: str | None = None
-
     resources: ResourceRefs
 
 
@@ -73,5 +71,3 @@ class ResourceRefs(BaseModel):
     )
 
     audio: str
-
-    video: str | None = None

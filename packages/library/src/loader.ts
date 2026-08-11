@@ -46,11 +46,6 @@ export class Loader {
                 ...metadata,
                 resources: {
                     audio: `${datasetUrl}/${metadata.resources.audio}`,
-
-                    video:
-                        metadata.resources.video
-                            ? `${datasetUrl}/${metadata.resources.video}`
-                            : undefined,
                 },
             },
             songmap,

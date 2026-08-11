@@ -35,13 +35,6 @@ def run(args: argparse.Namespace) -> int:
     if args.metadata_command == "fetch":
         return _fetch(args)
 
-    if args.metadata_command == "youtube":
-        console.failure(
-            "metadata youtube is not implemented.",
-        )
-
-        return 1
-
     console.failure(
         f"metadata {args.metadata_command} is not implemented.",
     )

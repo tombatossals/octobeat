@@ -129,7 +129,7 @@ export function Player() {
             .load(dataset.metadata);
     }, [dataset]);
 
-    function handleVideoClick(
+    function handleClick(
         event: MouseEvent<HTMLDivElement>,
     ) {
         const target =
@@ -149,7 +149,7 @@ export function Player() {
 
     return (
         <div
-            onClick={handleVideoClick}
+            onClick={handleClick}
             className="relative h-screen w-screen overflow-hidden bg-black"
         >
             <PlayerBackend />

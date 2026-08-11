@@ -9,7 +9,6 @@ A dataset contains everything required to reproduce and analyse a song:
 - metadata
 - cover artwork
 - audio recording
-- video recording
 - SongMap
 
 The CLI automates the complete pipeline from a source (such as YouTube or a local file) to a fully reproducible dataset.
@@ -63,7 +62,6 @@ This single command:
 - retrieves metadata (from Deezer);
 - downloads the cover artwork;
 - downloads the audio recording;
-- downloads the video;
 - decodes the audio when necessary;
 - analyses the recording;
 - generates the SongMap;
@@ -135,7 +133,7 @@ octobeat config set k v  # update a configuration value
 Create a complete dataset from a source (YouTube URL or local file).
 
 ```bash
-octobeat add <input> [--no-video] [--no-cover] [--offset SECONDS]
+octobeat add <input> [--no-cover] [--offset SECONDS]
 ```
 
 Options:
@@ -143,7 +141,6 @@ Options:
 - `-o, --output` — datasets directory (defaults to `paths.datasets`);
 - `--catalog` — catalog file (defaults to `<output>/catalog.json`);
 - `--id` — override the dataset identifier;
-- `--no-video` — skip downloading the video track;
 - `--no-cover` — skip downloading the cover artwork;
 - `--offset` — seconds into the media where the song begins.
 
@@ -178,7 +175,7 @@ octobeat dataset list [--output DIR] [--incomplete]
 
 Re-analyse every dataset in the workspace with the current analysis
 engine, then refresh each `songmap.json`, `metadata.json` and the
-catalog. Existing resources (audio, video, cover) are preserved.
+catalog. Existing resources (audio, cover) are preserved.
 
 ```bash
 octobeat dataset reanalyse [--output DIR] [--offset SECONDS]
@@ -225,50 +222,12 @@ Prints the BPM segments, time signatures, beat count, offset and the
 section list. Currently supports `.sng`; `.mid`/`.chart` are added as
 providers land.
 
-Pass a dataset `songmap.json` to also inspect its video synchronization
-state.
-
-## `sync-video`
-
-Synchronize a video with a SongMap by detecting where the song starts
-inside the video (cross-correlation of spectral features):
-
-```bash
-octobeat sync-video songmap.json video.mp4
-octobeat sync-video <dataset> video.mp4
-octobeat sync-video <dataset> https://youtu.be/...
-```
-
-Result:
-
-```
-Video synchronization
-
-Offset.............. 7.42 s
-Confidence.......... 0.98
-
-✓ SongMap updated
-```
-
-- The detected offset is stored in `SongMap.media.video` (`videoTime =
-  songTime + offset`); the timing is never modified.
-- When a dataset is targeted, `metadata.json` and `catalog.json` are
-  also updated (`resources.video`) so the web app renders the video.
-- The first argument may be a `songmap.json` path or a dataset id /
-  unique prefix resolved inside the datasets directory.
-- The video may be a local file or a **YouTube URL** — in that case it
-  is downloaded into the dataset as `video.mp4` first.
-- `--offset <seconds>` applies a manual offset instead of detection.
-- `--reference <audio>` overrides the reference audio (defaults to the
-  dataset's `recording.wav`).
-
 ## `metadata`
 
 Generate metadata.
 
 ```bash
 octobeat metadata fetch <dataset> [--no-interactive]
-octobeat metadata youtube <url>
 ```
 
 ### `metadata fetch`
@@ -299,7 +258,6 @@ Extract media from a source.
 
 ```bash
 octobeat extract audio <url>
-octobeat extract video <url>
 ```
 
 ## `cover`
@@ -370,7 +328,6 @@ datasets = "~/Music/OctoBeat"
 
 [download]
 audio_format = "bestaudio"
-video_format = "bestvideo"
 
 [catalog]
 auto_rebuild = true
@@ -389,7 +346,6 @@ dataset/
 ├── cover.jpg
 ├── recording.webm
 ├── recording.wav
-├── video.mp4
 └── songmap.json
 ```
 
