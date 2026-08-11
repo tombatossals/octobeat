@@ -17,7 +17,6 @@ import { useSettingsHydration } from "@/features/settings/hooks/useSettingsHydra
 import { NowPlayingCard } from "./NowPlayingCard";
 import { NowPlayingSummary } from "./NowPlayingSummary";
 import { PlayerControlsOverlay } from "./PlayerControlsOverlay";
-import { CountdownOverlay } from "./CountdownOverlay";
 
 import {
     useKeyboardShortcuts,
@@ -153,8 +152,6 @@ export function Player() {
             className="relative h-screen w-screen overflow-hidden bg-black"
         >
             <PlayerBackend />
-
-            <CountdownOverlay />
 
             <Logo />
 
