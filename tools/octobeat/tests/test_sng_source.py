@@ -170,3 +170,28 @@ def test_load_mixes_stems_ignoring_song_track(tmp_path):
         assert abs(float(samples.mean()) - expected) < expected * 0.01
     finally:
         recording.cleanup()
+
+
+def test_load_detects_count_in_and_song_start(tmp_path):
+    """The provider detects the count-in / song start of the recording."""
+
+    from octobeat.core.analyser import detect_music_lead_in
+
+    path = tmp_path / "multi.sng"
+    path.write_bytes(_multitrack_sng())
+
+    recording = SngSourceProvider().load(str(path))
+
+    try:
+        assert recording.count_in_start is not None
+        assert recording.song_start is not None
+        assert 0.0 <= recording.count_in_start <= recording.song_start
+
+        # The detection is reusable on any audio file.
+        count_in, song_start = detect_music_lead_in(
+            recording.path,
+        )
+        assert count_in >= 0.0
+        assert song_start >= count_in
+    finally:
+        recording.cleanup()

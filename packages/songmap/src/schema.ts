@@ -36,6 +36,14 @@ export const TimingSchema = z.object({
     source: z
         .string()
         .optional(),
+
+    countInStart: z
+        .number()
+        .optional(),
+
+    songStart: z
+        .number()
+        .optional(),
 });
 
 export const SectionSchema = z.object({

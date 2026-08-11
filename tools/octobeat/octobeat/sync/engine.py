@@ -48,6 +48,8 @@ class VideoSyncResult:
 def sync_video(
     reference: AudioFeatures,
     video: AudioFeatures,
+    *,
+    song_start: float = 0.0,
 ) -> VideoSyncResult:
     """
     Estimate the offset at which the reference song starts in the video.
@@ -55,15 +57,41 @@ def sync_video(
     ``offset`` is the video time corresponding to reference time 0:
 
     ``videoTime = songTime + offset``
+
+    ``song_start`` is the reference time where the song actually begins
+    after a count-in lead-in. When it is nonzero, only the reference
+    audio from that point is correlated against the video (the lead-in
+    is not in the video), so the offset becomes negative by ``song_start``
+    and the video waits at its first frame during the count-in.
     """
 
+    n_frames = reference.n_frames
+
+    start_col = max(
+        0,
+        min(
+            n_frames,
+            int(
+                round(
+                    song_start / FEATURE_SECONDS
+                )
+            ),
+        ),
+    )
+
+    reference_song = reference.features[
+        :, start_col:
+    ]
+
     offset, confidence = _cross_correlate(
-        reference.features,
+        reference_song,
         video.features,
     )
 
+    video_offset = offset - song_start
+
     return VideoSyncResult(
-        offset=round(float(offset), 3),
+        offset=round(float(video_offset), 3),
         confidence=round(float(confidence), 2),
     )
 

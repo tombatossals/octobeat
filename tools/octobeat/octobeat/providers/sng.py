@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from octobeat.audio.decoder import decode_to_wav
+from octobeat.core.analyser import detect_music_lead_in
 from octobeat.models.recording import Recording
 from octobeat.models.songmap import Source
 from octobeat.providers.base import SourceProvider
@@ -77,6 +78,12 @@ class SngSourceProvider(SourceProvider):
                     audio_bytes,
                     audio_path,
                 )
+
+            count_in_start, song_start = (
+                detect_music_lead_in(
+                    audio_path,
+                )
+            )
         except Exception:
             cleanup.cleanup()
             raise
@@ -99,6 +106,8 @@ class SngSourceProvider(SourceProvider):
                 else None
             ),
             cover_bytes=extract_cover(data),
+            count_in_start=count_in_start,
+            song_start=song_start,
         )
 
 

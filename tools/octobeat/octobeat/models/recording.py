@@ -34,6 +34,12 @@ class Recording:
     # Raw cover artwork bytes extracted from the source, if any.
     cover_bytes: bytes | None = None
 
+    # Detected count-in and song start (seconds into the audio). The
+    # count-in is the audible lead-in before the song really kicks in
+    # (e.g. Rock Band stick clicks). Only set when the source has one.
+    count_in_start: float | None = None
+    song_start: float | None = None
+
     def cleanup(self) -> None:
         if self.cleanup_dir is not None:
             self.cleanup_dir.cleanup()

@@ -41,6 +41,7 @@ def test_manifest_exists(fixtures):
         "compressed",
         "different-volume",
         "offset",
+        "count-in",
         "mismatch",
         "no-audio",
     } <= names
@@ -71,6 +72,29 @@ def test_compressed_audio_still_detected(fixtures):
     # still acceptable.
     assert result.confidence >= 0.60
     assert result.status != "review"
+
+
+def test_count_in_reference_aligns_with_song_start(fixtures):
+    """A reference with a count-in the video lacks aligns once the
+    lead-in is accounted for, producing a negative video offset."""
+
+    directory = fixtures / "count-in"
+
+    reference = compute_features(
+        directory / "reference.wav",
+    )
+    video = compute_features(
+        directory / "video.wav",
+    )
+
+    result = sync_video(
+        reference,
+        video,
+        song_start=2.0,
+    )
+
+    assert abs(result.offset - (-2.0)) < 0.15
+    assert result.confidence >= 0.90
 
 
 def test_mismatch_has_low_confidence(fixtures):

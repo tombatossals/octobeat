@@ -69,6 +69,12 @@ class Timing(SongMapModel):
     tempoMap: list[TempoSegment] | None = None
     source: str | None = None
 
+    # Count-in and song start (seconds into the audio). ``songStart`` is
+    # where the music really kicks in after any count-in; ``countInStart``
+    # is the first audible content of that count-in.
+    countInStart: float | None = Field(default=None, ge=0.0)
+    songStart: float | None = Field(default=None, ge=0.0)
+
 
 class Beat(SongMapModel):
     """
@@ -122,11 +128,13 @@ class VideoMedia(SongMapModel):
 
     ``offset`` is the video time at which the song begins:
     ``videoTime = songTime + offset``. ``syncConfidence`` records how
-    reliably the offset was detected (0..1).
+    reliably the offset was detected (0..1). The offset may be negative
+    when the recording starts with a count-in that the video does not
+    have: the video then waits at its first frame until the song starts.
     """
 
     file: str
-    offset: float = Field(ge=0.0)
+    offset: float = Field(ge=-3600.0)
     syncConfidence: float = Field(ge=0.0, le=1.0)
 
 

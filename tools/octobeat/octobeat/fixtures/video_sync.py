@@ -25,6 +25,7 @@ CASE_NAMES = [
     "compressed",
     "different-volume",
     "offset",
+    "count-in",
     "mismatch",
     "no-audio",
 ]
@@ -59,6 +60,7 @@ def build_video_sync_fixtures(output: Path) -> list[VideoSyncFixture]:
         _compressed(),
         _different_volume(),
         _offset(),
+        _count_in(),
         _mismatch(),
         _no_audio(),
     ]
@@ -89,7 +91,19 @@ def _build_case(directory: Path, fixture: VideoSyncFixture) -> None:
 
     offset = fixture.offset or 0.0
 
-    if fixture.name == "mismatch":
+    if fixture.name == "count-in":
+        # The reference starts with a 2 s stick-click count-in that the
+        # video does not have: the video is just the song.
+        lead_in = 2.0
+        reference_sig = np.concatenate(
+            [
+                _make_clicks(lead_in),
+                song,
+            ]
+        )
+        video_sig = song
+    elif fixture.name == "mismatch":
+        reference_sig = song
         video_sig = _make_song(
             DURATION,
             seed=7,
@@ -97,8 +111,10 @@ def _build_case(directory: Path, fixture: VideoSyncFixture) -> None:
             beat_interval=0.35,
         )
     elif fixture.name == "no-audio":
+        reference_sig = song
         video_sig = np.zeros_like(song)
     else:
+        reference_sig = song
         video_sig = np.concatenate(
             [
                 np.zeros(int(SR * offset)),
@@ -115,8 +131,22 @@ def _build_case(directory: Path, fixture: VideoSyncFixture) -> None:
     if fixture.name == "silent-intro":
         video_sig[: int(SR * offset)] = 0.0
 
-    _write_wav(directory / "reference.wav", song)
+    _write_wav(directory / "reference.wav", reference_sig)
     _write_wav(directory / "video.wav", video_sig)
+
+
+def _make_clicks(duration: float) -> np.ndarray:
+    """Sparse stick-click lead-in (brief clicks, silence between them)."""
+
+    n = int(SR * duration)
+    signal = np.zeros(n)
+
+    for beat in np.arange(0, duration, 0.5):
+        start = int(beat * SR)
+        if start < n:
+            signal[start : start + int(0.01 * SR)] = 0.6
+
+    return np.asarray(signal, dtype=np.float32)
 
 
 def _make_song(
@@ -208,6 +238,16 @@ def _offset() -> VideoSyncFixture:
     return VideoSyncFixture(
         name="offset",
         offset=1.5,
+        confidence_floor=0.90,
+    )
+
+
+def _count_in() -> VideoSyncFixture:
+    # Reference has a 2 s count-in the video lacks; the video offset is
+    # therefore negative (the video waits at its first frame).
+    return VideoSyncFixture(
+        name="count-in",
+        offset=-2.0,
         confidence_floor=0.90,
     )
 

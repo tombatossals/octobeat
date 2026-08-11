@@ -392,6 +392,8 @@ def analyse_with_chart(
         ).isoformat(),
         offset=chart_timing.offset,
         confidence=validation.confidence,
+        count_in_start=recording.count_in_start,
+        song_start=recording.song_start,
         lyrics=_fetch_lrclib_lyrics(
             recording.artist or "",
             recording.title or "",
@@ -772,4 +774,123 @@ def _detect_music_start(
             start,
             sr=sr,
         )
+    )
+
+
+def detect_music_lead_in(
+    audio_path: Path,
+) -> tuple[float, float]:
+    """
+    Detect the count-in and the song start in an audio file.
+
+    Returns ``(count_in_start, song_start)`` seconds into the audio:
+    ``count_in_start`` is the first audible content (typically the first
+    stick click of a Rock Band count-in) and ``song_start`` is where the
+    music truly kicks in — the first sustained burst of energy after any
+    quiet count-in, using a running minimum so the intermittent clicks do
+    not count as the band entry.
+    """
+
+    y, sr_raw = librosa.load(
+        str(audio_path),
+        sr=None,
+        mono=True,
+    )
+
+    sr = int(sr_raw)
+
+    # 50 ms non-overlapping windows.
+    hop = sr // 20
+
+    rms = librosa.feature.rms(
+        y=y,
+        frame_length=hop,
+        hop_length=hop,
+    )[0]
+
+    if rms.size == 0:
+        return 0.0, 0.0
+
+    times = librosa.frames_to_time(
+        np.arange(rms.size),
+        sr=sr,
+        hop_length=hop,
+    )
+
+    peak = float(
+        np.percentile(rms, 98),
+    )
+
+    count_threshold = max(
+        0.01,
+        peak * 0.08,
+    )
+
+    first_audible = np.flatnonzero(
+        rms >= count_threshold,
+    )
+
+    count_in_start = (
+        float(
+            times[
+                first_audible[0]
+            ]
+        )
+        if first_audible.size
+        else 0.0
+    )
+
+    # The band keeps the energy up between beats; the count-in clicks
+    # fall back to silence. A running minimum over ~0.5 s separates the
+    # two.
+    window = 5
+
+    running_min = np.array(
+        [
+            float(
+                np.min(
+                    rms[
+                        max(0, index - window): index + window + 1
+                    ]
+                )
+            )
+            for index in range(rms.size)
+        ]
+    )
+
+    band_threshold = (
+        float(
+            np.percentile(
+                running_min,
+                90,
+            )
+        )
+        * 0.25
+    )
+
+    sustain = 4
+    run = 0
+    song_start = 0.0
+
+    for index, energy in enumerate(
+        running_min
+    ):
+        if energy >= band_threshold:
+            run += 1
+            if run >= sustain:
+                song_start = float(
+                    times[
+                        index - sustain + 1
+                    ]
+                )
+                break
+        else:
+            run = 0
+
+    return (
+        round(count_in_start, 3),
+        round(
+            max(count_in_start, song_start),
+            3,
+        ),
     )

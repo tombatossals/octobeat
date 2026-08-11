@@ -45,6 +45,8 @@ def build_songmap(
     confidence: float = 1.0,
     downbeat_shift: int = 0,
     lyrics: list[LyricLine] | None = None,
+    count_in_start: float | None = None,
+    song_start: float | None = None,
 ) -> SongMap:
     """
     Build a complete SongMap from canonical ``TimingData``.
@@ -53,6 +55,10 @@ def build_songmap(
     ``"midi"``, ``"chart"``, ``"audio-analysis"``). ``downbeat_shift``
     is the audio-detection residue (0-based) of the beat that begins a
     bar; structured charts start on a downbeat so it defaults to 0.
+
+    ``count_in_start`` and ``song_start`` describe a count-in lead-in
+    before the music starts; ``song_start`` defaults to ``offset`` when
+    not provided.
     """
 
     beats = _build_beats(timing_data)
@@ -77,6 +83,16 @@ def build_songmap(
             confidence=round(confidence, 2),
             tempoMap=tempo_map,
             source=source_kind,
+            countInStart=(
+                round(count_in_start, 3)
+                if count_in_start is not None
+                else None
+            ),
+            songStart=(
+                round(song_start, 3)
+                if song_start is not None
+                else round(offset, 3)
+            ),
         ),
         beats=beats,
         bars=bars,

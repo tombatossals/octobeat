@@ -163,6 +163,10 @@ def build_dataset(
                 songmap,
                 video_path,
                 reference_audio=recording.path,
+                song_start=(
+                    recording.song_start
+                    or 0.0
+                ),
             )
 
         metadata = _build_metadata(
@@ -304,6 +308,7 @@ def _sync_video(
     video_path: Path,
     *,
     reference_audio: Path,
+    song_start: float = 0.0,
 ) -> SongMap:
     """
     Detect the video offset against the reference audio and attach the
@@ -334,7 +339,11 @@ def _sync_video(
             reference = compute_features(reference_audio)
             video = compute_features(video_audio)
 
-            result = sync_video(reference, video)
+            result = sync_video(
+                reference,
+                video,
+                song_start=song_start,
+            )
 
         console.info(
             f"Video offset: {result.offset:.2f} s "

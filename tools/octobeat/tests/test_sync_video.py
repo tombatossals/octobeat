@@ -126,6 +126,69 @@ def test_sync_video_keeps_timing_untouched(dataset):
     assert after["beats"] == before["beats"]
 
 
+def test_sync_video_with_count_in_uses_song_start(tmp_path):
+    """A reference with a count-in the video lacks syncs with a negative
+    offset when the SongMap carries ``timing.songStart``."""
+
+    import shutil
+
+    from octobeat.models.timing import Beat, TempoSegment, TimingData
+
+    build_video_sync_fixtures(tmp_path / "fx")
+
+    dataset = tmp_path / "count-in-dataset"
+    dataset.mkdir(parents=True)
+
+    shutil.copy(
+        tmp_path / "fx" / "count-in" / "reference.wav",
+        dataset / "recording.wav",
+    )
+
+    timing = TimingData(
+        tempos=[TempoSegment(start_beat=1, start_time=0.0, bpm=120.0)],
+        beats=[Beat(index=1, time=0.0)],
+        time_signatures=[],
+        sections=[],
+    )
+
+    songmap = build_songmap(
+        timing,
+        title="Count In",
+        duration=6.0,
+        source=Source(type="file", id="x"),
+        source_kind="sng",
+        generated_by="test",
+        created_at="2026-08-10T00:00:00+00:00",
+        song_start=2.0,
+        count_in_start=0.5,
+    )
+
+    assert songmap.timing.songStart == 2.0
+    assert songmap.timing.countInStart == 0.5
+
+    write_songmap(songmap, dataset / "songmap.json")
+
+    video = tmp_path / "fx" / "count-in" / "video.wav"
+
+    args = argparse.Namespace(
+        songmap="count-in-dataset",
+        video=str(video),
+        offset=None,
+        reference=None,
+        output=tmp_path,
+    )
+
+    assert run(args) == 0
+
+    updated = json.loads(
+        (dataset / "songmap.json").read_text(encoding="utf-8"),
+    )
+
+    media = updated["media"]["video"]
+    assert abs(media["offset"] - (-2.0)) < 0.15
+    assert media["syncConfidence"] >= 0.90
+
+
 def test_sync_video_dataset_by_id(tmp_path):
     """Dataset mode: resolve by id/prefix, video copied is not needed
     (a local video path is used directly)."""

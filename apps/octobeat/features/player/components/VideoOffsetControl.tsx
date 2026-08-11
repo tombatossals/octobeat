@@ -80,9 +80,11 @@ export function VideoOffsetControl() {
         dataset.metadata.id;
 
     function adjust(delta: number) {
-        const next = Math.max(
-            0,
-            videoOffset + delta,
+        // The offset may be negative when the recording starts with a
+        // count-in the video does not have.
+        const next = Math.min(
+            120,
+            Math.max(-120, videoOffset + delta),
         );
 
         setVideoOffset(next);

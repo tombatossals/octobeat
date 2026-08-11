@@ -65,6 +65,10 @@ def run(args: argparse.Namespace) -> int:
             reference_path,
             video_path,
             manual_offset=args.offset,
+            song_start=(
+                songmap.timing.songStart
+                or 0.0
+            ),
         )
     except VideoSyncError as error:
         console.error(str(error))
@@ -256,6 +260,7 @@ def _detect(
     video_path: Path,
     *,
     manual_offset: float | None,
+    song_start: float = 0.0,
 ) -> VideoSyncResult:
     """Detect the offset, or use the manual value when provided."""
 
@@ -280,7 +285,11 @@ def _detect(
 
         console.info("Finding offset...")
 
-        return sync_video(reference, video_features)
+        return sync_video(
+            reference,
+            video_features,
+            song_start=song_start,
+        )
 
 
 def _reference_audio(directory: Path) -> Path | None:
