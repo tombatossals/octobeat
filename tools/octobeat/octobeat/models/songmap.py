@@ -116,15 +116,6 @@ class Section(SongMapModel):
     sourceName: str | None = None
 
 
-class LyricLine(SongMapModel):
-    """
-    A single synced lyric line.
-    """
-
-    time: float = Field(ge=0.0)
-    text: str
-
-
 class SongMap(SongMapModel):
     """
     Root SongMap document.
@@ -145,5 +136,4 @@ class SongMap(SongMapModel):
     beats: list[Beat]
     bars: list[Bar]
 
-    lyrics: list[LyricLine] | None = None
     sections: list[Section] | None = None

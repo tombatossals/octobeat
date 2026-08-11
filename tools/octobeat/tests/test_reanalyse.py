@@ -5,9 +5,7 @@ import wave
 from pathlib import Path
 
 import numpy as np
-import pytest
 
-import octobeat.core.analyser as analyser_module
 from octobeat.io.resource import (
     CATALOG_FILE,
     METADATA_FILE,
@@ -15,15 +13,6 @@ from octobeat.io.resource import (
     SONGMAP_FILE,
 )
 from octobeat.pipeline import reanalyse_datasets
-
-
-@pytest.fixture(autouse=True)
-def _no_lyrics_network(monkeypatch):
-    monkeypatch.setattr(
-        analyser_module,
-        "_fetch_lrclib_lyrics",
-        lambda *args, **kwargs: None,
-    )
 
 
 def _make_dataset(

@@ -20,8 +20,7 @@ The current schema supports:
 * beats and bars (with downbeat detection);
 * global tempo, offset and time signature;
 * a tempo map (constant, discrete changes, accelerando/ritardando);
-* overall and per-metric confidence;
-* optional synced lyrics.
+* overall and per-metric confidence.
 
 ---
 

@@ -15,17 +15,6 @@ BPM_TOLERANCE = 3.0
 RAMP_TOLERANCE = 10.0
 
 
-@pytest.fixture(autouse=True)
-def _no_lyrics_network(monkeypatch):
-    import octobeat.core.analyser as analyser_module
-
-    monkeypatch.setattr(
-        analyser_module,
-        "_fetch_lrclib_lyrics",
-        lambda *args, **kwargs: None,
-    )
-
-
 def _analyse(
     path,
 ):

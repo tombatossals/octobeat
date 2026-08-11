@@ -201,8 +201,7 @@ The analyser (BeatEngine v2) detects:
 - a tempo map (constant tempo, discrete changes, accelerando/ritardando);
 - phase and a stable beat grid;
 - downbeats and bars;
-- overall, tempo, beat and grid confidence;
-- optional synced lyrics (from LRCLIB).
+- overall, tempo, beat and grid confidence.
 
 With `--chart <file>` the timing comes from a structured community
 chart (`.sng`/`.mid`/`.chart`); the audio is used to validate offset,

@@ -6,8 +6,8 @@ OctoBeat is a Next.js application that consumes SongMaps to keep
 technical exercises synchronized with real recordings.
 
 It plays the recording with a full-screen waveform, renders a
-synchronized exercise overlay, shows synced lyrics and provides a
-browsable catalog of datasets.
+synchronized exercise overlay and provides a browsable catalog of
+datasets.
 
 ---
 
@@ -93,11 +93,6 @@ The transport overlay keeps a seek bar with elapsed time and percentage.
 - countdown before the music starts;
 - a now-playing summary with title, artist, album, genre, year and BPM.
 
-## Lyrics
-
-- synchronized lyrics rendered over the waveform;
-- embedded in the SongMap when available, with an LRCLIB fallback.
-
 ## Shortcuts
 
 Hold `Ctrl`/`Cmd` to reveal the keyboard shortcut badges on the
@@ -126,7 +121,6 @@ apps/octobeat/
 ├── features/
 │   ├── exercises/          # exercise overlay + difficulty
 │   ├── library/            # catalog, search, filter
-│   ├── lyrics/             # synced lyrics
 │   ├── overlay/            # logo
 │   ├── player/             # player, controls, now playing
 │   ├── settings/           # settings dialog + toast
@@ -137,7 +131,7 @@ apps/octobeat/
 
 The UI is organized in three visibility levels:
 
-1. always visible — logo, difficulty, headers, exercises, lyrics;
+1. always visible — logo, difficulty, headers, exercises;
 2. on pointer or shortcut activity — transport controls;
 3. while holding `Ctrl`/`Cmd` — shortcut badges.
 

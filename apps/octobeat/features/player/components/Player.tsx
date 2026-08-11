@@ -11,7 +11,6 @@ import { Logo } from "@/features/overlay/components/Logo";
 import { ExerciseOverlay } from "@/features/exercises/components/ExerciseOverlay";
 import { DifficultySwitcher } from "@/features/exercises/components/DifficultySwitcher";
 import { HeaderActions } from "@/features/library/components/HeaderActions";
-import { LyricsOverlay } from "@/features/lyrics/components/LyricsOverlay";
 import { SettingsToast } from "@/features/settings/components/SettingsToast";
 import { useSettingsHydration } from "@/features/settings/hooks/useSettingsHydration";
 import { NowPlayingCard } from "./NowPlayingCard";
@@ -23,7 +22,6 @@ import {
 } from "@octobeat/player";
 
 import { useLibraryStore } from "@/features/library/store";
-import { useLyricsStore } from "@/features/lyrics/store";
 import { useUiVisibility } from "@/features/ui/hooks/useUiVisibility";
 import { useUiStore } from "@/features/ui/store";
 
@@ -96,38 +94,6 @@ export function Player() {
         });
     }, [player, next]);
 
-    const dataset = useLibraryStore(
-        (state) => state.dataset,
-    );
-
-    useEffect(() => {
-        if (!dataset) {
-            useLyricsStore
-                .getState()
-                .clear();
-
-            return;
-        }
-
-        const stored =
-            dataset.songmap.lyrics;
-
-        if (
-            stored &&
-            stored.length > 0
-        ) {
-            useLyricsStore
-                .getState()
-                .setLyrics(stored);
-
-            return;
-        }
-
-        void useLyricsStore
-            .getState()
-            .load(dataset.metadata);
-    }, [dataset]);
-
     function handleClick(
         event: MouseEvent<HTMLDivElement>,
     ) {
@@ -162,8 +128,6 @@ export function Player() {
             <NowPlayingCard />
 
             <ExerciseOverlay />
-
-            <LyricsOverlay />
 
             <HeaderActions />
 

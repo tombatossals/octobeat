@@ -18,7 +18,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
-- Optional `lyrics` block with time-synchronized lyric lines.
 - Confidence is documented as a combination of tempo confidence, beat
   confidence and grid stability.
 - Optional `sections` block describing the musical form (intro, verse,

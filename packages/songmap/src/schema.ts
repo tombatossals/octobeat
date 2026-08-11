@@ -10,11 +10,6 @@ export const BarSchema = z.object({
     firstBeat: z.number().int(),
 });
 
-export const LyricLineSchema = z.object({
-    time: z.number(),
-    text: z.string(),
-});
-
 export const TempoSegmentSchema = z.object({
     time: z.number(),
     bpm: z.number(),
@@ -94,10 +89,6 @@ export const SongMapSchema = z.object({
 
     bars: z.array(BarSchema),
 
-    lyrics: z
-        .array(LyricLineSchema)
-        .optional(),
-
     sections: z
         .array(SectionSchema)
         .optional(),
@@ -106,10 +97,6 @@ export const SongMapSchema = z.object({
 export type Beat = z.infer<typeof BeatSchema>;
 
 export type Bar = z.infer<typeof BarSchema>;
-
-export type LyricLine = z.infer<
-    typeof LyricLineSchema
->;
 
 export type TempoSegment = z.infer<
     typeof TempoSegmentSchema

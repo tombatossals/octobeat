@@ -138,7 +138,7 @@ Reference recording:
 > **Status:** The MVP is implemented and has evolved into a working
 > product. The current implementation supports a full CLI pipeline
 > (`octobeat add`, `octobeat analyse`), a growing catalog of recordings,
-> synchronized exercises and lyrics, and a web interface. See the
+> synchronized exercises, and a web interface. See the
 > repository `README.md` for the current state.
 
 ---
@@ -198,7 +198,7 @@ Build a SongMap Viewer. ✅ Done
 
 The web interface (`apps/octobeat`) renders the catalog, plays
 recordings with a full-screen waveform and displays synchronized
-exercises, lyrics and a debugging HUD.
+exercises and a debugging HUD.
 
 ---
 

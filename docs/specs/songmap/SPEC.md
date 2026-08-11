@@ -181,8 +181,6 @@ SongMap
 ├── bars
 
 ├── sections (optional)
-
-├── lyrics (optional)
 ```
 
 ---
@@ -407,32 +405,7 @@ Applications must ignore unknown optional fields.
 
 ---
 
-# 13. Lyrics
-
-The `lyrics` block is optional and contains time-synchronized lyrics.
-
-Each entry has:
-
-* time — seconds into the recording;
-* text — the lyric line.
-
-```json
-{
-  "lyrics": [
-    { "time": 12.45, "text": "Wake up" },
-    { "time": 13.12, "text": "Grab a brush and put a little make-up" }
-  ]
-}
-```
-
-Lyrics are embedded directly in the SongMap so that applications can
-render them offline without querying an external service. When the
-`lyrics` block is absent, consumers may fall back to a lyrics
-provider.
-
----
-
-# 14. Future evolution
+# 13. Future evolution
 
 Version 1 intentionally keeps the model minimal.
 
@@ -449,7 +422,7 @@ without modifying the existing contract.
 
 ---
 
-# 16. Future timeline model
+# 14. Future timeline model
 
 Although version 1 uses dedicated collections, the long-term conceptual model is an event timeline.
 
@@ -485,7 +458,7 @@ Applications should not assume that future SongMaps will always be organised usi
 
 ---
 
-# 17. Design goals
+# 15. Design goals
 
 SongMap has four primary goals.
 
@@ -523,7 +496,7 @@ BeatEngine and OctoBeat are consumers of SongMap, not its definition.
 
 ---
 
-# 18. Non-goals
+# 16. Non-goals
 
 SongMap is not:
 
@@ -538,7 +511,7 @@ Those concerns belong to independent specifications.
 
 ---
 
-# 19. Ecosystem
+# 17. Ecosystem
 
 SongMap is intended to become the common contract of the OctoBeat ecosystem.
 

@@ -6,11 +6,11 @@ OctoBeat is an open ecosystem for practicing technical exercises in
 time with real recordings. It consists of:
 
 - **SongMap** — an open specification describing the temporal structure
-  of an audio recording (beats, bars, tempo map, confidence, lyrics);
+  of an audio recording (beats, bars, tempo map, confidence);
 - **BeatEngine** — a CLI (`octobeat`) that downloads, analyses and
   builds complete datasets from YouTube or local files;
 - **OctoBeat app** — a web interface that plays recordings and keeps
-  exercises and lyrics synchronized with the music.
+  exercises synchronized with the music.
 
 ```
 YouTube / Local file
@@ -207,8 +207,7 @@ temporal structure of one specific recording.
     ]
   },
   "beats": [ { "index": 1, "time": 0.314 }, "..." ],
-  "bars": [ { "index": 1, "firstBeat": 1 }, "..." ],
-  "lyrics": [ { "time": 12.45, "text": "Wake up" } ]
+  "bars": [ { "index": 1, "firstBeat": 1 }, "..." ]
 }
 ```
 

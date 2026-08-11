@@ -14,7 +14,6 @@ from octobeat.models.songmap import (
     SCHEMA_ID,
     SONGMAP_VERSION,
     Bar,
-    LyricLine,
     Section,
     SongMap,
     SongMetadata,
@@ -44,7 +43,6 @@ def build_songmap(
     offset: float = 0.0,
     confidence: float = 1.0,
     downbeat_shift: int = 0,
-    lyrics: list[LyricLine] | None = None,
     count_in_start: float | None = None,
     song_start: float | None = None,
     count_in_clicks: list[float] | None = None,
@@ -105,7 +103,6 @@ def build_songmap(
         ),
         beats=beats,
         bars=bars,
-        lyrics=lyrics,
         sections=sections,
     )
 
