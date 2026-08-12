@@ -46,6 +46,7 @@ def load_config() -> Config:
     Load the workspace configuration.
 
     Returns the built-in defaults when no configuration file exists.
+    Unknown keys from older config versions are ignored.
     """
 
     path = config_path()
@@ -56,7 +57,53 @@ def load_config() -> Config:
     with path.open("rb") as file:
         data = tomllib.load(file)
 
+    data = _drop_unknown_sections(data)
+
     return Config.model_validate(data)
+
+
+def _drop_unknown_sections(
+    data: dict[str, Any],
+) -> dict[str, Any]:
+    """
+    Remove keys that are no longer present in the configuration model,
+    so stale values from older versions do not break loading.
+    """
+
+    model_sections = (
+        Config.model_fields.keys()
+    )
+
+    cleaned: dict[str, Any] = {}
+
+    for section, value in data.items():
+        if section not in model_sections:
+            continue
+
+        if isinstance(value, dict):
+            model = Config.model_fields[
+                section
+            ].annotation
+
+            fields = (
+                getattr(model, "model_fields", {})
+                if isinstance(
+                    model,
+                    type,
+                )
+                else {}
+            )
+
+            if fields:
+                value = {
+                    key: item
+                    for key, item in value.items()
+                    if key in fields
+                }
+
+        cleaned[section] = value
+
+    return cleaned
 
 
 def save_config(
