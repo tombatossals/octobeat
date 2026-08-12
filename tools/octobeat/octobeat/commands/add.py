@@ -2,10 +2,16 @@ from __future__ import annotations
 
 import argparse
 import traceback
+from pathlib import Path
 
+from octobeat.charts import (
+    _normalise,
+    chart_search_dirs,
+)
 from octobeat.config import (
     ensure_workspace,
 )
+from octobeat.config.model import Config
 from octobeat.io.resource import CATALOG_FILE
 from octobeat.pipeline import build_dataset
 from octobeat.ui import console
@@ -18,9 +24,16 @@ def run(args: argparse.Namespace) -> int:
 
     config = ensure_workspace()
 
-    input_source = _strip_surrounding_quotes(
-        args.input,
-    )
+    try:
+        input_source = _resolve_source(
+            _strip_surrounding_quotes(
+                args.input,
+            ),
+            config=config,
+        )
+    except SourceNotFoundError as error:
+        _report_source_not_found(error)
+        return 1
 
     output = (
         args.output.expanduser().resolve()
@@ -137,3 +150,161 @@ def _strip_surrounding_quotes(
         stripped = stripped[1:-1].strip()
 
     return stripped
+
+
+class SourceNotFoundError(Exception):
+    """
+    Raised when a local source or chart file cannot be located.
+
+    Carries the directories that were searched and any charts with a
+    similar name, so the error can be reported helpfully.
+    """
+
+    def __init__(
+        self,
+        source: str,
+        *,
+        searched_dirs: list[Path],
+        candidates: list[Path] | None = None,
+    ) -> None:
+        super().__init__(source)
+        self.source = source
+        self.searched_dirs = list(searched_dirs)
+        self.candidates = list(candidates or [])
+
+
+def _resolve_source(
+    source: str,
+    *,
+    config: Config,
+) -> str:
+    """
+    Resolve a source argument to a filesystem path.
+
+    When the value is an existing path it is returned as-is. Otherwise
+    the source is treated as a bare chart file name and looked up in
+    the configured charts directories (falling back to the repo's
+    ``sng/`` directory).
+
+    When a local file or chart cannot be located, a
+    :class:`SourceNotFoundError` is raised carrying the searched
+    directories and any similarly-named charts.
+    """
+
+    path = Path(source).expanduser()
+
+    if path.exists():
+        return str(path)
+
+    dirs = chart_search_dirs(config)
+
+    for directory in dirs:
+        candidate = directory / source
+
+        if candidate.is_file():
+            return str(candidate)
+
+    if _looks_like_local_file(source):
+        raise SourceNotFoundError(
+            source,
+            searched_dirs=dirs,
+            candidates=_similar_charts(
+                source,
+                config=config,
+            ),
+        )
+
+    return source
+
+
+def _looks_like_local_file(source: str) -> bool:
+    """
+    Whether ``source`` references a local file rather than a remote
+    resource (URL or bare search term).
+    """
+
+    if source.startswith(("http://", "https://")):
+        return False
+
+    path = Path(source)
+
+    if path.suffix:
+        return True
+
+    return "/" in source or "\\" in source
+
+
+def _similar_charts(
+    source: str,
+    *,
+    config: Config,
+) -> list[Path]:
+    """
+    Find charts whose normalised name contains every meaningful token
+    of ``source``, so a mistyped or mangled file name still surfaces
+    the intended chart.
+    """
+
+    needles = [
+        token
+        for token in _normalise(
+            Path(source).stem,
+        ).split()
+        if len(token) >= 3
+    ]
+
+    if not needles:
+        return []
+
+    matches: list[Path] = []
+
+    for directory in chart_search_dirs(config):
+        if not directory.is_dir():
+            continue
+
+        for pattern in (
+            "*.sng",
+            "*.mid",
+            "*.chart",
+        ):
+            for path in sorted(
+                directory.glob(pattern)
+            ):
+                if all(
+                    needle in _normalise(path.stem)
+                    for needle in needles
+                ):
+                    matches.append(path)
+
+    return matches[:5]
+
+
+def _report_source_not_found(
+    error: SourceNotFoundError,
+) -> None:
+    console.error(
+        f"Source not found: {error.source}",
+    )
+
+    console.info("")
+
+    console.info(
+        "Searched directories:",
+    )
+
+    for directory in error.searched_dirs:
+        console.info(
+            f"  {directory}",
+        )
+
+    if error.candidates:
+        console.info("")
+
+        console.info(
+            "Similar charts found:",
+        )
+
+        for candidate in error.candidates:
+            console.info(
+                f"  {candidate}",
+            )
