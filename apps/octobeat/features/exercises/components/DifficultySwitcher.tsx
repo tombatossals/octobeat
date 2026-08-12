@@ -8,6 +8,7 @@ import { ShortcutBadge } from "@/features/library/components/ShortcutBadge";
 import { useUiStore } from "@/features/ui/store";
 
 import {
+    DIFFICULTY_FACTOR,
     DIFFICULTY_LABELS,
     useDifficultyStore,
 } from "../store";
@@ -56,7 +57,7 @@ export function DifficultySwitcher() {
     );
 
     useShortcut(
-        { code: "Digit3" },
+        { code: "Digit4" },
         () =>
             setDifficulty(
                 ORDER[2]!,
@@ -64,8 +65,8 @@ export function DifficultySwitcher() {
     );
 
     return (
-        <div className="pointer-events-auto fixed left-1/2 top-8 z-50 flex -translate-x-1/2 items-center gap-1 rounded-md border border-white/10 bg-gray-800/60 p-1.5 shadow-2xl backdrop-blur-md">
-            {ORDER.map((option, index) => {
+        <div className="pointer-events-auto flex items-center gap-1 rounded-md border border-white/10 bg-gray-800/60 p-1.5 shadow-2xl backdrop-blur-md">
+            {ORDER.map((option) => {
                 const active =
                     difficulty === option;
 
@@ -100,7 +101,9 @@ export function DifficultySwitcher() {
                             <span className="absolute -right-2 -top-4">
                                 <ShortcutBadge
                                     label={String(
-                                        index + 1,
+                                        DIFFICULTY_FACTOR[
+                                            option
+                                        ],
                                     )}
                                     className="border border-white/60"
                                 />

@@ -89,7 +89,7 @@ The transport overlay keeps a seek bar with elapsed time and percentage.
 ## Exercises
 
 - Stick Control exercises synchronized with the beat grid;
-- difficulty selector (Easy / Medium / Hard) with shortcuts `1`/`2`/`3`;
+- difficulty selector (1x / 2x / 4x) with shortcuts `1`/`2`/`4`;
 - countdown before the music starts;
 - a now-playing summary with title, artist, album, genre, year and BPM.
 
@@ -108,7 +108,7 @@ interface.
 | `F`                        | Toggle fullscreen         |
 | `Ctrl`+`F`                 | Toggle genre filter       |
 | `Ctrl`+`K`                 | Search the catalog        |
-| `1` / `2` / `3`            | Difficulty Easy/Med/Hard  |
+| `1` / `2` / `4`            | Difficulty 1x/2x/4x      |
 
 ---
 

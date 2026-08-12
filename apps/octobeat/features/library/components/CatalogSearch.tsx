@@ -103,6 +103,7 @@ export function CatalogSearch(): JSX.Element {
 
         return [...filtered].sort(
             (a, b) =>
+                a.bpm - b.bpm ||
                 `${a.artist} - ${a.title}`.localeCompare(
                     `${b.artist} - ${b.title}`,
                 ),
@@ -282,6 +283,12 @@ export function CatalogSearch(): JSX.Element {
                                                     }
                                                 </div>
                                             </div>
+
+                                            <span className="ml-auto shrink-0 font-mono text-sm tabular-nums text-muted-foreground">
+                                                {
+                                                    entry.bpm
+                                                }
+                                            </span>
                                         </button>
                                     </li>
                                 ),

@@ -7,3 +7,8 @@ export interface CreateExerciseOptions {
     beatUnit?: number;
 }
 export declare function createExercise({ id, title, notation, beatsPerBar, beatUnit, }: CreateExerciseOptions): Exercise;
+/**
+ * Subdivide every beat of an exercise, producing `factor`
+ * alternating notes per original beat.
+ */
+export declare function subdivideExercise(exercise: Exercise, factor: number): Exercise;

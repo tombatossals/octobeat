@@ -9,10 +9,10 @@ import { usePlayerStore } from "@octobeat/player";
 
 import { Logo } from "@/features/overlay/components/Logo";
 import { ExerciseOverlay } from "@/features/exercises/components/ExerciseOverlay";
-import { DifficultySwitcher } from "@/features/exercises/components/DifficultySwitcher";
 import { HeaderActions } from "@/features/library/components/HeaderActions";
 import { SettingsToast } from "@/features/settings/components/SettingsToast";
 import { useSettingsHydration } from "@/features/settings/hooks/useSettingsHydration";
+import { useTheme } from "@/features/settings/hooks/useTheme";
 import { NowPlayingCard } from "./NowPlayingCard";
 import { NowPlayingSummary } from "./NowPlayingSummary";
 import { PlayerControlsOverlay } from "./PlayerControlsOverlay";
@@ -27,6 +27,8 @@ import { useUiStore } from "@/features/ui/store";
 
 export function Player() {
     useSettingsHydration();
+
+    useTheme();
 
     useUiVisibility();
 
@@ -122,8 +124,6 @@ export function Player() {
             <Logo />
 
             <NowPlayingSummary />
-
-            <DifficultySwitcher />
 
             <NowPlayingCard />
 

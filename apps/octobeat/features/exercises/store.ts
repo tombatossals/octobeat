@@ -14,9 +14,9 @@ export const DIFFICULTY_FACTOR:
 
 export const DIFFICULTY_LABELS:
     Record<Difficulty, string> = {
-        easy: "Easy",
-        medium: "Medium",
-        hard: "Hard",
+        easy: "1x",
+        medium: "2x",
+        hard: "4x",
     };
 
 interface DifficultyState {

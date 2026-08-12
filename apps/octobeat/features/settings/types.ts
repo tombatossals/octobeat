@@ -1,3 +1,5 @@
+export type Theme = "dark" | "light";
+
 export interface Settings {
     /**
      * Remote catalog location.
@@ -13,4 +15,14 @@ export interface Settings {
      * Preferred genres.
      */
     preferredGenres: string[];
+
+    /**
+     * Repetitions of each exercise line before advancing.
+     */
+    repetitionsPerLine: number;
+
+    /**
+     * Interface color theme.
+     */
+    theme: Theme;
 }

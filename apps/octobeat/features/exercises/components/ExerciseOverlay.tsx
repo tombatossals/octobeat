@@ -5,7 +5,7 @@ import type { JSX } from "react";
 
 import { books } from "@octobeat/exercises";
 import { usePlayerStore } from "@octobeat/player";
-import { ExerciseRenderer } from "@octobeat/ui";
+import { ExerciseStage } from "@octobeat/ui";
 
 import { useLibraryStore } from "@/features/library/store";
 
@@ -18,6 +18,9 @@ import {
     DIFFICULTY_FACTOR,
     useDifficultyStore,
 } from "../store";
+import { useSettingsStore } from "@/features/settings/store";
+
+import { DifficultySwitcher } from "./DifficultySwitcher";
 
 export function ExerciseOverlay(): JSX.Element | null {
     const dataset = useLibraryStore(
@@ -34,32 +37,97 @@ export function ExerciseOverlay(): JSX.Element | null {
                 state.difficulty,
         );
 
+    const repetitionsPerLine =
+        useSettingsStore(
+            (state) =>
+                state.settings
+                    .repetitionsPerLine,
+        );
+
     const [currentBeat, setCurrentBeat] =
         useState(0);
 
     const [currentTime, setCurrentTime] =
         useState(0);
 
-    const exercise = useMemo(() => {
-        return books.stickControl.exercises
-            .line1;
+    const exercises = useMemo(() => {
+        return Object.values(
+            books.stickControl.sets,
+        ).flatMap((set) =>
+            Object.values(
+                set.exercises,
+            ),
+        );
     }, []);
 
     const factor =
         DIFFICULTY_FACTOR[difficulty];
 
-    const beatsPerPass =
-        exercise.beats.length * factor;
+    const lineTotals = useMemo(() => {
+        return exercises.map(
+            (exercise) =>
+                exercise.beats.length *
+                factor *
+                repetitionsPerLine,
+        );
+    }, [
+        exercises,
+        factor,
+        repetitionsPerLine,
+    ]);
 
-    const repetition =
-        currentBeat > 0
-            ? ((Math.floor(
-                      (currentBeat - 1) /
-                          beatsPerPass,
-                  ) %
-                    20) +
-                  1)
-            : 1;
+    const totalBeats = useMemo(() => {
+        return lineTotals.reduce(
+            (sum, length) =>
+                sum + length,
+            0,
+        );
+    }, [lineTotals]);
+
+    let lineIndex = 0;
+    let repetition =
+        repetitionsPerLine;
+
+    if (currentBeat > 0) {
+        let position =
+            (currentBeat - 1) %
+            totalBeats;
+
+        for (
+            let i = 0;
+            i < lineTotals.length;
+            i++
+        ) {
+            if (
+                position <
+                lineTotals[i]!
+            ) {
+                lineIndex = i;
+
+                repetition =
+                    repetitionsPerLine -
+                    Math.floor(
+                        position /
+                            (exercises[i]!
+                                .beats.length *
+                                factor),
+                    );
+
+                break;
+            }
+
+            position -= lineTotals[i]!;
+        }
+    }
+
+    const exercise =
+        exercises[lineIndex]!;
+
+    const preview =
+        exercises[
+            (lineIndex + 1) %
+                exercises.length
+        ]!;
 
     useEffect(() => {
         const map = dataset?.songmap;
@@ -181,11 +249,19 @@ export function ExerciseOverlay(): JSX.Element | null {
 
     return (
         <div className="pointer-events-none absolute inset-x-0 bottom-24 z-30 flex justify-center">
-            <ExerciseRenderer
-                exercise={exercise}
-                currentBeat={currentBeat}
-                repetition={repetition}
-            />
+            <div className="flex flex-col items-start gap-3">
+                <ExerciseStage
+                    exercise={exercise}
+                    preview={preview}
+                    currentBeat={currentBeat}
+                    repetition={repetition}
+                    previewRepetition={
+                        repetitionsPerLine
+                    }
+                />
+
+                <DifficultySwitcher />
+            </div>
         </div>
     );
 }

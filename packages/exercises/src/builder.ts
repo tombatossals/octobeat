@@ -23,28 +23,73 @@ export function createExercise({
     beatsPerBar = 4,
     beatUnit = 4,
 }: CreateExerciseOptions): Exercise {
-    const beats = parseNotation(notation);
+    const parsed = parseNotation(notation);
 
     return {
         id,
         title,
         beatsPerBar,
         beatUnit,
-        beats,
+        beats: parsed.beats,
+        barLengths: parsed.barLengths,
     };
 }
 
+interface ParsedNotation {
+    beats: ExerciseBeat[];
+    barLengths: number[];
+}
+
+/**
+ * Cada token de 3 letras (p. ej. "RLR", "LRL") es un tresillo; el resto
+ * de tokens son golpes sueltos, uno por letra. Los compases se separan
+ * con "|" o "-".
+ */
 function parseNotation(
     notation: string,
-): ExerciseBeat[] {
-    return notation
-        .replaceAll("|", " ")
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean)
-        .map((token) => ({
-            hand: parseHand(token),
-        }));
+): ParsedNotation {
+    const beats: ExerciseBeat[] = [];
+    const barLengths: number[] = [];
+    let tripletId = 0;
+
+    const measures = notation
+        .split(/[|\\-]/)
+        .map((measure) =>
+            measure.trim(),
+        )
+        .filter(Boolean);
+
+    for (const measure of measures) {
+        const start = beats.length;
+        const tokens = measure
+            .split(/\s+/)
+            .filter(Boolean);
+
+        for (const token of tokens) {
+            if (token.length === 3) {
+                tripletId += 1;
+
+                for (const hand of token) {
+                    beats.push({
+                        hand: parseHand(hand),
+                        triplet: tripletId,
+                    });
+                }
+            } else {
+                for (const hand of token) {
+                    beats.push({
+                        hand: parseHand(hand),
+                    });
+                }
+            }
+        }
+
+        barLengths.push(
+            beats.length - start,
+        );
+    }
+
+    return { beats, barLengths };
 }
 
 function parseHand(
@@ -96,5 +141,9 @@ export function subdivideExercise(
         ...exercise,
         id: `${exercise.id}-x${factor}`,
         beats,
+        barLengths: exercise.barLengths.map(
+            (length) =>
+                length * factor,
+        ),
     };
 }

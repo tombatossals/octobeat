@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 
 import {
     Button,
+    cn,
     Input,
     Label,
 } from "@octobeat/ui";
@@ -35,6 +36,9 @@ function toDraft(
         preferredGenres: [
             ...settings.preferredGenres,
         ],
+        repetitionsPerLine:
+            settings.repetitionsPerLine,
+        theme: settings.theme,
     };
 }
 
@@ -146,6 +150,53 @@ function SettingsForm({
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <fieldset className="lg:col-span-2">
+                    <legend className="mb-2 block text-sm font-semibold text-foreground">
+                        Theme
+                    </legend>
+
+                    <div className="flex gap-1">
+                        {(["dark", "light"] as const).map(
+                            (theme) => (
+                                <Label
+                                    key={theme}
+                                    className={cn(
+                                        "flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-sm transition",
+                                        draft.theme ===
+                                            theme
+                                            ? "border-primary bg-accent text-foreground"
+                                            : "border-border text-muted-foreground hover:bg-accent/50",
+                                    )}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="theme"
+                                        value={theme}
+                                        checked={
+                                            draft.theme ===
+                                            theme
+                                        }
+                                        onChange={() =>
+                                            setDraft(
+                                                (current) => ({
+                                                    ...current,
+                                                    theme,
+                                                }),
+                                            )
+                                        }
+                                        className="sr-only"
+                                    />
+
+                                    {theme ===
+                                    "dark"
+                                        ? "Dark"
+                                        : "Light"}
+                                </Label>
+                            ),
+                        )}
+                    </div>
+                </fieldset>
+
                 <div className="space-y-2 lg:col-span-2">
                     <Label htmlFor="settings-catalog-url">
                         Catalog URL
@@ -232,7 +283,6 @@ function SettingsForm({
                         )}
                     </div>
                 </fieldset>
-
                 <fieldset>
                     <legend className="mb-2 block text-sm font-semibold text-foreground">
                         Preferred Genres
@@ -271,6 +321,42 @@ function SettingsForm({
                                 );
                             },
                         )}
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend className="mb-2 block text-sm font-semibold text-foreground">
+                        Exercise Repetitions per Line
+                    </legend>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="settings-repetitions-per-line">
+                            How many repetitions before
+                            advancing to the next line.
+                        </Label>
+
+                        <Input
+                            id="settings-repetitions-per-line"
+                            type="number"
+                            inputMode="numeric"
+                            min={1}
+                            value={
+                                draft.repetitionsPerLine
+                            }
+                            onChange={(event) =>
+                                setDraft(
+                                    (current) => ({
+                                        ...current,
+                                        repetitionsPerLine:
+                                            Number(
+                                                event
+                                                    .target
+                                                    .value,
+                                            ),
+                                    }),
+                                )
+                            }
+                        />
                     </div>
                 </fieldset>
             </div>

@@ -44,6 +44,16 @@ export const SettingsSchema = z
                         "Genres must be unique.",
                 },
             ),
+
+        repetitionsPerLine: z
+            .number()
+            .int()
+            .min(1),
+
+        theme: z.enum([
+            "dark",
+            "light",
+        ]),
     })
     .strict();
 

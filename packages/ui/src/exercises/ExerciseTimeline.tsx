@@ -13,37 +13,110 @@ import { cn } from "../lib/utils";
 export interface ExerciseTimelineProps {
     exercise: Exercise;
     currentBeat: number;
+
+    /**
+     * Desactiva el resaltado del beat activo (vista previa).
+     */
+    preview?: boolean;
+
+    /**
+     * Última repetición de la línea: los compases ya superados se
+     * atenúan para indicar que no volverán a sonar.
+     */
+    lastPass?: boolean;
+}
+
+interface BeatGroup {
+    beats: ExerciseBeat[];
+    startIndex: number;
 }
 
 export function ExerciseTimeline({
     exercise,
     currentBeat,
+    preview = false,
+    lastPass = false,
 }: ExerciseTimelineProps): JSX.Element {
     const activeBeat =
         ((currentBeat - 1) % exercise.beats.length +
             exercise.beats.length) %
         exercise.beats.length;
 
-    const measures: ExerciseBeat[][] = [];
+    let currentMeasure = 0;
+    let measureStart = 0;
 
     for (
         let i = 0;
-        i < exercise.beats.length;
-        i += exercise.beatsPerBar
+        i < exercise.barLengths.length;
+        i++
     ) {
-        measures.push(
-            exercise.beats.slice(
-                i,
-                i + exercise.beatsPerBar,
-            ),
+        if (
+            activeBeat <
+            measureStart +
+                exercise.barLengths[i]!
+        ) {
+            currentMeasure = i;
+            break;
+        }
+
+        measureStart +=
+            exercise.barLengths[i]!;
+    }
+
+    const measures: BeatGroup[][] = [];
+    let offset = 0;
+
+    for (const barLength of exercise.barLengths) {
+        const barBeats = exercise.beats.slice(
+            offset,
+            offset + barLength,
         );
+        offset += barLength;
+
+        const groups: BeatGroup[] = [];
+        let index = 0;
+
+        while (index < barBeats.length) {
+            const beat = barBeats[index]!;
+
+            if (beat.triplet == null) {
+                groups.push({
+                    beats: [beat],
+                    startIndex: offset - barLength + index,
+                });
+                index += 1;
+                continue;
+            }
+
+            const group = beat.triplet;
+            const groupBeats: ExerciseBeat[] = [];
+            const startIndex = offset - barLength + index;
+
+            while (
+                index < barBeats.length &&
+                barBeats[index]?.triplet ===
+                    group
+            ) {
+                groupBeats.push(
+                    barBeats[index]!,
+                );
+                index += 1;
+            }
+
+            groups.push({
+                beats: groupBeats,
+                startIndex,
+            });
+        }
+
+        measures.push(groups);
     }
 
     return (
         <div className="mx-auto w-full max-w-3xl">
             <div className="mx-auto flex items-center">
                 {measures.map(
-                    (measure, measureIndex) => (
+                    (groups, measureIndex) => (
                         <Fragment key={measureIndex}>
                             {measureIndex > 0 && (
                                 <div className="mx-2 flex h-8 items-center">
@@ -51,28 +124,79 @@ export function ExerciseTimeline({
                                 </div>
                             )}
 
-                            <div className="flex flex-1 items-center justify-between">
-                                {measure.map((beat, beatIndex) => {
-                                    const index =
-                                        measureIndex *
-                                        exercise.beatsPerBar +
-                                        beatIndex;
-
-                                    return (
-                                        <BeatCell
-                                            key={index}
-                                            beat={beat}
-                                            active={
-                                                index === activeBeat
-                                            }
+                            <div
+                                className={cn(
+                                    "flex flex-1 items-center justify-between transition-opacity duration-500",
+                                    lastPass &&
+                                        measureIndex <
+                                            currentMeasure
+                                        ? "opacity-30"
+                                        : "opacity-100",
+                                )}
+                            >
+                                {groups.map(
+                                    (
+                                        group,
+                                        groupIndex,
+                                    ) => (
+                                        <TripletGroup
+                                            key={groupIndex}
+                                            group={group}
+                                            preview={preview}
+                                            activeBeat={activeBeat}
                                         />
-                                    );
-                                })}
+                                    ),
+                                )}
                             </div>
                         </Fragment>
                     ),
                 )}
             </div>
+        </div>
+    );
+}
+
+interface TripletGroupProps {
+    group: BeatGroup;
+    preview: boolean;
+    activeBeat: number;
+}
+
+function TripletGroup({
+    group,
+    preview,
+    activeBeat,
+}: TripletGroupProps): JSX.Element {
+    const triplet =
+        group.beats[0]?.triplet != null;
+
+    return (
+        <div className="relative flex items-center">
+            {triplet && (
+                <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-xs font-black text-neutral-400">
+                    3
+                </span>
+            )}
+
+            {group.beats.map(
+                (beat, beatIndex) => {
+                    const index =
+                        group.startIndex +
+                        beatIndex;
+
+                    return (
+                        <BeatCell
+                            key={index}
+                            beat={beat}
+                            active={
+                                !preview &&
+                                index ===
+                                    activeBeat
+                            }
+                        />
+                    );
+                },
+            )}
         </div>
     );
 }

@@ -1,4 +1,4 @@
-import { createExercise } from "../../builder";
+import { createExercise } from "../../../builder";
 
 export const line1 = createExercise({
     id: "stick-control-line-1",
