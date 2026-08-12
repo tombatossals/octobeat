@@ -15,12 +15,12 @@ import {
 } from "@octobeat/songmap";
 
 import {
-    DIFFICULTY_FACTOR,
-    useDifficultyStore,
+    SPEED_FACTOR,
+    useSpeedStore,
 } from "../store";
 import { useSettingsStore } from "@/features/settings/store";
 
-import { DifficultySwitcher } from "./DifficultySwitcher";
+import { SpeedSwitcher } from "./SpeedSwitcher";
 
 export function ExerciseOverlay(): JSX.Element | null {
     const dataset = useLibraryStore(
@@ -31,10 +31,10 @@ export function ExerciseOverlay(): JSX.Element | null {
         (state) => state.player,
     );
 
-    const difficulty =
-        useDifficultyStore(
+    const speed =
+        useSpeedStore(
             (state) =>
-                state.difficulty,
+                state.speed,
         );
 
     const repetitionsPerLine =
@@ -94,18 +94,19 @@ export function ExerciseOverlay(): JSX.Element | null {
     }, []);
 
     const factor =
-        DIFFICULTY_FACTOR[difficulty];
+        SPEED_FACTOR[speed];
 
+    // La estructura del ejercicio (beats por línea y repeticiones) es
+    // independiente de la velocidad: el factor solo acelera el reloj
+    // del beat en el tick de abajo, no cambia la rutina.
     const lineTotals = useMemo(() => {
         return exercises.map(
             (exercise) =>
                 exercise.beats.length *
-                factor *
                 repetitionsPerLine,
         );
     }, [
         exercises,
-        factor,
         repetitionsPerLine,
     ]);
 
@@ -141,9 +142,8 @@ export function ExerciseOverlay(): JSX.Element | null {
                     repetitionsPerLine -
                     Math.floor(
                         position /
-                            (exercises[i]!
-                                .beats.length *
-                                factor),
+                            exercises[i]!
+                                .beats.length,
                     );
 
                 break;
@@ -305,7 +305,7 @@ export function ExerciseOverlay(): JSX.Element | null {
                     }
                 />
 
-                <DifficultySwitcher />
+                <SpeedSwitcher />
             </div>
         </div>
     );

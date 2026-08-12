@@ -89,7 +89,7 @@ The transport overlay keeps a seek bar with elapsed time and percentage.
 ## Exercises
 
 - Stick Control exercises synchronized with the beat grid;
-- difficulty selector (1x / 2x / 4x) with shortcuts `1`/`2`/`4`;
+- speed selector (1x / 2x / 4x) with shortcuts `1`/`2`/`4`;
 - countdown before the music starts;
 - a now-playing summary with title, artist, album, genre, year and BPM.
 
@@ -108,7 +108,7 @@ interface.
 | `F`                        | Toggle fullscreen         |
 | `Ctrl`+`F`                 | Toggle genre filter       |
 | `Ctrl`+`K`                 | Search the catalog        |
-| `1` / `2` / `4`            | Difficulty 1x/2x/4x      |
+| `1` / `2` / `4`            | Speed 1x/2x/4x          |
 
 ---
 
@@ -119,7 +119,7 @@ apps/octobeat/
 
 ├── app/                    # Next.js app router
 ├── features/
-│   ├── exercises/          # exercise overlay + difficulty
+│   ├── exercises/          # exercise overlay + speed
 │   ├── library/            # catalog, search, filter
 │   ├── overlay/            # logo
 │   ├── player/             # player, controls, now playing
@@ -131,7 +131,7 @@ apps/octobeat/
 
 The UI is organized in three visibility levels:
 
-1. always visible — logo, difficulty, headers, exercises;
+1. always visible — logo, speed, headers, exercises;
 2. on pointer or shortcut activity — transport controls;
 3. while holding `Ctrl`/`Cmd` — shortcut badges.
 

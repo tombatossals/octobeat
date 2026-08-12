@@ -8,32 +8,32 @@ import { ShortcutBadge } from "@/features/library/components/ShortcutBadge";
 import { useUiStore } from "@/features/ui/store";
 
 import {
-    DIFFICULTY_FACTOR,
-    DIFFICULTY_LABELS,
-    useDifficultyStore,
+    SPEED_FACTOR,
+    SPEED_LABELS,
+    useSpeedStore,
 } from "../store";
-import type { Difficulty } from "../store";
+import type { Speed } from "../store";
 
-const ORDER: Difficulty[] = [
-    "easy",
-    "medium",
-    "hard",
+const ORDER: Speed[] = [
+    "x1",
+    "x2",
+    "x4",
 ];
 
 const TEXT_SHADOW =
     "1px 1px 0 #374151, -1px -1px 0 #374151, 1px -1px 0 #374151, -1px 1px 0 #374151, 1px 0 0 #374151, -1px 0 0 #374151, 0 1px 0 #374151, 0 -1px 0 #374151";
 
-export function DifficultySwitcher() {
-    const difficulty =
-        useDifficultyStore(
+export function SpeedSwitcher() {
+    const speed =
+        useSpeedStore(
             (state) =>
-                state.difficulty,
+                state.speed,
         );
 
-    const setDifficulty =
-        useDifficultyStore(
+    const setSpeed =
+        useSpeedStore(
             (state) =>
-                state.setDifficulty,
+                state.setSpeed,
         );
 
     const revealed = useUiStore(
@@ -43,7 +43,7 @@ export function DifficultySwitcher() {
     useShortcut(
         { code: "Digit1" },
         () =>
-            setDifficulty(
+            setSpeed(
                 ORDER[0]!,
             ),
     );
@@ -51,7 +51,7 @@ export function DifficultySwitcher() {
     useShortcut(
         { code: "Digit2" },
         () =>
-            setDifficulty(
+            setSpeed(
                 ORDER[1]!,
             ),
     );
@@ -59,7 +59,7 @@ export function DifficultySwitcher() {
     useShortcut(
         { code: "Digit4" },
         () =>
-            setDifficulty(
+            setSpeed(
                 ORDER[2]!,
             ),
     );
@@ -68,7 +68,7 @@ export function DifficultySwitcher() {
         <div className="pointer-events-auto flex items-center gap-1 rounded-md border border-white/10 bg-gray-800/60 p-1.5 shadow-2xl backdrop-blur-md">
             {ORDER.map((option) => {
                 const active =
-                    difficulty === option;
+                    speed === option;
 
                 return (
                     <Button
@@ -77,7 +77,7 @@ export function DifficultySwitcher() {
                         variant="ghost"
                         size="sm"
                         onClick={() =>
-                            setDifficulty(
+                            setSpeed(
                                 option,
                             )
                         }
@@ -92,7 +92,7 @@ export function DifficultySwitcher() {
                         }}
                     >
                         {
-                            DIFFICULTY_LABELS[
+                            SPEED_LABELS[
                                 option
                             ]
                         }
@@ -101,7 +101,7 @@ export function DifficultySwitcher() {
                             <span className="absolute -right-2 -top-4">
                                 <ShortcutBadge
                                     label={String(
-                                        DIFFICULTY_FACTOR[
+                                        SPEED_FACTOR[
                                             option
                                         ],
                                     )}

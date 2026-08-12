@@ -1,39 +1,39 @@
 import { create } from "zustand";
 
-export type Difficulty =
-    | "easy"
-    | "medium"
-    | "hard";
+export type Speed =
+    | "x1"
+    | "x2"
+    | "x4";
 
-export const DIFFICULTY_FACTOR:
-    Record<Difficulty, number> = {
-        easy: 1,
-        medium: 2,
-        hard: 4,
+export const SPEED_FACTOR:
+    Record<Speed, number> = {
+        x1: 1,
+        x2: 2,
+        x4: 4,
     };
 
-export const DIFFICULTY_LABELS:
-    Record<Difficulty, string> = {
-        easy: "1x",
-        medium: "2x",
-        hard: "4x",
+export const SPEED_LABELS:
+    Record<Speed, string> = {
+        x1: "1x",
+        x2: "2x",
+        x4: "4x",
     };
 
-interface DifficultyState {
-    difficulty: Difficulty;
+interface SpeedState {
+    speed: Speed;
 
-    setDifficulty(
-        difficulty: Difficulty,
+    setSpeed(
+        speed: Speed,
     ): void;
 }
 
-export const useDifficultyStore =
-    create<DifficultyState>((set) => ({
-        difficulty: "easy",
+export const useSpeedStore =
+    create<SpeedState>((set) => ({
+        speed: "x1",
 
-        setDifficulty(difficulty) {
+        setSpeed(speed) {
             set({
-                difficulty,
+                speed,
             });
         },
     }));
