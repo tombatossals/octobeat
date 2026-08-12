@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
 
 import { books } from "@octobeat/exercises";
@@ -44,11 +44,44 @@ export function ExerciseOverlay(): JSX.Element | null {
                     .repetitionsPerLine,
         );
 
-    const [currentBeat, setCurrentBeat] =
+    // Posición del ejercicio acumulada entre canciones: cuando la
+    // canción cambia el beat grid se reinicia, así que sumamos un
+    // offset para continuar donde nos quedamos.
+    const [exerciseBeat, setExerciseBeat] =
         useState(0);
 
-    const [currentTime, setCurrentTime] =
-        useState(0);
+    const baseOffsetRef =
+        useRef(0);
+
+    const lastExerciseBeatRef =
+        useRef(0);
+
+    const datasetIdRef =
+        useRef<string | null>(
+            null,
+        );
+
+    // Al cambiar de canción el beat grid se reinicia: el offset base
+    // pasa a ser la última posición confirmada para que el ejercicio
+    // continúe en la línea en la que estábamos.
+    useEffect(() => {
+        const id =
+            dataset?.metadata.id ??
+            null;
+
+        if (
+            datasetIdRef.current !==
+                null &&
+            id !== datasetIdRef.current
+        ) {
+            baseOffsetRef.current =
+                lastExerciseBeatRef.current;
+
+            lastExerciseBeatRef.current = 0;
+        }
+
+        datasetIdRef.current = id;
+    }, [dataset?.metadata.id]);
 
     const exercises = useMemo(() => {
         return Object.values(
@@ -88,9 +121,9 @@ export function ExerciseOverlay(): JSX.Element | null {
     let repetition =
         repetitionsPerLine;
 
-    if (currentBeat > 0) {
+    if (exerciseBeat > 0) {
         let position =
-            (currentBeat - 1) %
+            (exerciseBeat - 1) %
             totalBeats;
 
         for (
@@ -172,18 +205,12 @@ export function ExerciseOverlay(): JSX.Element | null {
                           1000
                     : media;
 
-            setCurrentTime(
-                currentTime,
-            );
-
             const beat = beatAtTime(
                 map,
                 currentTime,
             );
 
             if (!beat) {
-                setCurrentBeat(0);
-
                 frame =
                     requestAnimationFrame(
                         tick,
@@ -212,12 +239,30 @@ export function ExerciseOverlay(): JSX.Element | null {
                     ),
                 );
 
-                setCurrentBeat(
+                const rawBeat =
                     (beat.index - 1) *
                         factor +
                         sub +
-                        1,
-                );
+                        1;
+
+                const nextBeatValue =
+                    baseOffsetRef.current +
+                    rawBeat;
+
+                // Al cambiar de canción el media se reinicia a 0 y el
+                // tick de la canción antigua recalcula un rawBeat
+                // pequeño; solo confirmamos posiciones que avanzan.
+                if (
+                    nextBeatValue >
+                    lastExerciseBeatRef.current
+                ) {
+                    lastExerciseBeatRef.current =
+                        nextBeatValue;
+
+                    setExerciseBeat(
+                        nextBeatValue,
+                    );
+                }
             }
 
             frame =
@@ -253,7 +298,7 @@ export function ExerciseOverlay(): JSX.Element | null {
                 <ExerciseStage
                     exercise={exercise}
                     preview={preview}
-                    currentBeat={currentBeat}
+                    currentBeat={exerciseBeat}
                     repetition={repetition}
                     previewRepetition={
                         repetitionsPerLine
