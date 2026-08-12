@@ -46,9 +46,11 @@ export function nextBeat(
         return null;
     }
 
+    // `beat.index` es 1-based (posicion de array + 1), asi que el
+    // siguiente beat vive en `beats[beat.index]`.
     return beatByIndex(
         songmap,
-        beat.index + 1,
+        beat.index,
     );
 }
 
@@ -67,6 +69,6 @@ export function previousBeat(
 
     return beatByIndex(
         songmap,
-        beat.index - 1,
+        beat.index - 2,
     );
 }
