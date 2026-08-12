@@ -53,12 +53,33 @@ Open [http://localhost:3000](http://localhost:3000).
 
 > The dev server uses port `3001` when `3000` is already in use.
 
-## Build for production
+## Build the static site
+
+The app is fully static: it builds to a plain folder (`out/`) that any
+web server can serve — no Node app server required. The catalog and
+datasets are static files fetched at runtime.
+
+Make sure the resources symlink is in place before building, so the
+datasets get copied into the output:
 
 ```bash
-pnpm build
-pnpm start
+ln -s ~/Music/OctoBeat apps/octobeat/public/resources
 ```
+
+```bash
+cd apps/octobeat
+pnpm build
+```
+
+This generates `out/` with `index.html`, the JS/CSS bundle and the
+datasets under `out/resources/`. Serve it with any static server, for
+example:
+
+```bash
+python3 -m http.server 3000 -d out
+```
+
+or point nginx/Apache at the `out/` directory.
 
 ---
 
