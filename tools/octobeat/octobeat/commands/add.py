@@ -18,6 +18,10 @@ def run(args: argparse.Namespace) -> int:
 
     config = ensure_workspace()
 
+    input_source = _strip_surrounding_quotes(
+        args.input,
+    )
+
     output = (
         args.output.expanduser().resolve()
         if args.output is not None
@@ -32,7 +36,7 @@ def run(args: argparse.Namespace) -> int:
 
     try:
         result = build_dataset(
-            args.input,
+            input_source,
             output=output,
             catalog=catalog,
             dataset_id=args.id,
@@ -103,3 +107,33 @@ def run(args: argparse.Namespace) -> int:
     )
 
     return 0
+
+
+_QUOTES = {
+    '"',
+    "'",
+    "\u201c",  # "
+    "\u201d",  # "
+    "\u2018",  # '
+    "\u2019",  # '
+}
+
+
+def _strip_surrounding_quotes(
+    value: str,
+) -> str:
+    """
+    Remove surrounding quote characters (straight or typographic)
+    that may have been copied along with the argument.
+    """
+
+    stripped = value.strip()
+
+    while (
+        len(stripped) >= 2
+        and stripped[0] in _QUOTES
+        and stripped[-1] in _QUOTES
+    ):
+        stripped = stripped[1:-1].strip()
+
+    return stripped
