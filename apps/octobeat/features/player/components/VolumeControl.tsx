@@ -15,7 +15,7 @@ import { ShortcutBadge } from "@/features/library/components/ShortcutBadge";
 import { useUiStore } from "@/features/ui/store";
 
 const ICON_OUTLINE =
-    "drop-shadow(1px 1px 0 #374151) drop-shadow(-1px -1px 0 #374151) drop-shadow(1px -1px 0 #374151) drop-shadow(-1px 1px 0 #374151) drop-shadow(1px 0 0 #374151) drop-shadow(-1px 0 0 #374151) drop-shadow(0 1px 0 #374151) drop-shadow(0 -1px 0 #374151)";
+    "drop-shadow(1px 1px 0 var(--icon-outline)) drop-shadow(-1px -1px 0 var(--icon-outline)) drop-shadow(1px -1px 0 var(--icon-outline)) drop-shadow(-1px 1px 0 var(--icon-outline)) drop-shadow(1px 0 0 var(--icon-outline)) drop-shadow(-1px 0 0 var(--icon-outline)) drop-shadow(0 1px 0 var(--icon-outline)) drop-shadow(0 -1px 0 var(--icon-outline))";
 
 const TRACK_HEIGHT = 112;
 
@@ -221,7 +221,7 @@ export function VolumeControl() {
                         revealSlider();
                     }
                 }}
-                className="relative flex cursor-pointer items-center text-white transition-colors outline-none focus:outline-none hover:text-gray-400"
+                className="relative flex cursor-pointer items-center text-foreground transition-colors outline-none focus:outline-none hover:text-muted-foreground"
             >
                 <span
                     style={{
@@ -235,7 +235,7 @@ export function VolumeControl() {
                     <span className="absolute -right-4 -top-2">
                         <ShortcutBadge
                             label="↑"
-                            className="border border-white/60"
+                            className="border border-border"
                         />
                     </span>
                 )}
@@ -244,14 +244,14 @@ export function VolumeControl() {
                     <span className="absolute -bottom-2 -right-4">
                         <ShortcutBadge
                             label="↓"
-                            className="border border-white/60"
+                            className="border border-border"
                         />
                     </span>
                 )}
             </button>
 
             {open && (
-                <div className="absolute left-1/2 top-full mt-3 flex -translate-x-1/2 flex-col items-center rounded-lg border border-white/10 bg-gray-800/60 p-1.5 shadow-2xl backdrop-blur-md">
+                <div className="absolute left-1/2 top-full mt-3 flex -translate-x-1/2 flex-col items-center rounded-lg border border-border bg-background/60 p-1.5 shadow-2xl backdrop-blur-md">
                     <div
                         ref={trackRef}
                         role="slider"
@@ -270,9 +270,9 @@ export function VolumeControl() {
                             height: TRACK_HEIGHT,
                         }}
                     >
-                        <div className="absolute bottom-0 left-1/2 top-0 w-1.5 -translate-x-1/2 overflow-hidden rounded-full bg-white/20">
+                        <div className="absolute bottom-0 left-1/2 top-0 w-1.5 -translate-x-1/2 overflow-hidden rounded-full bg-foreground/20">
                             <div
-                                className="absolute bottom-0 left-0 right-0 bg-white"
+                                className="absolute bottom-0 left-0 right-0 bg-foreground"
                                 style={{
                                     height: `${percentage}%`,
                                 }}
@@ -280,18 +280,18 @@ export function VolumeControl() {
                         </div>
 
                         <div
-                            className="absolute left-1/2 h-3 w-3 -translate-x-1/2 rounded-full bg-white shadow"
+                            className="absolute left-1/2 h-3 w-3 -translate-x-1/2 rounded-full bg-foreground shadow"
                             style={{
                                 top: `calc(${100 - percentage}% - 6px)`,
                             }}
                         />
 
                         <div
-                            className="pointer-events-none absolute left-full ml-2 whitespace-nowrap text-xs font-medium tabular-nums text-white"
+                            className="pointer-events-none absolute left-full ml-2 whitespace-nowrap text-xs font-medium tabular-nums text-foreground"
                             style={{
                                 top: `calc(${100 - percentage}% - 6px)`,
                                 textShadow:
-                                    "1px 1px 0 #374151, -1px -1px 0 #374151, 1px 0 0 #374151, -1px 0 0 #374151, 0 1px 0 #374151, 0 -1px 0 #374151",
+                                    "1px 1px 0 var(--icon-outline), -1px -1px 0 var(--icon-outline), 1px 0 0 var(--icon-outline), -1px 0 0 var(--icon-outline), 0 1px 0 var(--icon-outline), 0 -1px 0 var(--icon-outline)",
                             }}
                         >
                             {percentage}%

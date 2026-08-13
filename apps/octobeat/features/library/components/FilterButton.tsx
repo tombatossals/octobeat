@@ -14,7 +14,7 @@ import { ShortcutBadge } from "./ShortcutBadge";
 import { FilterDialog } from "./FilterDialog";
 
 const ICON_OUTLINE =
-    "drop-shadow(1px 1px 0 #374151) drop-shadow(-1px -1px 0 #374151) drop-shadow(1px -1px 0 #374151) drop-shadow(-1px 1px 0 #374151) drop-shadow(1px 0 0 #374151) drop-shadow(-1px 0 0 #374151) drop-shadow(0 1px 0 #374151) drop-shadow(0 -1px 0 #374151)";
+    "drop-shadow(1px 1px 0 var(--icon-outline)) drop-shadow(-1px -1px 0 var(--icon-outline)) drop-shadow(1px -1px 0 var(--icon-outline)) drop-shadow(-1px 1px 0 var(--icon-outline)) drop-shadow(1px 0 0 var(--icon-outline)) drop-shadow(-1px 0 0 var(--icon-outline)) drop-shadow(0 1px 0 var(--icon-outline)) drop-shadow(0 -1px 0 var(--icon-outline))";
 
 export function FilterButton() {
     const [open, setOpen] =
@@ -58,7 +58,7 @@ export function FilterButton() {
                     "relative flex cursor-pointer items-center transition-colors",
                     active
                         ? "text-amber-400"
-                        : "text-white hover:text-gray-400",
+                        : "text-foreground hover:text-muted-foreground",
                 ].join(" ")}
             >
                 <span
@@ -73,7 +73,7 @@ export function FilterButton() {
                     <span className="absolute -right-3 -top-4">
                         <ShortcutBadge
                             label="F"
-                            className="border border-white/60"
+                            className="border border-border"
                         />
                     </span>
                 )}

@@ -21,7 +21,7 @@ const ORDER: Speed[] = [
 ];
 
 const TEXT_SHADOW =
-    "1px 1px 0 #374151, -1px -1px 0 #374151, 1px -1px 0 #374151, -1px 1px 0 #374151, 1px 0 0 #374151, -1px 0 0 #374151, 0 1px 0 #374151, 0 -1px 0 #374151";
+    "1px 1px 0 var(--icon-outline), -1px -1px 0 var(--icon-outline), 1px -1px 0 var(--icon-outline), -1px 1px 0 var(--icon-outline), 1px 0 0 var(--icon-outline), -1px 0 0 var(--icon-outline), 0 1px 0 var(--icon-outline), 0 -1px 0 var(--icon-outline)";
 
 export function SpeedSwitcher() {
     const speed =
@@ -65,7 +65,7 @@ export function SpeedSwitcher() {
     );
 
     return (
-        <div className="pointer-events-auto flex items-center gap-1 rounded-md border border-white/10 bg-gray-800/60 p-1.5 shadow-2xl backdrop-blur-md">
+        <div className="pointer-events-auto flex items-center gap-1 rounded-md border border-border bg-background/60 p-1.5 shadow-2xl backdrop-blur-md">
             {ORDER.map((option) => {
                 const active =
                     speed === option;
@@ -82,10 +82,10 @@ export function SpeedSwitcher() {
                             )
                         }
                         className={cn(
-                            "relative flex cursor-pointer items-center rounded-sm text-lg text-white",
+                            "relative flex cursor-pointer items-center rounded-sm text-lg text-foreground",
                             active
-                                ? "bg-white/15 shadow-sm"
-                                : "hover:bg-white/10",
+                                ? "bg-foreground/15 shadow-sm"
+                                : "hover:bg-foreground/10",
                         )}
                         style={{
                             textShadow: TEXT_SHADOW,
@@ -105,7 +105,7 @@ export function SpeedSwitcher() {
                                             option
                                         ],
                                     )}
-                                    className="border border-white/60"
+                                    className="border border-border"
                                 />
                             </span>
                         )}

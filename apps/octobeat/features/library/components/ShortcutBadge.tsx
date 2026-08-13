@@ -9,7 +9,7 @@ export function ShortcutBadge({
 }) {
     return (
         <kbd
-            className={`rounded bg-white/15 px-1.5 py-0.5 text-[10px] font-medium leading-none text-white/80 ${className}`}
+            className={`rounded bg-foreground/15 px-1.5 py-0.5 text-[10px] font-medium leading-none text-foreground/80 ${className}`}
         >
             {label}
         </kbd>

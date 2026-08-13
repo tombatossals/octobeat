@@ -268,6 +268,18 @@ export function WaveformPlayer({
                 height,
             );
 
+            // Lee los colores del tema actual para que el waveform se
+            // adapte a tema claro/oscuro.
+            const styles =
+                getComputedStyle(
+                    document.documentElement,
+                );
+
+            const foreground =
+                styles.getPropertyValue(
+                    "--foreground",
+                );
+
             const store =
                 usePlayerStore.getState();
 
@@ -394,7 +406,9 @@ export function WaveformPlayer({
                     x1 - x0 > 56
                 ) {
                     ctx.fillStyle =
-                        palette.text;
+                        foreground;
+                    ctx.globalAlpha =
+                        0.85;
                     ctx.font =
                         "600 12px ui-sans-serif, system-ui, sans-serif";
                     ctx.textAlign =
@@ -411,6 +425,9 @@ export function WaveformPlayer({
                             height *
                                 0.015,
                     );
+
+                    ctx.globalAlpha =
+                        1;
                 }
             }
 
@@ -461,7 +478,11 @@ export function WaveformPlayer({
 
                 ctx.fillStyle = played
                     ? "rgba(96, 165, 250, 0.85)"
-                    : "rgba(148, 163, 184, 0.22)";
+                    : foreground;
+
+                ctx.globalAlpha = played
+                    ? 1
+                    : 0.22;
 
                 ctx.fillRect(
                     x,
@@ -470,6 +491,8 @@ export function WaveformPlayer({
                     barH,
                 );
             }
+
+            ctx.globalAlpha = 1;
 
             // Playhead.
             ctx.save();

@@ -12,7 +12,7 @@ import { ShortcutBadge } from "@/features/library/components/ShortcutBadge";
 import { useUiStore } from "@/features/ui/store";
 
 const ICON_OUTLINE =
-    "drop-shadow(1px 1px 0 #374151) drop-shadow(-1px -1px 0 #374151) drop-shadow(1px -1px 0 #374151) drop-shadow(-1px 1px 0 #374151) drop-shadow(1px 0 0 #374151) drop-shadow(-1px 0 0 #374151) drop-shadow(0 1px 0 #374151) drop-shadow(0 -1px 0 #374151)";
+    "drop-shadow(1px 1px 0 var(--icon-outline)) drop-shadow(-1px -1px 0 var(--icon-outline)) drop-shadow(1px -1px 0 var(--icon-outline)) drop-shadow(-1px 1px 0 var(--icon-outline)) drop-shadow(1px 0 0 var(--icon-outline)) drop-shadow(-1px 0 0 var(--icon-outline)) drop-shadow(0 1px 0 var(--icon-outline)) drop-shadow(0 -1px 0 var(--icon-outline))";
 
 export function FullscreenButton() {
     const [isFullscreen, setIsFullscreen] =
@@ -67,7 +67,7 @@ export function FullscreenButton() {
             aria-label="Toggle fullscreen"
             title="Toggle fullscreen"
             onClick={handleToggle}
-            className="relative flex cursor-pointer items-center text-white transition-colors outline-none focus:outline-none hover:text-gray-400"
+            className="relative flex cursor-pointer items-center text-foreground transition-colors outline-none focus:outline-none hover:text-muted-foreground"
         >
             <span
                 style={{
@@ -81,7 +81,7 @@ export function FullscreenButton() {
                 <span className="absolute -right-3 -top-4">
                     <ShortcutBadge
                         label="F"
-                        className="border border-white/60"
+                        className="border border-border"
                     />
                 </span>
             )}

@@ -6,7 +6,7 @@ import { Settings as SettingsIcon } from "lucide-react";
 import { SettingsDialog } from "./SettingsDialog";
 
 const ICON_OUTLINE =
-    "drop-shadow(1px 1px 0 #374151) drop-shadow(-1px -1px 0 #374151) drop-shadow(1px -1px 0 #374151) drop-shadow(-1px 1px 0 #374151) drop-shadow(1px 0 0 #374151) drop-shadow(-1px 0 0 #374151) drop-shadow(0 1px 0 #374151) drop-shadow(0 -1px 0 #374151)";
+    "drop-shadow(1px 1px 0 var(--icon-outline)) drop-shadow(-1px -1px 0 var(--icon-outline)) drop-shadow(1px -1px 0 var(--icon-outline)) drop-shadow(-1px 1px 0 var(--icon-outline)) drop-shadow(1px 0 0 var(--icon-outline)) drop-shadow(-1px 0 0 var(--icon-outline)) drop-shadow(0 1px 0 var(--icon-outline)) drop-shadow(0 -1px 0 var(--icon-outline))";
 
 export function SettingsButton() {
     const [open, setOpen] =
@@ -18,7 +18,7 @@ export function SettingsButton() {
                 type="button"
                 aria-label="Open settings"
                 onClick={() => setOpen(true)}
-                className="flex cursor-pointer items-center text-white transition-colors outline-none focus:outline-none hover:text-gray-400"
+                className="flex cursor-pointer items-center text-foreground transition-colors outline-none focus:outline-none hover:text-muted-foreground"
             >
                 <span
                     style={{

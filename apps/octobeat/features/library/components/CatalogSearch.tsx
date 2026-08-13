@@ -25,7 +25,7 @@ import { matchesFilters } from "../filters";
 import { ShortcutBadge } from "./ShortcutBadge";
 
 const ICON_OUTLINE =
-    "drop-shadow(1px 1px 0 #374151) drop-shadow(-1px -1px 0 #374151) drop-shadow(1px -1px 0 #374151) drop-shadow(-1px 1px 0 #374151) drop-shadow(1px 0 0 #374151) drop-shadow(-1px 0 0 #374151) drop-shadow(0 1px 0 #374151) drop-shadow(0 -1px 0 #374151)";
+    "drop-shadow(1px 1px 0 var(--icon-outline)) drop-shadow(-1px -1px 0 var(--icon-outline)) drop-shadow(1px -1px 0 var(--icon-outline)) drop-shadow(-1px 1px 0 var(--icon-outline)) drop-shadow(1px 0 0 var(--icon-outline)) drop-shadow(-1px 0 0 var(--icon-outline)) drop-shadow(0 1px 0 var(--icon-outline)) drop-shadow(0 -1px 0 var(--icon-outline))";
 
 export function CatalogSearch(): JSX.Element {
     const [open, setOpen] =
@@ -193,7 +193,7 @@ export function CatalogSearch(): JSX.Element {
                         true,
                     )
                 }
-                className="relative flex cursor-pointer items-center text-white transition-colors outline-none focus:outline-none hover:text-gray-400"
+                className="relative flex cursor-pointer items-center text-foreground transition-colors outline-none focus:outline-none hover:text-muted-foreground"
             >
                 <span
                     style={{
@@ -207,7 +207,7 @@ export function CatalogSearch(): JSX.Element {
                     <span className="absolute -right-3 -top-4">
                         <ShortcutBadge
                             label="K"
-                            className="border border-white/60"
+                            className="border border-border"
                         />
                     </span>
                 )}

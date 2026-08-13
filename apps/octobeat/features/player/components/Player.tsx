@@ -117,7 +117,7 @@ export function Player() {
     return (
         <div
             onClick={handleClick}
-            className="relative h-screen w-screen overflow-hidden bg-black"
+            className="relative h-screen w-screen overflow-hidden bg-background"
         >
             <PlayerBackend />
 

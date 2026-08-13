@@ -20,7 +20,7 @@ import { useUiStore } from "@/features/ui/store";
 const SEEK_SECONDS = 5;
 
 const ICON_OUTLINE =
-    "drop-shadow(1px 1px 0 #374151) drop-shadow(-1px -1px 0 #374151) drop-shadow(1px -1px 0 #374151) drop-shadow(-1px 1px 0 #374151) drop-shadow(1px 0 0 #374151) drop-shadow(-1px 0 0 #374151) drop-shadow(0 1px 0 #374151) drop-shadow(0 -1px 0 #374151)";
+    "drop-shadow(1px 1px 0 var(--icon-outline)) drop-shadow(-1px -1px 0 var(--icon-outline)) drop-shadow(1px -1px 0 var(--icon-outline)) drop-shadow(-1px 1px 0 var(--icon-outline)) drop-shadow(1px 0 0 var(--icon-outline)) drop-shadow(-1px 0 0 var(--icon-outline)) drop-shadow(0 1px 0 var(--icon-outline)) drop-shadow(0 -1px 0 var(--icon-outline))";
 
 export function PlayerControlsOverlay(): JSX.Element {
     const playing = usePlayerStore(
@@ -91,7 +91,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                     onClick={() =>
                         void previous()
                     }
-                    className="flex cursor-pointer items-center justify-center text-white opacity-50 transition-all hover:opacity-100"
+                    className="flex cursor-pointer items-center justify-center text-foreground opacity-50 transition-all hover:opacity-100"
                     style={{
                         filter: ICON_OUTLINE,
                     }}
@@ -103,7 +103,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                     <span className="absolute left-1/2 -top-6 -translate-x-1/2">
                         <ShortcutBadge
                             label="P"
-                            className="border border-white/60"
+                            className="border border-border"
                         />
                     </span>
                 )}
@@ -118,7 +118,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                             -SEEK_SECONDS,
                         )
                     }
-                    className="flex cursor-pointer items-center justify-center text-white opacity-50 transition-all hover:opacity-100"
+                    className="flex cursor-pointer items-center justify-center text-foreground opacity-50 transition-all hover:opacity-100"
                     style={{
                         filter: ICON_OUTLINE,
                     }}
@@ -130,7 +130,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                     <span className="absolute left-1/2 -top-6 -translate-x-1/2">
                         <ShortcutBadge
                             label="←"
-                            className="border border-white/60"
+                            className="border border-border"
                         />
                     </span>
                 )}
@@ -147,7 +147,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                     onClick={() =>
                         void playPause()
                     }
-                    className="flex cursor-pointer items-center justify-center text-white opacity-50 transition-all hover:opacity-100"
+                    className="flex cursor-pointer items-center justify-center text-foreground opacity-50 transition-all hover:opacity-100"
                     style={{
                         filter: ICON_OUTLINE,
                     }}
@@ -163,7 +163,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                     <span className="absolute left-1/2 -top-6 -translate-x-1/2">
                         <ShortcutBadge
                             label="Space"
-                            className="border border-white/60"
+                            className="border border-border"
                         />
                     </span>
                 )}
@@ -178,7 +178,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                             SEEK_SECONDS,
                         )
                     }
-                    className="flex cursor-pointer items-center justify-center text-white opacity-50 transition-all hover:opacity-100"
+                    className="flex cursor-pointer items-center justify-center text-foreground opacity-50 transition-all hover:opacity-100"
                     style={{
                         filter: ICON_OUTLINE,
                     }}
@@ -190,7 +190,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                     <span className="absolute left-1/2 -top-6 -translate-x-1/2">
                         <ShortcutBadge
                             label="→"
-                            className="border border-white/60"
+                            className="border border-border"
                         />
                     </span>
                 )}
@@ -203,7 +203,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                     onClick={() =>
                         void next()
                     }
-                    className="flex cursor-pointer items-center justify-center text-white opacity-50 transition-all hover:opacity-100"
+                    className="flex cursor-pointer items-center justify-center text-foreground opacity-50 transition-all hover:opacity-100"
                     style={{
                         filter: ICON_OUTLINE,
                     }}
@@ -215,7 +215,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                     <span className="absolute left-1/2 -top-6 -translate-x-1/2">
                         <ShortcutBadge
                             label="N"
-                            className="border border-white/60"
+                            className="border border-border"
                         />
                     </span>
                 )}
@@ -225,7 +225,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                 <div className="w-full max-w-md">
                     <SeekBar />
 
-                    <div className="mt-2 flex items-center justify-between text-sm text-white">
+                    <div className="mt-2 flex items-center justify-between text-sm text-foreground">
                         <TimeDisplay />
 
                         <span className="tabular-nums">
