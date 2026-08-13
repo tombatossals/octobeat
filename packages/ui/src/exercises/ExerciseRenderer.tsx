@@ -42,7 +42,7 @@ export function ExerciseRenderer({
     lastPass = false,
 }: ExerciseRendererProps): JSX.Element {
     return (
-        <div className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-1 shadow-2xl">
+        <div className="flex w-full items-center gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-1 shadow-2xl">
             <div className="flex shrink-0 items-center">
                 <span className="font-mono text-sm font-black text-neutral-500">
                     {exercise.title}

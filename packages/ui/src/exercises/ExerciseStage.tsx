@@ -71,8 +71,8 @@ export function ExerciseStage({
     }, [exercise]);
 
     return (
-        <div className="flex items-center gap-3">
-            <div className="relative">
+        <div className="flex w-full flex-col gap-2">
+            <div className="relative w-full">
                 {leaving && (
                     <div className="pointer-events-none absolute inset-0 animate-[exerciseExit_600ms_ease-in-out_forwards]">
                         <ExerciseRenderer

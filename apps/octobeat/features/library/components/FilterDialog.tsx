@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Dialog } from "@base-ui/react/dialog";
 import { X } from "lucide-react";
 
+import { books } from "@octobeat/exercises";
 import { Button, cn, Label } from "@octobeat/ui";
 
 import { useLibraryStore } from "../store";
@@ -32,6 +33,9 @@ function toDraft(
         ],
         genres: [...filters.genres],
         decades: [...filters.decades],
+        exerciseSets: [
+            ...filters.exerciseSets,
+        ],
     };
 }
 
@@ -281,6 +285,58 @@ export function FilterDialog({
                                                 />
 
                                                 {genre}
+                                            </Label>
+                                        );
+                                    },
+                                )}
+                            </div>
+                        </fieldset>
+
+                        <fieldset className="lg:col-span-2">
+                            <legend className="mb-2 block text-sm font-semibold text-foreground">
+                                Book Sections
+                            </legend>
+
+                            <div className="grid grid-cols-2 gap-1 lg:grid-cols-3">
+                                {Object.values(
+                                    books
+                                        .stickControl
+                                        .sets,
+                                ).map(
+                                    (set) => {
+                                        const checked =
+                                            draft.exerciseSets.includes(
+                                                set.id,
+                                            );
+
+                                        return (
+                                            <Label
+                                                key={
+                                                    set.id
+                                                }
+                                                className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={
+                                                        checked
+                                                    }
+                                                    onChange={() =>
+                                                        setDraft(
+                                                            (current) => ({
+                                                                ...current,
+                                                                exerciseSets:
+                                                                    toggle(
+                                                                        current.exerciseSets,
+                                                                        set.id,
+                                                                    ),
+                                                            }),
+                                                        )
+                                                    }
+                                                    className="size-4 accent-primary"
+                                                />
+
+                                                {set.title}
                                             </Label>
                                         );
                                     },

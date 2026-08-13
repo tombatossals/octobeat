@@ -95,15 +95,42 @@ export function ExerciseOverlay(): JSX.Element | null {
         datasetIdRef.current = id;
     }, [dataset?.metadata.id]);
 
+    const exerciseSets = useLibraryStore(
+        (state) =>
+            state.filters
+                .exerciseSets,
+    );
+
     const exercises = useMemo(() => {
-        return Object.values(
+        const all = Object.values(
             books.stickControl.sets,
         ).flatMap((set) =>
             Object.values(
                 set.exercises,
             ),
         );
-    }, []);
+
+        if (
+            exerciseSets.length ===
+            0
+        ) {
+            return all;
+        }
+
+        return Object.values(
+            books.stickControl.sets,
+        )
+            .filter((set) =>
+                exerciseSets.includes(
+                    set.id,
+                ),
+            )
+            .flatMap((set) =>
+                Object.values(
+                    set.exercises,
+                ),
+            );
+    }, [exerciseSets]);
 
     const factor =
         SPEED_FACTOR[speed];
@@ -362,8 +389,8 @@ export function ExerciseOverlay(): JSX.Element | null {
     }
 
     return (
-        <div className="pointer-events-none absolute inset-x-0 bottom-24 z-30 flex justify-center short:bottom-14">
-            <div className="flex flex-col items-start gap-3 short:gap-1.5">
+        <div className="pointer-events-none absolute inset-x-0 bottom-24 z-30 flex justify-center px-4 short:bottom-14">
+            <div className="flex w-full max-w-4xl flex-col items-center gap-3 short:gap-1.5">
                 <ExerciseStage
                     exercise={exercise}
                     preview={preview}

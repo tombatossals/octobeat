@@ -11,6 +11,11 @@ import {
 } from "./filters";
 import type { LibraryFilters } from "./filters";
 
+import {
+    loadFilters,
+    saveFilters,
+} from "./filterStorage";
+
 /**
  * Fisher-Yates shuffle. Returns a new array.
  */
@@ -107,12 +112,15 @@ export const useLibraryStore =
             const catalog =
                 await getLibrary().list();
 
+            const filters =
+                loadFilters();
+
             const ids = shuffle(
                 catalog
                     .filter((entry) =>
                         matchesFilters(
                             entry,
-                            get().filters,
+                            filters,
                         ),
                     )
                     .map(
@@ -123,6 +131,7 @@ export const useLibraryStore =
 
             set({
                 entries: catalog,
+                filters,
                 ids,
             });
 
@@ -130,6 +139,8 @@ export const useLibraryStore =
         },
 
         setFilters(filters) {
+            saveFilters(filters);
+
             const ids = shuffle(
                 get()
                     .entries.filter(

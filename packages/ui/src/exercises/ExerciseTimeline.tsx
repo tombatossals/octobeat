@@ -113,8 +113,8 @@ export function ExerciseTimeline({
     }
 
     return (
-        <div className="mx-auto w-full max-w-3xl">
-            <div className="mx-auto flex items-center">
+        <div className="w-full">
+            <div className="flex items-center">
                 {measures.map(
                     (groups, measureIndex) => (
                         <Fragment key={measureIndex}>

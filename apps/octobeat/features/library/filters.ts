@@ -15,6 +15,11 @@ export interface LibraryFilters {
      * Selected decade keys, e.g. "80s".
      */
     decades: string[];
+
+    /**
+     * Selected exercise set ids to practice (e.g. "single-beat-combinations").
+     */
+    exerciseSets: string[];
 }
 
 export const BPM_RANGES: ReadonlyArray<{
@@ -51,6 +56,7 @@ export const EMPTY_FILTERS: LibraryFilters = {
     bpmRanges: [],
     genres: [],
     decades: [],
+    exerciseSets: [],
 };
 
 export function isEmptyFilters(
@@ -59,7 +65,8 @@ export function isEmptyFilters(
     return (
         filters.bpmRanges.length === 0 &&
         filters.genres.length === 0 &&
-        filters.decades.length === 0
+        filters.decades.length === 0 &&
+        filters.exerciseSets.length === 0
     );
 }
 
