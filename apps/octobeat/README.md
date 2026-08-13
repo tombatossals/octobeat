@@ -59,8 +59,7 @@ The app is fully static: it builds to a plain folder (`out/`) that any
 web server can serve — no Node app server required. The catalog and
 datasets are static files fetched at runtime.
 
-Make sure the resources symlink is in place before building, so the
-datasets get copied into the output:
+Make sure the resources symlink is in place before building:
 
 ```bash
 ln -s ~/Music/OctoBeat apps/octobeat/public/resources
@@ -71,9 +70,10 @@ cd apps/octobeat
 pnpm build
 ```
 
-This generates `out/` with `index.html`, the JS/CSS bundle and the
-datasets under `out/resources/`. Serve it with any static server, for
-example:
+This generates `out/` with `index.html`, the JS/CSS bundle and a
+symlink at `out/resources/` pointing at your datasets — the datasets are
+**not** copied, so the build stays fast even with hundreds of gigabytes
+of resources. Serve it with any static server, for example:
 
 ```bash
 python3 -m http.server 3000 -d out
