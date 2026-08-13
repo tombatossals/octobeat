@@ -316,7 +316,7 @@ export function SettingsDialog({
             <Dialog.Portal>
                 <Dialog.Backdrop className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm" />
 
-                <Dialog.Popup className="fixed left-1/2 top-1/2 z-[90] w-[min(90vw,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-background p-6 text-foreground shadow-2xl lg:w-[min(90vw,56rem)]">
+                <Dialog.Popup className="fixed left-1/2 top-1/2 z-[90] max-h-[85vh] w-[min(90vw,28rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-border bg-background p-6 text-foreground shadow-2xl lg:w-[min(90vw,56rem)] short:p-4">
                     <SettingsForm
                         settings={settings}
                         onSave={handleSave}

@@ -74,7 +74,7 @@ export function FullscreenButton() {
                     filter: ICON_OUTLINE,
                 }}
             >
-                <Icon className="h-7 w-7" />
+                <Icon className="h-7 w-7 short:h-6 short:w-6" />
             </span>
 
             {revealed && (

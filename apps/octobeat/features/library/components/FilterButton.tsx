@@ -66,7 +66,7 @@ export function FilterButton() {
                         filter: ICON_OUTLINE,
                     }}
                 >
-                    <Filter className="h-7 w-7" />
+                    <Filter className="h-7 w-7 short:h-6 short:w-6" />
                 </span>
 
                 {revealed && (

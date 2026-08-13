@@ -65,7 +65,7 @@ export function SpeedSwitcher() {
     );
 
     return (
-        <div className="pointer-events-auto flex items-center gap-1 rounded-md border border-border bg-background/60 p-1.5 shadow-2xl backdrop-blur-md">
+        <div className="pointer-events-auto flex items-center gap-1 rounded-md border border-border bg-background/60 p-1.5 shadow-2xl backdrop-blur-md short:p-1">
             {ORDER.map((option) => {
                 const active =
                     speed === option;
@@ -82,7 +82,7 @@ export function SpeedSwitcher() {
                             )
                         }
                         className={cn(
-                            "relative flex cursor-pointer items-center rounded-sm text-lg text-foreground",
+                            "relative flex cursor-pointer items-center rounded-sm text-lg text-foreground short:text-sm",
                             active
                                 ? "bg-foreground/15 shadow-sm"
                                 : "hover:bg-foreground/10",

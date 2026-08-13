@@ -25,7 +25,7 @@ export function SettingsButton() {
                         filter: ICON_OUTLINE,
                     }}
                 >
-                    <SettingsIcon className="h-9 w-9" />
+                    <SettingsIcon className="h-9 w-9 short:h-7 short:w-7" />
                 </span>
             </button>
 

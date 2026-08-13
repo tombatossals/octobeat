@@ -84,7 +84,7 @@ export function PlayerControlsOverlay(): JSX.Element {
 
     return (
         <div className="pointer-events-none fixed inset-0 z-40">
-            <div className="pointer-events-auto absolute left-[8%] top-1/2 -translate-y-1/2">
+            <div className="pointer-events-auto absolute left-[8%] top-1/2 -translate-y-1/2 short:left-[4%]">
                 <button
                     type="button"
                     aria-label="Previous song"
@@ -96,7 +96,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                         filter: ICON_OUTLINE,
                     }}
                 >
-                    <SkipBack className="h-9 w-9" />
+                    <SkipBack className="h-9 w-9 short:h-6 short:w-6" />
                 </button>
 
                 {revealed && (
@@ -109,7 +109,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                 )}
             </div>
 
-            <div className="pointer-events-auto absolute left-[25%] top-1/2 -translate-y-1/2">
+            <div className="pointer-events-auto absolute left-[25%] top-1/2 -translate-y-1/2 short:left-[18%]">
                 <button
                     type="button"
                     aria-label="Rewind 5 seconds"
@@ -123,7 +123,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                         filter: ICON_OUTLINE,
                     }}
                 >
-                    <Rewind className="h-8 w-8" />
+                    <Rewind className="h-8 w-8 short:h-6 short:w-6" />
                 </button>
 
                 {revealed && (
@@ -153,9 +153,9 @@ export function PlayerControlsOverlay(): JSX.Element {
                     }}
                 >
                     {playing ? (
-                        <Pause className="h-14 w-14" />
+                        <Pause className="h-14 w-14 short:h-10 short:w-10" />
                     ) : (
-                        <Play className="h-14 w-14" />
+                        <Play className="h-14 w-14 short:h-10 short:w-10" />
                     )}
                 </button>
 
@@ -169,7 +169,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                 )}
             </div>
 
-            <div className="pointer-events-auto absolute right-[25%] top-1/2 -translate-y-1/2">
+            <div className="pointer-events-auto absolute right-[25%] top-1/2 -translate-y-1/2 short:right-[18%]">
                 <button
                     type="button"
                     aria-label="Forward 5 seconds"
@@ -183,7 +183,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                         filter: ICON_OUTLINE,
                     }}
                 >
-                    <FastForward className="h-8 w-8" />
+                    <FastForward className="h-8 w-8 short:h-6 short:w-6" />
                 </button>
 
                 {revealed && (
@@ -196,7 +196,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                 )}
             </div>
 
-            <div className="pointer-events-auto absolute right-[8%] top-1/2 -translate-y-1/2">
+            <div className="pointer-events-auto absolute right-[8%] top-1/2 -translate-y-1/2 short:right-[4%]">
                 <button
                     type="button"
                     aria-label="Next song"
@@ -208,7 +208,7 @@ export function PlayerControlsOverlay(): JSX.Element {
                         filter: ICON_OUTLINE,
                     }}
                 >
-                    <SkipForward className="h-9 w-9" />
+                    <SkipForward className="h-9 w-9 short:h-6 short:w-6" />
                 </button>
 
                 {revealed && (

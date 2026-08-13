@@ -13,13 +13,13 @@ export function HeaderActions() {
             onClick={(event) =>
                 event.stopPropagation()
             }
-            className="pointer-events-auto fixed right-10 top-8 z-50 flex items-start gap-5"
+            className="pointer-events-auto fixed right-10 top-8 z-50 flex items-start gap-5 short:right-4 short:top-3 short:gap-3"
         >
             <FilterButton />
 
             <CatalogSearch />
 
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-4 short:gap-2">
                 <SettingsButton />
 
                 <VolumeControl />

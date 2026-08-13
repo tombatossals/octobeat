@@ -2,15 +2,15 @@
 
 export function Logo() {
     return (
-        <div className="pointer-events-none fixed left-4 top-4 z-50 flex items-center rounded-full border border-border bg-background/60 pl-0 pr-5 shadow-2xl backdrop-blur-xl">
+        <div className="pointer-events-none fixed left-4 top-4 z-50 flex items-center rounded-full border border-border bg-background/60 pl-0 pr-5 shadow-2xl backdrop-blur-xl short:left-3 short:top-3 short:pr-3">
             <img
                 src="/logo.png"
                 alt="Octobeat logo"
-                className="h-15 w-auto object-contain"
+                className="h-15 w-auto object-contain short:h-10"
             />
 
             <span
-                className="mx-1.5 h-8 w-px bg-foreground"
+                className="mx-1.5 h-8 w-px bg-foreground short:h-6"
                 style={{
                     boxShadow:
                         "1px 1px 0 var(--icon-outline), -1px -1px 0 var(--icon-outline), 1px -1px 0 var(--icon-outline), -1px 1px 0 var(--icon-outline), 1px 0 0 var(--icon-outline), -1px 0 0 var(--icon-outline), 0 1px 0 var(--icon-outline), 0 -1px 0 var(--icon-outline)",
@@ -19,7 +19,7 @@ export function Logo() {
             />
 
             <span
-                className="text-4xl font-black leading-none tracking-[-0.08em] text-foreground"
+                className="text-4xl font-black leading-none tracking-[-0.08em] text-foreground short:text-2xl"
                 style={{
                     textShadow:
                         "1px 1px 0 var(--icon-outline), -1px -1px 0 var(--icon-outline), 1px -1px 0 var(--icon-outline), -1px 1px 0 var(--icon-outline), 1px 0 0 var(--icon-outline), -1px 0 0 var(--icon-outline), 0 1px 0 var(--icon-outline), 0 -1px 0 var(--icon-outline)",

@@ -200,7 +200,7 @@ export function CatalogSearch(): JSX.Element {
                         filter: ICON_OUTLINE,
                     }}
                 >
-                    <Search className="h-7 w-7" />
+                    <Search className="h-7 w-7 short:h-6 short:w-6" />
                 </span>
 
                 {revealed && (
@@ -220,7 +220,7 @@ export function CatalogSearch(): JSX.Element {
                 <Dialog.Portal>
                     <Dialog.Backdrop className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm" />
 
-                    <Dialog.Popup className="fixed left-1/2 top-[18%] z-[90] w-[min(90vw,32rem)] -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+                    <Dialog.Popup className="fixed left-1/2 top-[18%] z-[90] flex max-h-[75vh] w-[min(90vw,32rem)] -translate-x-1/2 flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl short:top-[10%] short:max-h-[80vh]">
                         <div className="flex items-center gap-3 border-b border-border px-4">
                             <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
 
@@ -252,7 +252,7 @@ export function CatalogSearch(): JSX.Element {
                         </div>
 
                         <ul
-                            className="max-h-96 overflow-y-auto p-2"
+                            className="max-h-96 flex-1 overflow-y-auto p-2"
                             role="listbox"
                         >
                             {results.map(

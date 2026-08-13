@@ -362,8 +362,8 @@ export function ExerciseOverlay(): JSX.Element | null {
     }
 
     return (
-        <div className="pointer-events-none absolute inset-x-0 bottom-24 z-30 flex justify-center">
-            <div className="flex flex-col items-start gap-3">
+        <div className="pointer-events-none absolute inset-x-0 bottom-24 z-30 flex justify-center short:bottom-14">
+            <div className="flex flex-col items-start gap-3 short:gap-1.5">
                 <ExerciseStage
                     exercise={exercise}
                     preview={preview}
