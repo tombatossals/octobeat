@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
 
-import { books } from "@octobeat/exercises";
+import {
+    books,
+    exerciseNoteDurations,
+} from "@octobeat/exercises";
 import { usePlayerStore } from "@octobeat/player";
 import { ExerciseStage } from "@octobeat/ui";
 
@@ -21,6 +24,71 @@ import {
 import { useSettingsStore } from "@/features/settings/store";
 
 import { SpeedSwitcher } from "./SpeedSwitcher";
+
+interface ExerciseCycle {
+    /**
+     * Posición en pulsos del inicio de cada golpe dentro del ciclo
+     * completo de ejercicios (longitud = totalNotes + 1).
+     */
+    offsets: number[];
+
+    /**
+     * Número total de golpes del ciclo.
+     */
+    totalNotes: number;
+
+    /**
+     * Duración total del ciclo en pulsos.
+     */
+    totalBeats: number;
+}
+
+/**
+ * Mapea una posición musical (en pulsos) al índice global del golpe
+ * activo del ciclo de ejercicios. Los golpes de tresillo duran 2/3 de
+ * pulso, así que el puntero avanza más rápido al atravesarlos.
+ */
+function globalNoteIndexAt(
+    musicalPosition: number,
+    factor: number,
+    cycle: ExerciseCycle,
+): number {
+    const { offsets, totalNotes, totalBeats } =
+        cycle;
+
+    if (totalBeats <= 0 || totalNotes === 0) {
+        return 0;
+    }
+
+    const position =
+        factor * musicalPosition;
+
+    const cycles = Math.floor(
+        position / totalBeats,
+    );
+
+    const within =
+        position -
+        cycles * totalBeats;
+
+    let low = 0;
+    let high = totalNotes;
+
+    while (low < high) {
+        const mid = (low + high) >> 1;
+
+        if (offsets[mid]! <= within) {
+            low = mid + 1;
+        } else {
+            high = mid;
+        }
+    }
+
+    return (
+        cycles * totalNotes +
+        (low - 1)
+    );
+}
 
 export function ExerciseOverlay(): JSX.Element | null {
     const dataset = useLibraryStore(
@@ -157,6 +225,55 @@ export function ExerciseOverlay(): JSX.Element | null {
         );
     }, [lineTotals]);
 
+    // Estructura temporal del ciclo completo de ejercicios: la
+    // duración en pulsos de cada golpe acumulada a lo largo de todas
+    // las líneas y repeticiones. Se usa para mapear la posición
+    // musical al golpe activo respetando los tresillos.
+    const exerciseCycle = useMemo(() => {
+        const offsets: number[] = [
+            0,
+        ];
+
+        let runningBeats = 0;
+        let totalNotes = 0;
+
+        for (const exercise of exercises) {
+            const durations =
+                exerciseNoteDurations(
+                    exercise,
+                );
+
+            for (
+                let repetition = 0;
+                repetition <
+                repetitionsPerLine;
+                repetition++
+            ) {
+                for (const duration of durations) {
+                    runningBeats +=
+                        duration;
+
+                    offsets.push(
+                        runningBeats,
+                    );
+                }
+            }
+
+            totalNotes +=
+                durations.length *
+                repetitionsPerLine;
+        }
+
+        return {
+            offsets,
+            totalNotes,
+            totalBeats: runningBeats,
+        };
+    }, [
+        exercises,
+        repetitionsPerLine,
+    ]);
+
     let lineIndex = 0;
     let repetition =
         repetitionsPerLine;
@@ -249,22 +366,34 @@ export function ExerciseOverlay(): JSX.Element | null {
                           rawNow.time
                         : 0.5;
 
-                const sub =
-                    Math.min(
-                        factor - 1,
-                        Math.floor(
-                            ((anchorMedia -
-                                rawNow.time) /
-                                duration) *
-                                factor,
-                        ),
+                const frac = next
+                    ? Math.min(
+                          1,
+                          (anchorMedia -
+                              rawNow.time) /
+                              duration,
+                      )
+                    : Math.min(
+                          (factor - 1) /
+                              factor,
+                          (anchorMedia -
+                              rawNow.time) /
+                              duration,
+                      );
+
+                const musicalPosition =
+                    (rawNow.index - 1) +
+                    Math.max(
+                        0,
+                        frac,
                     );
 
                 const rawBeat =
-                    (rawNow.index - 1) *
-                        factor +
-                        sub +
-                        1;
+                    globalNoteIndexAt(
+                        musicalPosition,
+                        factor,
+                        exerciseCycle,
+                    ) + 1;
 
                 biasRef.current =
                     lastExerciseBeatRef.current -
@@ -324,21 +453,34 @@ export function ExerciseOverlay(): JSX.Element | null {
                     ? next.time - beat.time
                     : 0.5;
 
-                const sub = Math.min(
-                    factor - 1,
-                    Math.floor(
-                        ((currentTime -
-                            beat.time) /
-                            duration) *
-                            factor,
-                    ),
-                );
+                const frac = next
+                    ? Math.min(
+                          1,
+                          (currentTime -
+                              beat.time) /
+                              duration,
+                      )
+                    : Math.min(
+                          (factor - 1) /
+                              factor,
+                          (currentTime -
+                              beat.time) /
+                              duration,
+                      );
+
+                const musicalPosition =
+                    (beat.index - 1) +
+                    Math.max(
+                        0,
+                        frac,
+                    );
 
                 const rawBeat =
-                    (beat.index - 1) *
-                        factor +
-                        sub +
-                        1;
+                    globalNoteIndexAt(
+                        musicalPosition,
+                        factor,
+                        exerciseCycle,
+                    ) + 1;
 
                 const nextBeatValue =
                     baseOffsetRef.current +
@@ -380,6 +522,7 @@ export function ExerciseOverlay(): JSX.Element | null {
         dataset,
         player,
         factor,
+        exerciseCycle,
     ]);
 
     const songmap = dataset?.songmap;
@@ -390,7 +533,7 @@ export function ExerciseOverlay(): JSX.Element | null {
 
     return (
         <div className="pointer-events-none absolute inset-x-0 bottom-24 z-30 flex justify-center px-4 short:bottom-14">
-            <div className="flex w-full max-w-4xl flex-col items-center gap-3 short:gap-1.5">
+            <div className="flex w-full max-w-6xl flex-col items-center gap-3 short:gap-1.5">
                 <ExerciseStage
                     exercise={exercise}
                     preview={preview}

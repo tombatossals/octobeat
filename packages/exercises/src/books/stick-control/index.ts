@@ -1,3 +1,4 @@
+import { shortRollCombinations } from "./short-roll-combinations";
 import { singleBeatCombinations } from "./single-beat-combinations";
 import { triplets } from "./triplets";
 
@@ -11,5 +12,6 @@ export const stickControl: ExerciseBook = {
     sets: {
         singleBeatCombinations,
         triplets,
+        shortRollCombinations,
     },
 };

@@ -4,11 +4,17 @@ export interface ExerciseBeat {
     hand: Hand;
 
     /**
-     * Grupo de tresillo al que pertenece este golpe. Todos los golpes
-     * de un mismo tresillo comparten el mismo id; los golpes sueltos
-     * no tienen este campo.
+     * Grupo rítmico al que pertenece este golpe (un tresillo, un roll…).
+     * Todos los golpes de un mismo grupo comparten el mismo id; los
+     * golpes sueltos no tienen este campo.
      */
-    triplet?: number;
+    group?: number;
+
+    /**
+     * Número de golpes del grupo (3 en un tresillo, 4 en un roll de
+     * golpe simple).
+     */
+    groupStrokes?: number;
 }
 
 export interface Exercise {
@@ -23,8 +29,8 @@ export interface Exercise {
     beats: ExerciseBeat[];
 
     /**
-     * Número de golpes de cada compás. Con tresillos los compases
-     * pueden tener longitudes distintas.
+     * Número de golpes de cada compás. Con grupos rítmicos (tresillos,
+     * rolls…) los compases pueden tener longitudes distintas.
      */
     barLengths: number[];
 }

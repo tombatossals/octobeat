@@ -79,7 +79,7 @@ export function ExerciseTimeline({
         while (index < barBeats.length) {
             const beat = barBeats[index]!;
 
-            if (beat.triplet == null) {
+            if (beat.group == null) {
                 groups.push({
                     beats: [beat],
                     startIndex: offset - barLength + index,
@@ -88,13 +88,13 @@ export function ExerciseTimeline({
                 continue;
             }
 
-            const group = beat.triplet;
+            const group = beat.group;
             const groupBeats: ExerciseBeat[] = [];
             const startIndex = offset - barLength + index;
 
             while (
                 index < barBeats.length &&
-                barBeats[index]?.triplet ===
+                barBeats[index]?.group ===
                     group
             ) {
                 groupBeats.push(
@@ -113,7 +113,7 @@ export function ExerciseTimeline({
     }
 
     return (
-        <div className="w-full">
+        <div className="w-full pt-4">
             <div className="flex items-center">
                 {measures.map(
                     (groups, measureIndex) => (
@@ -126,7 +126,7 @@ export function ExerciseTimeline({
 
                             <div
                                 className={cn(
-                                    "flex flex-1 items-center justify-between transition-opacity duration-500",
+                                    "flex flex-1 items-center transition-opacity duration-500",
                                     lastPass &&
                                         measureIndex <
                                             currentMeasure
@@ -139,7 +139,7 @@ export function ExerciseTimeline({
                                         group,
                                         groupIndex,
                                     ) => (
-                                        <TripletGroup
+                                        <GroupRenderer
                                             key={groupIndex}
                                             group={group}
                                             preview={preview}
@@ -156,69 +156,110 @@ export function ExerciseTimeline({
     );
 }
 
-interface TripletGroupProps {
+interface GroupRendererProps {
     group: BeatGroup;
     preview: boolean;
     activeBeat: number;
 }
 
-function TripletGroup({
+function GroupRenderer({
     group,
     preview,
     activeBeat,
-}: TripletGroupProps): JSX.Element {
-    const triplet =
-        group.beats[0]?.triplet != null;
+}: GroupRendererProps): JSX.Element {
+    const strokes =
+        group.beats[0]?.groupStrokes;
+
+    // Un grupo rítmico (tresillo o roll) de N golpes dura lo mismo que
+    // 2 golpes sueltos: cada golpe ocupa 2/N de la anchura de un golpe
+    // suelto, de modo que la línea siempre encaja en el contenedor.
+    const groupGrow = strokes != null ? 2 : 1;
+    const strokeGrow =
+        strokes != null ? 2 / strokes : 1;
+
+    const beats = group.beats.map(
+        (beat, beatIndex) => {
+            const index =
+                group.startIndex +
+                beatIndex;
+
+            return (
+                <BeatCell
+                    key={index}
+                    beat={beat}
+                    grow={strokeGrow}
+                    active={
+                        !preview &&
+                        index ===
+                            activeBeat
+                    }
+                />
+            );
+        },
+    );
 
     return (
-        <div className="relative flex items-center">
-            {triplet && (
-                <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-xs font-black text-neutral-400">
-                    3
-                </span>
+        <div
+            className={cn(
+                "relative flex min-w-0 items-center",
+                strokes != null &&
+                    "mx-1",
+            )}
+            style={{
+                flexGrow: groupGrow,
+                flexBasis: 0,
+            }}
+        >
+            {strokes != null && (
+                <div
+                    className="pointer-events-none absolute left-0 right-0 flex flex-col items-center"
+                    style={{ bottom: "100%" }}
+                >
+                    <span className="bg-white px-1 text-xs font-black leading-none text-neutral-500">
+                        {strokes}
+                    </span>
+
+                    <div className="mt-0.5 h-[2px] w-full bg-neutral-400" />
+                </div>
             )}
 
-            {group.beats.map(
-                (beat, beatIndex) => {
-                    const index =
-                        group.startIndex +
-                        beatIndex;
-
-                    return (
-                        <BeatCell
-                            key={index}
-                            beat={beat}
-                            active={
-                                !preview &&
-                                index ===
-                                    activeBeat
-                            }
-                        />
-                    );
-                },
-            )}
+            {beats}
         </div>
     );
 }
 
 interface BeatCellProps {
     beat: ExerciseBeat;
+
+    /**
+     * Anchura proporcional del golpe en pulsos (1 para golpes sueltos,
+     * 2/3 para golpes de tresillo, 1/2 para golpes de roll).
+     */
+    grow: number;
+
     active: boolean;
 }
 
 function BeatCell({
     beat,
+    grow,
     active,
 }: BeatCellProps): JSX.Element {
     return (
-        <div className="relative flex justify-center py-1.5">
+        <div
+            className="relative flex min-w-0 justify-center py-0.5"
+            style={{
+                flexGrow: grow,
+                flexBasis: 0,
+            }}
+        >
             {active && (
                 <>
-                    <div className="absolute -top-1 text-sm text-blue-600">
+                    <div className="absolute -top-1 text-[10px] leading-none text-blue-600">
                         ▼
                     </div>
 
-                    <div className="absolute inset-x-1 inset-y-1 rounded-xl bg-blue-100" />
+                    <div className="absolute inset-0 rounded-md bg-blue-100" />
                 </>
             )}
 

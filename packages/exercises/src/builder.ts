@@ -41,7 +41,10 @@ interface ParsedNotation {
 }
 
 /**
- * Cada token de 3 letras (p. ej. "RLR", "LRL") es un tresillo; el resto
+ * Cada token entre corchetes (p. ej. "[RLRL]", "[RLR]") es un grupo
+ * rítmico que dura lo mismo que dos golpes sueltos: cada golpe ocupa
+ * 2/N de pulso, con N el número de letras del grupo. Un token de 3
+ * letras sin corchetes (p. ej. "RLR") también es un tresillo. El resto
  * de tokens son golpes sueltos, uno por letra. Los compases se separan
  * con "|" o "-".
  */
@@ -50,7 +53,7 @@ function parseNotation(
 ): ParsedNotation {
     const beats: ExerciseBeat[] = [];
     const barLengths: number[] = [];
-    let tripletId = 0;
+    let groupId = 0;
 
     const measures = notation
         .split(/[|\\-]/)
@@ -66,13 +69,34 @@ function parseNotation(
             .filter(Boolean);
 
         for (const token of tokens) {
-            if (token.length === 3) {
-                tripletId += 1;
+            const bracketGroup = token.match(
+                /^\[([RLrl]+)\]$/,
+            );
+
+            if (bracketGroup) {
+                const hands =
+                    bracketGroup[1]!;
+
+                groupId += 1;
+
+                for (const hand of hands) {
+                    beats.push({
+                        hand: parseHand(hand),
+                        group: groupId,
+                        groupStrokes:
+                            hands.length,
+                    });
+                }
+            } else if (
+                token.length === 3
+            ) {
+                groupId += 1;
 
                 for (const hand of token) {
                     beats.push({
                         hand: parseHand(hand),
-                        triplet: tripletId,
+                        group: groupId,
+                        groupStrokes: 3,
                     });
                 }
             } else {
@@ -104,6 +128,34 @@ function parseHand(
     }
 
     return hand;
+}
+
+/**
+ * Duración en pulsos de cada golpe de un ejercicio. Un golpe suelto
+ * ocupa 1 pulso; los golpes de un grupo rítmico (tresillo o roll)
+ * ocupan 2/N de pulso, ya que un grupo de N golpes dura lo mismo que
+ * dos golpes sueltos (p. ej. un tresillo LRL dura lo mismo que un LR).
+ */
+export function exerciseNoteDurations(
+    exercise: Exercise,
+): number[] {
+    return exercise.beats.map((beat) =>
+        beat.group == null
+            ? 1
+            : 2 / beat.groupStrokes!,
+    );
+}
+
+/**
+ * Duración total del ejercicio en pulsos (la suma de las duraciones
+ * de todos sus golpes).
+ */
+export function exerciseDurationInBeats(
+    exercise: Exercise,
+): number {
+    return exerciseNoteDurations(
+        exercise,
+    ).reduce((sum, duration) => sum + duration, 0);
 }
 
 /**
