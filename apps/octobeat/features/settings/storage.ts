@@ -27,10 +27,22 @@ export function loadSettings(): Settings {
     }
 
     try {
+        const rest = Object.fromEntries(
+            Object.entries(
+                JSON.parse(raw),
+            ).filter(
+                ([key]) =>
+                    key !==
+                        "preferredGenres" &&
+                    key !==
+                        "defaultDifficulty",
+            ),
+        );
+
         const parsed =
             SettingsSchema.safeParse({
                 ...DEFAULT_SETTINGS,
-                ...JSON.parse(raw),
+                ...rest,
             });
 
         if (!parsed.success) {

@@ -27,24 +27,6 @@ export const SettingsSchema = z
                 "Enter a valid URL.",
             ),
 
-        defaultDifficulty: z
-            .number()
-            .int()
-            .min(1)
-            .max(5),
-
-        preferredGenres: z
-            .array(z.string())
-            .refine(
-                (genres) =>
-                    new Set(genres).size ===
-                    genres.length,
-                {
-                    message:
-                        "Genres must be unique.",
-                },
-            ),
-
         repetitionsPerLine: z
             .number()
             .int()

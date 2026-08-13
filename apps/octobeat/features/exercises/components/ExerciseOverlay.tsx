@@ -56,6 +56,17 @@ export function ExerciseOverlay(): JSX.Element | null {
     const lastExerciseBeatRef =
         useRef(0);
 
+    // Compensa el salto del rawBeat al cambiar de velocidad: al reducir
+    // el factor el rawBeat recalcula un valor más pequeño y el guard
+    // monótono lo bloquearía, congelando el contador.
+    const biasRef =
+        useRef(0);
+
+    const prevFactorRef =
+        useRef<number | null>(
+            null,
+        );
+
     const datasetIdRef =
         useRef<string | null>(
             null,
@@ -78,6 +89,7 @@ export function ExerciseOverlay(): JSX.Element | null {
                 lastExerciseBeatRef.current;
 
             lastExerciseBeatRef.current = 0;
+            biasRef.current = 0;
         }
 
         datasetIdRef.current = id;
@@ -181,6 +193,62 @@ export function ExerciseOverlay(): JSX.Element | null {
         let anchorPerf =
             performance.now();
 
+        // Al cambiar de velocidad el rawBeat salta (mayor o menor según
+        // el factor) y el guard monótono abajo lo bloquearía. Recalibra
+        // el bias para que el contador continúe desde la última posición
+        // confirmada.
+        if (
+            prevFactorRef.current !==
+                null &&
+            prevFactorRef.current !==
+                factor
+        ) {
+            const rawNow =
+                beatAtTime(
+                    map,
+                    anchorMedia,
+                );
+
+            if (rawNow) {
+                const next =
+                    nextBeat(
+                        map,
+                        rawNow.time,
+                    );
+
+                const duration =
+                    next
+                        ? next.time -
+                          rawNow.time
+                        : 0.5;
+
+                const sub =
+                    Math.min(
+                        factor - 1,
+                        Math.floor(
+                            ((anchorMedia -
+                                rawNow.time) /
+                                duration) *
+                                factor,
+                        ),
+                    );
+
+                const rawBeat =
+                    (rawNow.index - 1) *
+                        factor +
+                        sub +
+                        1;
+
+                biasRef.current =
+                    lastExerciseBeatRef.current -
+                    baseOffsetRef.current -
+                    rawBeat;
+            }
+        }
+
+        prevFactorRef.current =
+            factor;
+
         function tick() {
             if (!map || !adapter) {
                 return;
@@ -247,6 +315,7 @@ export function ExerciseOverlay(): JSX.Element | null {
 
                 const nextBeatValue =
                     baseOffsetRef.current +
+                    biasRef.current +
                     rawBeat;
 
                 // Al cambiar de canción el media se reinicia a 0 y el

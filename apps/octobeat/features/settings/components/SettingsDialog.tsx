@@ -13,7 +13,6 @@ import {
 
 import { useSettingsStore } from "../store";
 import { SettingsSchema, isHttpsUrl } from "../schema";
-import { AVAILABLE_GENRES, DIFFICULTY_OPTIONS } from "../genres";
 
 import type { Settings } from "../types";
 
@@ -31,11 +30,6 @@ function toDraft(
     return {
         catalogUrl:
             settings.catalogUrl,
-        defaultDifficulty:
-            settings.defaultDifficulty,
-        preferredGenres: [
-            ...settings.preferredGenres,
-        ],
         repetitionsPerLine:
             settings.repetitionsPerLine,
         theme: settings.theme,
@@ -57,6 +51,10 @@ function SettingsForm({
     onSave,
     onCancel,
 }: SettingsFormProps) {
+    const applyTheme = useSettingsStore(
+        (state) => state.applyTheme,
+    );
+
     const [draft, setDraft] =
         useState<Settings>(() =>
             toDraft(settings),
@@ -96,31 +94,6 @@ function SettingsForm({
         !isHttpsUrl(
             draft.catalogUrl,
         );
-
-    function toggleGenre(
-        genre: string,
-    ) {
-        setDraft((current) => {
-            const selected =
-                current.preferredGenres.includes(
-                    genre,
-                );
-
-            return {
-                ...current,
-                preferredGenres: selected
-                    ? current.preferredGenres.filter(
-                          (item) =>
-                              item !==
-                              genre,
-                      )
-                    : [
-                          ...current.preferredGenres,
-                          genre,
-                      ],
-            };
-        });
-    }
 
     function handleSave() {
         if (invalid) {
@@ -176,14 +149,18 @@ function SettingsForm({
                                             draft.theme ===
                                             theme
                                         }
-                                        onChange={() =>
+                                        onChange={() => {
+                                            applyTheme(
+                                                theme,
+                                            );
+
                                             setDraft(
                                                 (current) => ({
                                                     ...current,
                                                     theme,
                                                 }),
-                                            )
-                                        }
+                                            );
+                                        }}
                                         className="sr-only"
                                     />
 
@@ -241,122 +218,50 @@ function SettingsForm({
 
                 <fieldset>
                     <legend className="mb-2 block text-sm font-semibold text-foreground">
-                        Default Difficulty
+                        Exercise Repetitions per Line
                     </legend>
 
-                    <div className="space-y-1">
-                        {DIFFICULTY_OPTIONS.map(
-                            (
-                                option,
-                            ) => (
+                    <div className="flex gap-1">
+                        {[5, 10, 20].map(
+                            (repetitions) => (
                                 <Label
                                     key={
-                                        option.value
+                                        repetitions
                                     }
-                                    className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
+                                    className={cn(
+                                        "flex cursor-pointer items-center rounded-lg border px-4 py-2 text-sm transition",
+                                        draft.repetitionsPerLine ===
+                                            repetitions
+                                            ? "border-primary bg-accent text-foreground"
+                                            : "border-border text-muted-foreground hover:bg-accent/50",
+                                    )}
                                 >
                                     <input
                                         type="radio"
-                                        name="default-difficulty"
+                                        name="repetitions-per-line"
                                         value={
-                                            option.value
+                                            repetitions
                                         }
                                         checked={
-                                            draft.defaultDifficulty ===
-                                            option.value
+                                            draft.repetitionsPerLine ===
+                                            repetitions
                                         }
                                         onChange={() =>
                                             setDraft(
                                                 (current) => ({
                                                     ...current,
-                                                    defaultDifficulty:
-                                                        option.value,
+                                                    repetitionsPerLine:
+                                                        repetitions,
                                                 }),
                                             )
                                         }
-                                        className="size-4 accent-primary"
+                                        className="sr-only"
                                     />
 
-                                    {option.label}
+                                    {repetitions}
                                 </Label>
                             ),
                         )}
-                    </div>
-                </fieldset>
-                <fieldset>
-                    <legend className="mb-2 block text-sm font-semibold text-foreground">
-                        Preferred Genres
-                    </legend>
-
-                    <div className="grid grid-cols-2 gap-1">
-                        {AVAILABLE_GENRES.map(
-                            (genre) => {
-                                const checked =
-                                    draft.preferredGenres.includes(
-                                        genre,
-                                    );
-
-                                return (
-                                    <Label
-                                        key={
-                                            genre
-                                        }
-                                        className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={
-                                                checked
-                                            }
-                                            onChange={() =>
-                                                toggleGenre(
-                                                    genre,
-                                                )
-                                            }
-                                            className="size-4 accent-primary"
-                                        />
-
-                                        {genre}
-                                    </Label>
-                                );
-                            },
-                        )}
-                    </div>
-                </fieldset>
-
-                <fieldset>
-                    <legend className="mb-2 block text-sm font-semibold text-foreground">
-                        Exercise Repetitions per Line
-                    </legend>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="settings-repetitions-per-line">
-                            How many repetitions before
-                            advancing to the next line.
-                        </Label>
-
-                        <Input
-                            id="settings-repetitions-per-line"
-                            type="number"
-                            inputMode="numeric"
-                            min={1}
-                            value={
-                                draft.repetitionsPerLine
-                            }
-                            onChange={(event) =>
-                                setDraft(
-                                    (current) => ({
-                                        ...current,
-                                        repetitionsPerLine:
-                                            Number(
-                                                event
-                                                    .target
-                                                    .value,
-                                            ),
-                                    }),
-                                )
-                            }
-                        />
                     </div>
                 </fieldset>
             </div>

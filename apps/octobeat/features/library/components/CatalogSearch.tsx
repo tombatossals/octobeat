@@ -263,7 +263,7 @@ export function CatalogSearch(): JSX.Element {
                                                 )
                                             }
                                             className={cn(
-                                                "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors",
+                                                "flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors",
                                                 index ===
                                                     selected
                                                     ? "bg-accent text-accent-foreground"
@@ -304,11 +304,20 @@ export function CatalogSearch(): JSX.Element {
 
                         <div className="flex items-center gap-4 border-t border-border px-4 py-2 text-xs text-muted-foreground">
                             <span>
-                                ↑↓ Navegar
+                                {entries.length}{" "}
+                                {entries.length === 1
+                                    ? "canción"
+                                    : "canciones"}
                             </span>
 
-                            <span>
-                                ↵ Abrir
+                            <span className="ml-auto flex items-center gap-4">
+                                <span>
+                                    ↑↓ Navegar
+                                </span>
+
+                                <span>
+                                    ↵ Abrir
+                                </span>
                             </span>
                         </div>
                     </Dialog.Popup>

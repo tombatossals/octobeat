@@ -6,7 +6,7 @@ import {
     saveSettings,
 } from "./storage";
 
-import type { Settings } from "./types";
+import type { Settings, Theme } from "./types";
 
 const TOAST_DURATION = 2500;
 
@@ -34,6 +34,11 @@ interface SettingsState {
      * Merge partial changes into the current settings and persist.
      */
     update(partial: Partial<Settings>): void;
+
+    /**
+     * Apply a theme immediately and persist, without the save toast.
+     */
+    applyTheme(theme: Theme): void;
 
     /**
      * Restore defaults and persist.
@@ -104,6 +109,20 @@ export const useSettingsStore =
             });
 
             showToast(set);
+        },
+
+        applyTheme(theme) {
+            saveSettings({
+                ...get().settings,
+                theme,
+            });
+
+            set({
+                settings: {
+                    ...get().settings,
+                    theme,
+                },
+            });
         },
 
         reset() {
