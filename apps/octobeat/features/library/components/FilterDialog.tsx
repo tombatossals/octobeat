@@ -293,14 +293,18 @@ export function FilterDialog({
                         <Button
                             variant="ghost"
                             onClick={() => {
-                                setDraft(
+                                setFilters(
                                     toDraft(
                                         EMPTY_FILTERS,
                                     ),
                                 );
+
+                                onOpenChange(
+                                    false,
+                                );
                             }}
                         >
-                            Clear
+                            Clear Filters
                         </Button>
 
                         <Button
