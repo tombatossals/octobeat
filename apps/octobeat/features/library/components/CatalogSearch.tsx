@@ -20,6 +20,7 @@ import { useShortcut } from "@/lib/useShortcut";
 import { useUiStore } from "@/features/ui/store";
 
 import { useLibraryStore } from "../store";
+import { matchesFilters } from "../filters";
 
 import { ShortcutBadge } from "./ShortcutBadge";
 
@@ -44,6 +45,10 @@ export function CatalogSearch(): JSX.Element {
 
     const openSong = useLibraryStore(
         (state) => state.open,
+    );
+
+    const filters = useLibraryStore(
+        (state) => state.filters,
     );
 
     const revealed = useUiStore(
@@ -89,17 +94,32 @@ export function CatalogSearch(): JSX.Element {
         setOpen(next);
     }
 
+    const filteredByFilters = useMemo(
+        () =>
+            entries.filter(
+                (entry) =>
+                    matchesFilters(
+                        entry,
+                        filters,
+                    ),
+            ),
+        [entries, filters],
+    );
+
     const results = useMemo(() => {
         const needle =
             query.trim().toLowerCase();
 
-        const filtered = needle
-            ? entries.filter((entry) =>
-                  `${entry.artist} ${entry.title}`
-                      .toLowerCase()
-                      .includes(needle),
-              )
-            : entries;
+        const filtered =
+            filteredByFilters.filter(
+                (entry) =>
+                    !needle ||
+                    `${entry.artist} ${entry.title}`
+                        .toLowerCase()
+                        .includes(
+                            needle,
+                        ),
+            );
 
         return [...filtered].sort(
             (a, b) =>
@@ -108,7 +128,7 @@ export function CatalogSearch(): JSX.Element {
                     `${b.artist} - ${b.title}`,
                 ),
         );
-    }, [entries, query]);
+    }, [filteredByFilters, query]);
 
     function handleKeyDown(
         event: React.KeyboardEvent<HTMLInputElement>,
@@ -304,8 +324,8 @@ export function CatalogSearch(): JSX.Element {
 
                         <div className="flex items-center gap-4 border-t border-border px-4 py-2 text-xs text-muted-foreground">
                             <span>
-                                {entries.length}{" "}
-                                {entries.length === 1
+                                {filteredByFilters.length}{" "}
+                                {filteredByFilters.length === 1
                                     ? "canción"
                                     : "canciones"}
                             </span>

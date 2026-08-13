@@ -1,9 +1,15 @@
 import { create } from "zustand";
 
-import type { Dataset } from "@octobeat/library";
+import type { Dataset, Metadata } from "@octobeat/library";
 import { usePlayerStore } from "@octobeat/player";
 
 import { getLibrary } from "@/lib/library";
+
+import {
+    EMPTY_FILTERS,
+    matchesFilters,
+} from "./filters";
+import type { LibraryFilters } from "./filters";
 
 /**
  * Fisher-Yates shuffle. Returns a new array.
@@ -27,7 +33,13 @@ function shuffle<T>(items: readonly T[]): T[] {
 
 interface LibraryState {
     /**
-     * Available dataset ids, loaded from the catalog.
+     * Full catalog entries, kept so filters can be re-applied without
+     * re-fetching.
+     */
+    entries: readonly Metadata[];
+
+    /**
+     * Available dataset ids, filtered and shuffled.
      */
     ids: string[];
 
@@ -42,9 +54,21 @@ interface LibraryState {
     dataset: Dataset | null;
 
     /**
+     * Active filters applied to the playback queue.
+     */
+    filters: LibraryFilters;
+
+    /**
      * Load the catalog and populate the available dataset ids.
      */
     initialize(): Promise<readonly string[]>;
+
+    /**
+     * Update the active filters and rebuild the playback queue.
+     */
+    setFilters(
+        filters: LibraryFilters,
+    ): void;
 
     /**
      * Open a dataset by id.
@@ -69,25 +93,59 @@ interface LibraryState {
 
 export const useLibraryStore =
     create<LibraryState>((set, get) => ({
+        entries: [],
+
         ids: [],
 
         index: 0,
 
         dataset: null,
 
+        filters: EMPTY_FILTERS,
+
         async initialize() {
             const catalog =
                 await getLibrary().list();
 
             const ids = shuffle(
-                catalog.map(
-                    (entry) => entry.id,
-                ),
+                catalog
+                    .filter((entry) =>
+                        matchesFilters(
+                            entry,
+                            get().filters,
+                        ),
+                    )
+                    .map(
+                        (entry) =>
+                            entry.id,
+                    ),
             );
 
-            set({ ids });
+            set({
+                entries: catalog,
+                ids,
+            });
 
             return ids;
+        },
+
+        setFilters(filters) {
+            const ids = shuffle(
+                get()
+                    .entries.filter(
+                        (entry) =>
+                            matchesFilters(
+                                entry,
+                                filters,
+                            ),
+                    )
+                    .map(
+                        (entry) =>
+                            entry.id,
+                    ),
+            );
+
+            set({ filters, ids });
         },
 
         async open(id: string) {
