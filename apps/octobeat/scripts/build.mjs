@@ -5,16 +5,15 @@
 // take forever and blow up the output size.
 //
 // Instead of copying the datasets, we:
-//   1. temporarily move `public/resources` out of `public/` so Next skips
-//      it (Next copies dotfiles too, so it must leave the public dir);
+//   1. temporarily remove `public/resources` (it is a symlink, so we just
+//      remember its target and recreate it later);
 //   2. run `next build`;
 //   3. recreate `out/resources` as a symlink to the same target.
 // The datasets are static files fetched at runtime, so a symlink works
 // just as well as a copy.
 
 import { execFileSync } from "node:child_process";
-import { lstatSync, mkdtempSync, readlinkSync, renameSync, rmSync, symlinkSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { lstatSync, readlinkSync, rmSync, symlinkSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -32,16 +31,15 @@ function isSymlink(path) {
 }
 
 async function run() {
-  let stash = null;
   let target = null;
 
   if (isSymlink(publicResources)) {
     target = readlinkSync(publicResources);
 
-    // Move the symlink outside `public/` (and outside `out/`) so Next
-    // never touches it. A per-run temp dir keeps interrupted builds safe.
-    stash = mkdtempSync(join(tmpdir(), "octobeat-resources-"));
-    renameSync(publicResources, join(stash, "resources"));
+    // Next copies dotfiles too, so the symlink must leave the public dir
+    // entirely. Removing it is safe: we recreate it with the same target
+    // right after the build.
+    unlinkSync(publicResources);
     console.log(`Hid ${publicResources} (symlink → ${target})`);
   }
 
@@ -59,8 +57,7 @@ async function run() {
       console.log(`Linked ${outResources} → ${target}`);
 
       // Restore the original public symlink for the dev server.
-      renameSync(join(stash, "resources"), publicResources);
-      rmSync(stash, { recursive: true, force: true });
+      symlinkSync(target, publicResources);
     }
   }
 }
