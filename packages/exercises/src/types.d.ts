@@ -1,6 +1,23 @@
 export type Hand = "R" | "L";
 export interface ExerciseBeat {
+    /**
+     * Mano del golpe. Para silencios no es significativa (se usa "R"
+     * como valor interno).
+     */
     hand: Hand;
+    /**
+     * Silencio: este hueco rítmico no suena pero mantiene su duración.
+     */
+    rest?: boolean;
+    /**
+     * Mano del grace note / flam que precede a este golpe. Su presencia
+     * indica que el golpe lleva adorno (p. ej. "gR", "lR").
+     */
+    grace?: Hand;
+    /**
+     * Golpe acentuado (dinámica no estándar).
+     */
+    accented?: boolean;
     /**
      * Grupo rítmico al que pertenece este golpe (un tresillo, un roll…).
      * Todos los golpes de un mismo grupo comparten el mismo id; los

@@ -41,12 +41,14 @@ interface ParsedNotation {
 }
 
 /**
- * Cada token entre corchetes (p. ej. "[RLRL]", "[RLR]") es un grupo
+ * Cada token entre corchetes (p. ej. "[RLRL]", "[gRRLL]") es un grupo
  * rítmico que dura lo mismo que dos golpes sueltos: cada golpe ocupa
- * 2/N de pulso, con N el número de letras del grupo. Un token de 3
- * letras sin corchetes (p. ej. "RLR") también es un tresillo. El resto
- * de tokens son golpes sueltos, uno por letra. Los compases se separan
- * con "|" o "-".
+ * 2/N de pulso, con N el número de golpes del grupo. Un token
+ * "(3:RLR)" es un tresillo explícito con la misma regla de duración.
+ * El resto de tokens son golpes sueltos, uno por letra. Cada nota
+ * admite la sintaxis [grace][mano][acento] del manifiesto: "g"/"l"/"r"
+ * en minúscula antecede a la mano (mayúscula) y "!" marca el acento.
+ * Los compases se separan con "|" o "-".
  */
 function parseNotation(
     notation: string,
@@ -70,39 +72,63 @@ function parseNotation(
 
         for (const token of tokens) {
             const bracketGroup = token.match(
-                /^\[([RLrl]+)\]$/,
+                /^\[([^\]]+)\]$/,
+            );
+
+            const tupletGroup = token.match(
+                /^\((\d+):([^)]+)\)$/,
             );
 
             if (bracketGroup) {
-                const hands =
-                    bracketGroup[1]!;
+                const strokes =
+                    parseStrokes(
+                        bracketGroup[1]!,
+                    );
 
                 groupId += 1;
 
-                for (const hand of hands) {
+                for (const stroke of strokes) {
                     beats.push({
-                        hand: parseHand(hand),
+                        hand: stroke.hand,
+                        grace: stroke.grace,
+                        accented:
+                            stroke.accented,
+                        rest: stroke.rest,
                         group: groupId,
                         groupStrokes:
-                            hands.length,
+                            strokes.length,
                     });
                 }
-            } else if (
-                token.length === 3
-            ) {
+            } else if (tupletGroup) {
+                const strokes =
+                    parseStrokes(
+                        tupletGroup[2]!,
+                    );
+
                 groupId += 1;
 
-                for (const hand of token) {
+                for (const stroke of strokes) {
                     beats.push({
-                        hand: parseHand(hand),
+                        hand: stroke.hand,
+                        grace: stroke.grace,
+                        accented:
+                            stroke.accented,
+                        rest: stroke.rest,
                         group: groupId,
-                        groupStrokes: 3,
+                        groupStrokes:
+                            strokes.length,
                     });
                 }
             } else {
-                for (const hand of token) {
+                for (const stroke of parseStrokes(
+                    token,
+                )) {
                     beats.push({
-                        hand: parseHand(hand),
+                        hand: stroke.hand,
+                        grace: stroke.grace,
+                        accented:
+                            stroke.accented,
+                        rest: stroke.rest,
                     });
                 }
             }
@@ -114,6 +140,89 @@ function parseNotation(
     }
 
     return { beats, barLengths };
+}
+
+interface ParsedStroke {
+    hand: Hand;
+    grace?: Hand;
+    accented?: boolean;
+    rest?: boolean;
+}
+
+/**
+ * Parsea una secuencia de notas (dentro de un grupo o suelta) con la
+ * sintaxis [grace][mano][acento]: "g"/"l"/"r" en minúscula marcan un
+ * grace note antes de la mano (mayúscula), "!" marca el acento y "_"
+ * es un silencio que ocupa el hueco rítmico sin sonar. "g" usa la
+ * misma mano que la nota principal; "l"/"r" fuerzan la mano del adorno.
+ */
+function parseStrokes(
+    text: string,
+): ParsedStroke[] {
+    const strokes: ParsedStroke[] = [];
+
+    for (let i = 0; i < text.length; i++) {
+        const c = text[i]!;
+
+        if (c === "_") {
+            strokes.push({
+                hand: "R",
+                rest: true,
+            });
+
+            continue;
+        }
+
+        if (c === "!") {
+            const last =
+                strokes[strokes.length - 1];
+
+            if (!last) {
+                throw new Error(
+                    `Unexpected accent marker "!" in "${text}".`,
+                );
+            }
+
+            last.accented = true;
+
+            continue;
+        }
+
+        if (c === "g" || c === "l" || c === "r") {
+            const next = text[i + 1];
+
+            if (
+                next == null ||
+                !/[RL]/.test(next)
+            ) {
+                throw new Error(
+                    `Grace note "${c}" must be followed by a hand in "${text}".`,
+                );
+            }
+
+            const hand = parseHand(next);
+
+            strokes.push({
+                hand,
+                grace:
+                    c === "g"
+                        ? hand
+                        : c === "l"
+                          ? "L"
+                          : "R",
+            });
+
+            i += 1;
+
+            continue;
+        }
+
+        strokes.push({
+            hand: parseHand(c),
+        });
+    }
+
+    return strokes;
 }
 
 function parseHand(

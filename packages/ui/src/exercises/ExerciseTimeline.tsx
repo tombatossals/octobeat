@@ -266,6 +266,7 @@ function BeatCell({
             <div
                 className={cn(
                     "relative z-10 flex items-center justify-center font-mono font-black transition-all duration-150",
+                    beat.rest && "text-neutral-400",
                     active
                         ? "scale-110 text-blue-700"
                         : "text-black",
@@ -277,7 +278,7 @@ function BeatCell({
                         "1px 1px 0 #e5e5e5, -1px -1px 0 #e5e5e5, 1px -1px 0 #e5e5e5, -1px 1px 0 #e5e5e5, 1px 0 0 #e5e5e5, -1px 0 0 #e5e5e5, 0 1px 0 #e5e5e5, 0 -1px 0 #e5e5e5, 0 2px 4px rgb(0 0 0 / 25%)",
                 }}
             >
-                {beat.hand}
+                {beat.rest ? "–" : beat.hand}
             </div>
         </div>
     );
