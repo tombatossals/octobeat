@@ -17,7 +17,7 @@ export interface LibraryFilters {
     decades: string[];
 
     /**
-     * Selected exercise set ids to practice (e.g. "single-beat-combinations").
+     * Selected exercise set ids to practice (e.g. "01-single-beat-combinations").
      */
     exerciseSets: string[];
 

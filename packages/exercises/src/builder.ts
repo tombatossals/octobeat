@@ -49,7 +49,9 @@ interface ParsedNotation {
  * Cada token entre corchetes (p. ej. "[RLRL]", "[gRRLL]") es un grupo
  * rítmico que dura lo mismo que dos golpes sueltos: cada golpe ocupa
  * 2/N de pulso, con N el número de golpes del grupo. Un token
- * "(3:RLR)" es un tresillo explícito con la misma regla de duración.
+ * "(3:RLR)" es un tresillo explícito con la misma regla de duración;
+ * "(N/M:...)" indica además el número M de unidades temporales que
+ * ocupa el grupo (cada unidad equivale a media pulso).
  * El resto de tokens son golpes sueltos, uno por letra. Cada nota
  * admite la sintaxis [grace][mano][acento] del manifiesto: "g"/"l"/"r"
  * en minúscula antecede a la mano (mayúscula), "!" marca el acento y
@@ -91,7 +93,7 @@ function parseNotation(
             );
 
             const tupletGroup = token.match(
-                /^\((\d+):([^)]+)\)$/,
+                /^\((\d+)(?:\/(\d+))?:([^)]+)\)$/,
             );
 
             if (bracketGroup) {
@@ -120,8 +122,15 @@ function parseNotation(
             } else if (tupletGroup) {
                 const strokes =
                     parseStrokes(
-                        tupletGroup[2]!,
+                        tupletGroup[3]!,
                     );
+
+                const units =
+                    tupletGroup[2] != null
+                        ? Number(
+                              tupletGroup[2],
+                          )
+                        : undefined;
 
                 groupId += 1;
 
@@ -138,6 +147,9 @@ function parseNotation(
                         group: groupId,
                         groupStrokes:
                             strokes.length,
+                        ...(units != null
+                            ? { groupUnits: units }
+                            : {}),
                     });
                 }
             } else {
@@ -343,7 +355,9 @@ function parseHand(
  * ocupa 1 pulso; los golpes de un grupo rítmico (tresillo o roll)
  * ocupan 2/N de pulso, ya que un grupo de N golpes dura lo mismo que
  * dos golpes sueltos (p. ej. un tresillo LRL dura lo mismo que un LR).
- * Un silencio con puntillo ("__") dura una subdivisión y media.
+ * Un grupo "(N/M:...)" se distribuye sobre M unidades equivalentes de
+ * media pulso: cada golpe ocupa M/(2N) de pulso. Un silencio con
+ * puntillo ("__") dura una subdivisión y media.
  */
 export function exerciseNoteDurations(
     exercise: Exercise,
@@ -352,7 +366,10 @@ export function exerciseNoteDurations(
         const base =
             beat.group == null
                 ? 1
-                : 2 / beat.groupStrokes!;
+                : beat.groupUnits != null
+                  ? beat.groupUnits /
+                    (2 * beat.groupStrokes!)
+                  : 2 / beat.groupStrokes!;
 
         return beat.restDotted
             ? base * 1.5

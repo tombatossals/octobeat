@@ -1,6 +1,6 @@
 # Manifiesto de Transcripción de Partituras de Caja
 
-**v4** — amplía la v3 para hacer explícita la semántica temporal y cubrir figuras con puntillo, ligaduras, grupos irregulares, ghost notes, rolls y estructuras de repetición, manteniendo la sintaxis compacta utilizada hasta ahora.
+**v5** — formaliza la duración de los grupos irregulares y distingue explícitamente los tresillos de corcheas de los tresillos de semicorcheas. Amplía la v4 manteniendo la sintaxis compacta utilizada para las transcripciones anteriores.
 
 Este documento define un sistema de notación textual para transcribir partituras de caja (snare drum) a texto plano, de forma que una persona pueda reconstruir la partitura original —ritmo, sticking, silencios, articulaciones y estructura— únicamente a partir del texto, sin ambigüedad.
 
@@ -11,14 +11,13 @@ Este documento define un sistema de notación textual para transcribir partitura
 3. **La simplicidad no debe sacrificar precisión.** Si hace falta un símbolo para representar información musical real, se añade.
 4. **Un compás = una unidad de texto**, delimitada siempre por `|`.
 5. **La notación representa ataques y eventos musicales**, no únicamente letras de sticking.
-6. **La información temporal debe ser inequívoca.** Cuando una figura no pueda determinarse por contexto, su valor debe indicarse explícitamente.
-7. **Las articulaciones y las duraciones son conceptos independientes.** Una ligadura de duración no debe confundirse con una ligadura de fraseo.
+6. **La información temporal debe ser inequívoca.**
+7. **Las articulaciones, las duraciones y el fraseo son conceptos independientes.**
+8. **Los grupos irregulares deben indicar su relación temporal cuando no pueda deducirse inequívocamente.**
 
 ---
 
-# Reglas de notación
-
-## 1. Sticking base
+# 1. Sticking base
 
 * `R` = golpe/ataque con mano derecha.
 * `L` = golpe/ataque con mano izquierda.
@@ -35,13 +34,13 @@ representa cuatro ataques consecutivos: derecha, izquierda, derecha, izquierda.
 
 ---
 
-## 2. Agrupación rítmica
+# 2. Agrupación rítmica
 
-### 2.1. Grupos regulares
+## 2.1. Grupos regulares
 
 `[ ... ]` = grupo de notas o eventos que comparten la misma unidad rítmica.
 
-Por defecto, si no se especifica valor, la unidad es la **semicorchea**.
+Por defecto, la unidad es la **semicorchea**.
 
 Ejemplo:
 
@@ -59,9 +58,11 @@ Los espacios entre grupos separan eventos rítmicos consecutivos dentro de un mi
 
 El espacio no tiene significado temporal propio.
 
-### 2.2. Valor explícito
+---
 
-Cuando sea necesario, el valor se indica antes de `:`:
+# 3. Valor de figura explícito
+
+Cuando sea necesario, el valor se indica mediante un prefijo numérico:
 
 ```text
 [4:R]
@@ -77,131 +78,36 @@ Valores estándar:
 * `16:` = semicorchea
 * `32:` = fusa
 
-`16:` puede omitirse cuando el valor por defecto sea semicorchea.
+`16:` puede omitirse cuando el grupo utilice semicorcheas.
 
-Si dentro de un mismo compás conviven grupos de valores diferentes, se recomienda indicar el valor explícitamente en todos los grupos:
+Cuando dentro de un mismo compás convivan valores diferentes, se recomienda indicar el valor explícitamente en todos los grupos:
 
 ```text
 [8:RLRL] [16:RLRL] [16:RLRL]
 ```
 
-Esto evita cualquier dependencia del contexto.
+Esto evita depender del contexto.
 
 ---
 
-## 3. Figuras con puntillo
+# 4. Figuras con puntillo
 
 Los valores con puntillo utilizan `.` después del valor:
 
 ```text
-4.:
-8.:
-16.:
-32.:
+[4.:R]
+[8.:RL]
+[16.:RLR]
+[32.:RLRL]
 ```
 
-Ejemplos:
-
-```text
-[8.:R]
-[16.:RL]
-```
-
-representan respectivamente una corchea con puntillo y dos semicorcheas con puntillo.
-
-La notación de puntillo afecta al valor temporal indicado y no constituye una articulación.
+El punto forma parte del valor temporal y no representa una articulación.
 
 ---
 
-## 4. Eventos de duración excepcional dentro de un grupo
+# 5. Silencios
 
-Cuando dentro de un mismo grupo existan eventos con valores temporales diferentes, el valor puede indicarse individualmente.
-
-Sintaxis:
-
-```text
-[valor:evento valor:evento ...]
-```
-
-Ejemplo:
-
-```text
-[8:R 16:L 16:R]
-```
-
-representa una corchea seguida de dos semicorcheas.
-
-Esta forma se utilizará únicamente cuando sea necesario representar valores distintos dentro de una misma agrupación.
-
-Cuando todos los eventos comparten valor, se utilizará la forma compacta:
-
-```text
-[16:RLRL]
-```
-
----
-
-## 5. Tresillos y grupos irregulares
-
-Los tresillos se representan mediante:
-
-```text
-(3:RLR)
-```
-
-La marca `3:` es obligatoria.
-
-Nunca se utiliza `[ ]` para representar por sí solo un tresillo.
-
-### 5.1. Otros grupos irregulares
-
-La sintaxis se generaliza a:
-
-```text
-(N:contenido)
-```
-
-donde `N` indica el número de eventos del grupo.
-
-Ejemplos:
-
-```text
-(3:RLR)
-(5:RLRLR)
-(6:RLRLRL)
-(7:RLRLRLR)
-```
-
-representan tresillo, quintillo, seisillo y septillo, respectivamente.
-
-### 5.2. Relación temporal explícita
-
-Cuando sea necesario indicar qué espacio temporal ocupa el grupo, se utiliza:
-
-```text
-(N/M:contenido)
-```
-
-donde:
-
-* `N` = número de eventos reales
-* `M` = número de subdivisiones equivalentes que ocupa temporalmente el grupo
-
-Ejemplo:
-
-```text
-(3/4:RLR)
-```
-
-= tres notas ocupando el espacio temporal de cuatro unidades equivalentes.
-
-Esto permite representar grupos irregulares distintos del tresillo estándar.
-
----
-
-## 6. Silencios
-
-`_` = silencio de una unidad temporal equivalente al valor especificado por el grupo.
+`_` = silencio de una unidad temporal equivalente al valor indicado por el contexto o el grupo.
 
 Ejemplos:
 
@@ -212,9 +118,9 @@ Ejemplos:
 
 representan respectivamente una semicorchea de silencio y una corchea de silencio.
 
-El número de eventos representados debe permitir reconstruir la posición temporal exacta.
+El silencio ocupa tiempo real y nunca se omite simplemente una posición silenciosa.
 
-### 6.1. Silencios con puntillo
+## 5.1. Silencio con puntillo
 
 `_.` = silencio con puntillo.
 
@@ -224,33 +130,124 @@ Ejemplo:
 [8:R _.]
 ```
 
-o, cuando resulte más claro, mediante duración explícita:
+Cuando sea necesario evitar cualquier ambigüedad, puede indicarse el valor explícitamente:
 
 ```text
-[8:R 8. :_]
+[8:R 8.:_]
 ```
-
-La segunda forma se reserva para casos en los que la duración del silencio necesite quedar completamente explícita.
-
-### 6.2. Silencios prolongados
-
-Cuando un silencio ocupa más de una unidad, puede repetirse:
-
-```text
-[16:____]
-```
-
-o expresarse como duración explícita cuando la subdivisión no sea homogénea.
-
-Nunca se omite una posición temporal silenciosa sin indicarla de alguna manera.
 
 ---
 
-## 7. Ligaduras de duración
+# 6. Tresillos
 
-La ligadura de duración se representa mediante `^`.
+Un tresillo es un grupo de **tres ataques que ocupa el espacio temporal de dos unidades equivalentes**.
 
-`R^R` significa que la segunda representación no constituye un nuevo ataque, sino la prolongación de la primera nota.
+La forma compacta:
+
+```text
+(3:RLR)
+```
+
+se utilizará para un **tresillo estándar**, cuando la unidad temporal del tresillo pueda determinarse inequívocamente por el contexto.
+
+Por ejemplo, en un contexto de corcheas:
+
+```text
+(3:RLR)
+```
+
+= tres corcheas de tresillo ocupando el espacio de dos corcheas.
+
+## 6.1. Tresillos de semicorcheas
+
+Cuando las tres notas ocupen el espacio de **dos semicorcheas**, se utilizará:
+
+```text
+(3/2:RLR)
+```
+
+Ejemplo:
+
+```text
+[16:RLRL] (3/2:RLR) (3/2:LRL) |
+```
+
+Aquí cada `(3/2:...)` contiene tres ataques distribuidos sobre el espacio temporal de dos semicorcheas.
+
+Esta distinción es obligatoria cuando un tresillo de semicorcheas pueda confundirse con un tresillo de corcheas.
+
+---
+
+# 7. Forma totalmente explícita de los grupos irregulares
+
+Cuando sea necesario especificar de forma completamente inequívoca tanto el número de ataques como la unidad temporal, puede utilizarse:
+
+```text
+(N/M:contenido)
+```
+
+donde:
+
+* `N` = número de ataques reales.
+* `M` = número de unidades temporales equivalentes que ocupa el grupo.
+
+Ejemplos:
+
+```text
+(3/2:RLR)
+```
+
+= 3 ataques en el espacio temporal de 2 unidades.
+
+```text
+(5/4:RLRLR)
+```
+
+= 5 ataques en el espacio temporal de 4 unidades.
+
+```text
+(7/4:RLRLRLR)
+```
+
+= 7 ataques en el espacio temporal de 4 unidades.
+
+La unidad concreta —corchea, semicorchea, etc.— se determina por el contexto o por una indicación de valor explícita.
+
+---
+
+# 8. Otros grupos irregulares
+
+Además de los tresillos pueden aparecer:
+
+```text
+(5/4:RLRLR)
+(6/4:RLRLRL)
+(7/4:RLRLRLR)
+```
+
+para quintillos, seisillos y septillos.
+
+La misma regla se aplica a cualquier otro número de ataques.
+
+---
+
+# 9. Figuras mixtas dentro de un mismo grupo
+
+Cuando dentro de una misma agrupación existan eventos con valores temporales diferentes, cada uno puede especificar su propio valor:
+
+```text
+[8:R 16:L 16:R]
+```
+
+representa una corchea seguida de dos semicorcheas.
+
+Esta forma se utilizará únicamente cuando sea necesario representar duraciones diferentes dentro del mismo grupo.
+
+---
+
+# 10. Ligaduras de duración
+
+`^` = ligadura de duración.
 
 Ejemplo:
 
@@ -258,21 +255,15 @@ Ejemplo:
 R^R
 ```
 
-= una nota de mano derecha prolongada.
+significa que la segunda representación no constituye un nuevo ataque, sino la prolongación de la primera nota.
 
-La ligadura de duración es distinta de la ligadura de fraseo.
+La ligadura puede atravesar grupos o compases.
 
-Puede atravesar grupos:
-
-```text
-[16:RLR] R^R
-```
-
-y también barras de compás cuando sea necesario.
+Una nota ligada **no debe interpretarse como un segundo golpe**.
 
 ---
 
-## 8. Acentos
+# 11. Acentos
 
 `!` después de la mano = golpe acentuado.
 
@@ -283,46 +274,38 @@ R!
 L!
 ```
 
-Un golpe sin `!` es un golpe normal.
-
-Los acentos se especifican nota por nota.
-
-Ejemplo:
+Los acentos se indican nota a nota:
 
 ```text
 [R!L!RL]
 ```
 
-Los acentos no se aplican automáticamente a todo un grupo.
-
 ---
 
-## 9. Ghost notes
+# 12. Ghost notes
 
-Las ghost notes se representan mediante `°` después de la mano:
+`°` después de la mano = ghost note.
+
+Ejemplos:
 
 ```text
 R°
 L°
 ```
 
-Ejemplo:
+Ejemplo dentro de un grupo:
 
 ```text
 [R L° R L]
 ```
 
-La ghost note conserva su sticking pero se diferencia dinámicamente de una nota normal.
-
-El acento y la ghost note pueden combinarse cuando la partitura lo requiera, aunque musicalmente no suele ser habitual.
-
 ---
 
-## 10. Grace notes y flams
+# 13. Grace notes y flams
 
 Las grace notes se escriben en minúscula.
 
-Cuando se conoce la mano del grace note:
+Cuando se conoce la mano:
 
 ```text
 lR
@@ -331,56 +314,46 @@ rL
 
 significa respectivamente:
 
-* grace de izquierda + golpe principal de derecha
-* grace de derecha + golpe principal de izquierda
+* grace de izquierda + golpe principal de derecha.
+* grace de derecha + golpe principal de izquierda.
 
-La mano principal siempre aparece en mayúscula.
+La mano principal aparece siempre en mayúscula.
 
-La forma:
-
-```text
-gR
-```
-
-se reserva para un grace note cuya mano no esté especificada en la partitura original o cuya procedencia no pueda determinarse.
-
-Un flam estándar debe indicar la mano del grace note siempre que esta información esté disponible.
+`gR` se reserva para un grace note cuya mano no esté especificada o no pueda determinarse.
 
 ---
 
-## 11. Rolls, buzz y tremolo
+# 14. Rolls, buzz y tremolo
 
-Los rolls o redobles que aparecen explícitamente indicados en la partitura deben conservar su carácter de articulación aunque el sticking pueda deducirse.
+Los rolls o redobles indicados expresamente en la partitura deben conservar su articulación.
 
-Se utilizará:
+Forma general:
 
 ```text
 {roll:contenido}
 ```
 
-para un roll indicado en la partitura.
+Tipos específicos:
+
+```text
+{single:contenido}
+{double:contenido}
+{buzz:contenido}
+```
 
 Ejemplo:
 
 ```text
-{roll:RLRL}
+{buzz:RLRL}
 ```
 
-Cuando el tipo de roll sea relevante:
-
-```text
-{single:...}
-{double:...}
-{buzz:...}
-```
-
-La presencia de una indicación de roll no debe sustituirse únicamente por una secuencia de `R` y `L`, ya que una secuencia equivalente de golpes individuales no representa necesariamente la misma articulación musical.
+La indicación de roll no se sustituye simplemente por una secuencia de golpes, porque la articulación es información musical independiente.
 
 ---
 
-## 12. Ligaduras de fraseo
+# 15. Ligaduras de fraseo
 
-Las ligaduras de fraseo se representan mediante `~`.
+`~` = ligadura o arco de fraseo.
 
 Ejemplo:
 
@@ -388,17 +361,15 @@ Ejemplo:
 R~L~R~L
 ```
 
-significa que los golpes forman parte de una misma frase o arco de fraseo.
-
 `~` nunca representa una ligadura de duración.
 
-Para prolongaciones de notas se utiliza exclusivamente `^`.
+Para ligaduras de duración se utiliza exclusivamente `^`.
 
 ---
 
-## 13. Articulaciones adicionales
+# 16. Articulaciones adicionales
 
-Cuando una articulación no esté cubierta por una notación específica, se utilizará la sintaxis:
+Cuando aparezca una articulación que no disponga de símbolo específico:
 
 ```text
 {art:tipo}
@@ -411,39 +382,30 @@ R{art:marcato}
 L{art:tenuto}
 ```
 
-Esto permite ampliar el sistema sin reutilizar símbolos ya existentes.
+Esto permite ampliar la notación sin reutilizar símbolos existentes.
 
 ---
 
-## 14. Orden de aplicación de símbolos
+# 17. Orden de aplicación de símbolos
 
-Cuando varias marcas afectan a un mismo ataque, se mantiene siempre el siguiente orden:
+Cuando varias marcas afectan al mismo ataque, se mantiene este orden:
 
 ```text
 [grace][mano][articulación dinámica][otras marcas]
 ```
 
-Ejemplo:
+Ejemplos:
 
 ```text
 lR!
-```
-
-= grace de izquierda + ataque principal de derecha + acento.
-
-Ejemplo:
-
-```text
 rL°
 ```
 
-= grace de derecha + ataque principal de izquierda + ghost note.
-
-Las modificaciones de duración y fraseo se consideran relaciones entre eventos y se escriben de forma independiente.
+Las relaciones de duración y fraseo se expresan aparte mediante `^` y `~`.
 
 ---
 
-## 15. Separador de compás
+# 18. Separador de compás
 
 `|` = final de compás.
 
@@ -459,29 +421,25 @@ Nunca se utiliza `|` para separar grupos dentro del mismo compás.
 
 ---
 
-## 16. Compases completamente silenciosos
+# 19. Compases completamente silenciosos
 
-Un compás completamente silencioso se representa como:
+Un compás completamente silencioso se representa mediante:
 
 ```text
 REST |
 ```
 
-Esto evita tener que escribir todas las subdivisiones cuando no existe ningún ataque.
-
-Para varios compases consecutivos de silencio puede utilizarse:
+Para varios compases consecutivos:
 
 ```text
 REST x4
 ```
 
-cuando la partitura indique explícitamente cuatro compases de silencio.
-
 ---
 
-## 17. Repeticiones
+# 20. Repeticiones
 
-Las secciones repetidas se delimitan mediante:
+Las secciones repetidas se representan mediante:
 
 ```text
 ||: ... :||
@@ -490,55 +448,43 @@ Las secciones repetidas se delimitan mediante:
 Ejemplo:
 
 ```text
-||: [RLRL] [RLRL] :|| 
+||: [RLRL] [RLRL] :||
 ```
 
-Si se especifica un número concreto de repeticiones:
+Cuando exista un número explícito de repeticiones:
 
 ```text
 ||: [RLRL] [RLRL] :|| x4
 ```
 
-La repetición se considera una propiedad estructural y no forma parte del sticking.
-
 ---
 
-## 18. Primer final y final definitivo
+# 21. Primer final y final definitivo
 
-### Primer final
+Primer final:
 
 ```text
 {1st: ...}
 ```
 
-Se ejecuta durante las repeticiones previas a la última.
-
-### Final definitivo
+Final definitivo:
 
 ```text
 {final: ...}
 ```
 
-Se ejecuta únicamente en la última repetición.
-
 Ejemplo:
 
 ```text
-||: [RLRL] [RLRL] | {1st: [R!L!RL]} :||
-{final: [R!L!RL] R}
-```
-
-Las instrucciones como "repeat 20 times before final ending" se consideran información estructural y pueden expresarse fuera de los grupos rítmicos:
-
-```text
-(repetir 20 veces antes del final)
+||: [RLRL] [RLRL] | {1st: [RLRL]} :||
+{final: [RLRL] R} |
 ```
 
 ---
 
-## 19. Repetición de compases
+# 22. Repetición de compases
 
-Cuando la partitura utiliza un símbolo de repetición de uno o varios compases, se puede representar mediante:
+Cuando la partitura indique la repetición de uno o varios compases:
 
 ```text
 {repeat:1}
@@ -550,125 +496,109 @@ o:
 {repeat:2}
 ```
 
-según el número de compases que sustituya.
-
-Esto evita confundir una repetición estructural con una secuencia de ataques.
+La repetición estructural no forma parte del sticking.
 
 ---
 
-## 20. Estructuras de navegación
+# 23. Estructuras de navegación
 
-Cuando una partitura completa utilice indicaciones como:
-
-* D.C.
-* D.S.
-* al Coda
-* al Fine
-* Coda
-* Fine
-
-se representarán como instrucciones estructurales explícitas:
+Las indicaciones estructurales se representan explícitamente:
 
 ```text
 {DC}
 {DS}
 {Coda}
-{Fine}
 {ToCoda}
+{Fine}
 ```
 
 Estas marcas no forman parte del ritmo ni del sticking.
 
 ---
 
-# Modelo temporal
+# 24. Modelo temporal
 
-La interpretación temporal de la transcripción seguirá estas reglas:
+La interpretación temporal sigue estas reglas:
 
-1. Cada evento representa un ataque, silencio o prolongación situado en una posición temporal concreta.
-2. El valor indicado por `4:`, `8:`, `16:`, `32:`, etc. determina la unidad temporal del evento o grupo.
+1. Cada ataque representa un evento situado en una posición temporal.
+2. El valor de figura determina la duración temporal correspondiente.
 3. Los grupos consecutivos se interpretan de izquierda a derecha.
-4. Los espacios separan grupos pero no añaden tiempo.
-5. Los silencios ocupan tiempo real; no son simplemente caracteres ausentes.
-6. Una ligadura `^` prolonga una nota existente y no crea un nuevo ataque.
-7. Un grupo irregular `(N/M:...)` redistribuye temporalmente sus eventos dentro del espacio indicado.
-8. Las indicaciones de repetición, finales y navegación no alteran el contenido temporal de los compases que describen.
-
-La suma de las duraciones de todos los eventos de un compás debe corresponder exactamente a la duración indicada por su compás musical.
+4. Los espacios entre grupos no añaden tiempo.
+5. Los silencios ocupan tiempo real.
+6. `^` prolonga una nota y no crea un nuevo ataque.
+7. Un grupo irregular `(N/M:...)` distribuye sus `N` ataques dentro del espacio temporal correspondiente a `M` unidades equivalentes.
+8. Los tresillos de semicorcheas se representan específicamente como `(3/2:...)`.
+9. Las repeticiones y finales modifican la estructura de ejecución, pero no la duración interna de los compases.
+10. La suma temporal de todos los eventos de un compás debe coincidir exactamente con la duración musical del compás.
 
 ---
 
-# Ejemplos de aplicación
+# 25. Ejemplos
 
-## Ejemplo 1 — semicorcheas y silencio
+## Semicorcheas normales
 
 ```text
-[R!L!RL] [RLR_] |
+[RLRL] [LRLR] |
 ```
 
-Dos grupos de cuatro semicorcheas, con acento en las dos primeras notas y silencio final en el segundo grupo.
+## Corcheas
 
-## Ejemplo 2 — figuras mixtas
+```text
+[8:RLRL] |
+```
+
+## Mezcla de corcheas y semicorcheas
 
 ```text
 [8:RLRL] [16:RLRL] [16:RLRL] |
 ```
 
-El primer grupo utiliza corcheas y los siguientes semicorcheas.
-
-## Ejemplo 3 — tresillos
+## Tresillos de corchea
 
 ```text
 (3:RLR) (3:LRL) |
 ```
 
-Dos grupos de tresillos.
-
-## Ejemplo 4 — quintillo
+## Tresillos de semicorchea
 
 ```text
-(5:RLRLR) |
+(3/2:RLR) (3/2:LRL) |
 ```
 
-## Ejemplo 5 — grupo irregular con relación temporal explícita
+## Compás mixto con semicorcheas y tresillos de semicorchea
 
 ```text
-(3/4:RLR) |
+[RLRL] (3/2:RLR) (3/2:LRL) |
 ```
 
-Tres ataques ocupando el espacio temporal de cuatro unidades equivalentes.
-
-## Ejemplo 6 — flam
+## Quintillo
 
 ```text
-[lR R L rR] |
+(5/4:RLRLR) |
 ```
 
-## Ejemplo 7 — ghost note y acento
+## Acentos
 
 ```text
-[R! L° R L!] |
+[R!L!RL] |
 ```
 
-## Ejemplo 8 — ligadura de duración
+## Ghost notes
+
+```text
+[R L° R L] |
+```
+
+## Flam
+
+```text
+[lR R L rL] |
+```
+
+## Ligadura
 
 ```text
 [R^R L R] |
-```
-
-La segunda `R` no constituye un nuevo ataque.
-
-## Ejemplo 9 — roll
-
-```text
-{roll:RLRL} |
-```
-
-## Ejemplo 10 — final alternativo
-
-```text
-||: [RLRL] [RLRL] | {1st: [R!L!RL]} :||
-{final: [R!L!RL] R} |
 ```
 
 ---
@@ -678,22 +608,23 @@ La segunda `R` no constituye un nuevo ataque.
 * [ ] ¿Cada ataque tiene correctamente indicado `R` o `L`?
 * [ ] ¿Todas las posiciones silenciosas están representadas?
 * [ ] ¿Cada grupo tiene el valor rítmico correcto?
-* [ ] ¿Los grupos con valor distinto de semicorchea llevan `4:`, `8:`, `16:`, `32:` o el valor correspondiente?
+* [ ] ¿Las figuras distintas de semicorchea llevan su valor explícito cuando sea necesario?
 * [ ] ¿Las figuras con puntillo están indicadas correctamente?
-* [ ] ¿Todos los tresillos están marcados con `(3:...)`?
-* [ ] ¿Los quintillos, seisillos, septillos y otros grupos irregulares están identificados?
+* [ ] ¿Todos los tresillos normales están marcados con `(3:...)`?
+* [ ] ¿Los tresillos de semicorchea están marcados con `(3/2:...)`?
+* [ ] ¿Los quintillos, seisillos, septillos y demás grupos irregulares indican su relación temporal?
 * [ ] ¿Los silencios tienen la duración correcta?
-* [ ] ¿Los acentos están marcados individualmente con `!`?
+* [ ] ¿Los acentos están marcados con `!`?
 * [ ] ¿Las ghost notes están marcadas con `°`?
 * [ ] ¿Los grace notes/flams indican correctamente la mano del adorno?
-* [ ] ¿Los rolls o buzz están representados como articulaciones y no únicamente como secuencias de golpes?
+* [ ] ¿Los rolls y buzz están representados como articulaciones?
 * [ ] ¿Las ligaduras de duración utilizan `^`?
 * [ ] ¿Las ligaduras de fraseo utilizan `~`?
 * [ ] ¿Cada compás termina con `|`?
 * [ ] ¿Los compases completamente silenciosos están identificados?
 * [ ] ¿Los primeros finales y finales definitivos están correctamente diferenciados?
 * [ ] ¿Las repeticiones estructurales están representadas?
-* [ ] ¿Las indicaciones D.C., D.S., Coda y Fine, si existen, están conservadas?
-* [ ] ¿La suma temporal de todos los eventos de cada compás coincide con la duración musical del compás?
+* [ ] ¿Las indicaciones D.C., D.S., Coda y Fine están conservadas cuando aparecen?
+* [ ] ¿La suma temporal de cada compás coincide con su duración musical?
 
-Si la respuesta a alguna de estas preguntas es **no**, la transcripción está incompleta o necesita revisión.
+Si alguna respuesta es **no**, la transcripción está incompleta o necesita revisión.

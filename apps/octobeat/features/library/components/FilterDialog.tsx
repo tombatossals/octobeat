@@ -29,6 +29,12 @@ interface FilterDialogProps {
     ): void;
 }
 
+interface FilterDialogContentProps {
+    onOpenChange(
+        open: boolean,
+    ): void;
+}
+
 function toDraft(
     filters: LibraryFilters,
 ): LibraryFilters {
@@ -58,10 +64,15 @@ function toggle(
         : [...list, value];
 }
 
-export function FilterDialog({
-    open,
+/**
+ * The filter form. Mounted while the dialog is open so its draft state is
+ * re-initialized from the store's current filters each time it opens. This
+ * ensures filters restored from localStorage on page load are shown as
+ * active.
+ */
+function FilterDialogContent({
     onOpenChange,
-}: FilterDialogProps) {
+}: FilterDialogContentProps) {
     const filters = useLibraryStore(
         (state) => state.filters,
     );
@@ -80,6 +91,15 @@ export function FilterDialog({
         useState<LibraryFilters>(
             () => toDraft(filters),
         );
+
+    const [prevFilters, setPrevFilters] =
+        useState(filters);
+
+    if (filters !== prevFilters) {
+        setPrevFilters(filters);
+
+        setDraft(toDraft(filters));
+    }
 
     const genres = useMemo(() => {
         const seen = new Set<string>();
@@ -104,16 +124,6 @@ export function FilterDialog({
         [draft, filters],
     );
 
-    function handleOpenChange(
-        next: boolean,
-    ) {
-        if (next) {
-            setDraft(toDraft(filters));
-        }
-
-        onOpenChange(next);
-    }
-
     function handleSave() {
         setFilters(draft);
 
@@ -121,15 +131,8 @@ export function FilterDialog({
     }
 
     return (
-        <Dialog.Root
-            open={open}
-            onOpenChange={handleOpenChange}
-        >
-            <Dialog.Portal>
-                <Dialog.Backdrop className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm" />
-
-                <Dialog.Popup className="fixed left-1/2 top-1/2 z-[90] flex max-h-[85vh] w-[min(90vw,28rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-2xl border border-border bg-background p-6 text-foreground shadow-2xl lg:w-[min(90vw,42rem)]">
-                    <div className="mb-6 flex items-center justify-between">
+        <>
+            <div className="mb-6 flex items-center justify-between">
                         <Dialog.Title className="text-xl font-bold text-foreground">
                             Filters
                         </Dialog.Title>
@@ -390,6 +393,26 @@ export function FilterDialog({
                             Apply
                         </Button>
                     </div>
+        </>
+    );
+}
+
+export function FilterDialog({
+    open,
+    onOpenChange,
+}: FilterDialogProps) {
+    return (
+        <Dialog.Root
+            open={open}
+            onOpenChange={onOpenChange}
+        >
+            <Dialog.Portal>
+                <Dialog.Backdrop className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm" />
+
+                <Dialog.Popup className="fixed left-1/2 top-1/2 z-[90] flex max-h-[85vh] w-[min(90vw,28rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-2xl border border-border bg-background p-6 text-foreground shadow-2xl lg:w-[min(90vw,42rem)]">
+                    <FilterDialogContent
+                        onOpenChange={onOpenChange}
+                    />
                 </Dialog.Popup>
             </Dialog.Portal>
         </Dialog.Root>

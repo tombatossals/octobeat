@@ -47,6 +47,14 @@ export interface ExerciseBeat {
      * golpe simple).
      */
     groupStrokes?: number;
+
+    /**
+     * Número de unidades temporales equivalentes que ocupa el grupo
+     * (la `M` de `(N/M:...)`, p. ej. 2 en "(3/2:RLR)"). Cuando está
+     * presente, el grupo de `groupStrokes` golpes se distribuye sobre
+     * esas unidades; sin él, el grupo ocupa dos golpes sueltos.
+     */
+    groupUnits?: number;
 }
 
 export interface Exercise {

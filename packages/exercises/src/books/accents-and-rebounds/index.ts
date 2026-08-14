@@ -1,4 +1,4 @@
-import { accentedEighths } from "./accented-eighths";
+import { accentedEighths } from "./01-accented-eighths";
 
 import type { ExerciseBook } from "../../types";
 

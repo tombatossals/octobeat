@@ -179,12 +179,23 @@ function GroupRenderer({
     const strokes =
         group.beats[0]?.groupStrokes;
 
+    const groupUnits =
+        group.beats[0]?.groupUnits;
+
     // Un grupo rítmico (tresillo o roll) de N golpes dura lo mismo que
     // 2 golpes sueltos: cada golpe ocupa 2/N de la anchura de un golpe
-    // suelto, de modo que la línea siempre encaja en el contenedor.
-    const groupGrow = strokes != null ? 2 : 1;
+    // suelto, de modo que la línea siempre encaja en el contenedor. Un
+    // grupo "(N/M:...)" ocupa M unidades de media pulso (anchura M/2).
+    const groupGrow =
+        strokes != null
+            ? groupUnits != null
+                ? groupUnits / 2
+                : 2
+            : 1;
     const strokeGrow =
-        strokes != null ? 2 / strokes : 1;
+        strokes != null
+            ? groupGrow / strokes
+            : 1;
 
     const beats = group.beats.map(
         (beat, beatIndex) => {

@@ -10,6 +10,7 @@ export * from "./components/button";
 export * from "./components/checkbox";
 export * from "./components/input";
 export * from "./components/label";
+export * from "./components/multi-select";
 export * from "./components/slider";
 export * from "./components/table";
 export * from "./lib/utils";
