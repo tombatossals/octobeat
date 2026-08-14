@@ -5,7 +5,12 @@ import { Dialog } from "@base-ui/react/dialog";
 import { X } from "lucide-react";
 
 import { books } from "@octobeat/exercises";
-import { Button, cn, Label } from "@octobeat/ui";
+import {
+    Button,
+    cn,
+    Label,
+    MultiSelect,
+} from "@octobeat/ui";
 
 import { useLibraryStore } from "../store";
 
@@ -251,47 +256,27 @@ export function FilterDialog({
                                 Genres
                             </legend>
 
-                            <div className="grid max-h-56 grid-cols-2 gap-1 overflow-y-auto pr-1 lg:grid-cols-3">
-                                {genres.map(
-                                    (genre) => {
-                                        const checked =
-                                            draft.genres.includes(
-                                                genre,
-                                            );
-
-                                        return (
-                                            <Label
-                                                key={
-                                                    genre
-                                                }
-                                                className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={
-                                                        checked
-                                                    }
-                                                    onChange={() =>
-                                                        setDraft(
-                                                            (current) => ({
-                                                                ...current,
-                                                                genres:
-                                                                    toggle(
-                                                                        current.genres,
-                                                                        genre,
-                                                                    ),
-                                                            }),
-                                                        )
-                                                    }
-                                                    className="size-4 accent-primary"
-                                                />
-
-                                                {genre}
-                                            </Label>
-                                        );
-                                    },
-                                )}
-                            </div>
+                            <MultiSelect
+                                value={draft.genres}
+                                onValueChange={(genres) =>
+                                    setDraft(
+                                        (current) => ({
+                                            ...current,
+                                            genres,
+                                        }),
+                                    )
+                                }
+                                options={genres.map((genre) => ({
+                                    value: genre,
+                                    label: genre,
+                                }))}
+                                placeholder="All genres"
+                                countLabel={(count) =>
+                                    count === 1
+                                        ? "1 genre"
+                                        : `${count} genres`
+                                }
+                            />
                         </fieldset>
 
                         <fieldset className="lg:col-span-2">
@@ -299,51 +284,31 @@ export function FilterDialog({
                                 Book Sections
                             </legend>
 
-                            <div className="grid grid-cols-2 gap-1 lg:grid-cols-3">
-                                {Object.values(
+                            <MultiSelect
+                                value={draft.exerciseSets}
+                                onValueChange={(exerciseSets) =>
+                                    setDraft(
+                                        (current) => ({
+                                            ...current,
+                                            exerciseSets,
+                                        }),
+                                    )
+                                }
+                                options={Object.values(
                                     books
                                         .stickControl
                                         .sets,
-                                ).map(
-                                    (set) => {
-                                        const checked =
-                                            draft.exerciseSets.includes(
-                                                set.id,
-                                            );
-
-                                        return (
-                                            <Label
-                                                key={
-                                                    set.id
-                                                }
-                                                className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={
-                                                        checked
-                                                    }
-                                                    onChange={() =>
-                                                        setDraft(
-                                                            (current) => ({
-                                                                ...current,
-                                                                exerciseSets:
-                                                                    toggle(
-                                                                        current.exerciseSets,
-                                                                        set.id,
-                                                                    ),
-                                                            }),
-                                                        )
-                                                    }
-                                                    className="size-4 accent-primary"
-                                                />
-
-                                                {set.title}
-                                            </Label>
-                                        );
-                                    },
-                                )}
-                            </div>
+                                ).map((set) => ({
+                                    value: set.id,
+                                    label: set.title,
+                                }))}
+                                placeholder="All sections"
+                                countLabel={(count) =>
+                                    count === 1
+                                        ? "1 section"
+                                        : `${count} sections`
+                                }
+                            />
                         </fieldset>
                     </div>
 

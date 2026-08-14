@@ -33,14 +33,10 @@ export const BPM_RANGES: ReadonlyArray<{
     min: number;
     max: number;
 }> = [
-    { key: "40-60", label: "40–60", min: 40, max: 60 },
-    { key: "60-80", label: "60–80", min: 60, max: 80 },
-    { key: "80-100", label: "80–100", min: 80, max: 100 },
-    { key: "100-120", label: "100–120", min: 100, max: 120 },
-    { key: "120-140", label: "120–140", min: 120, max: 140 },
-    { key: "140-160", label: "140–160", min: 140, max: 160 },
-    { key: "160-180", label: "160–180", min: 160, max: 180 },
-    { key: "180-200", label: "180–200", min: 180, max: 200 },
+    { key: "40-80", label: "40–80", min: 40, max: 80 },
+    { key: "80-120", label: "80–120", min: 80, max: 120 },
+    { key: "120-160", label: "120–160", min: 120, max: 160 },
+    { key: "160-200", label: "160–200", min: 160, max: 200 },
     { key: "200-", label: "200–", min: 200, max: Infinity },
 ];
 
