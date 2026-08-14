@@ -75,8 +75,7 @@ def test_build_dataset_from_local_file(
 
     assert songmap_path.exists()
     assert metadata_path.exists()
-    assert (dataset_dir / "recording.wav").exists()
-    assert (dataset_dir / "recording.webm").exists()
+    assert (dataset_dir / "recording.mp3").exists()
 
     songmap = json.loads(
         songmap_path.read_text(
@@ -94,7 +93,7 @@ def test_build_dataset_from_local_file(
     )
 
     assert metadata["id"] == result.dataset_id
-    assert metadata["resources"]["audio"] == "recording.webm"
+    assert metadata["resources"]["audio"] == "recording.mp3"
 
     catalog_path = (
         tmp_path

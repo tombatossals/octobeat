@@ -9,6 +9,7 @@ from octobeat.config import ensure_workspace
 from octobeat.io.resource import (
     COVER_FILE,
     METADATA_FILE,
+    RECORDING_MP3,
     upsert_catalog,
     write_metadata,
 )
@@ -236,7 +237,7 @@ def _blank_metadata(
         bpm=120.0,
         duration=0.0,
         resources=ResourceRefs(
-            audio="recording.wav",
+            audio=RECORDING_MP3,
         ),
     )
 

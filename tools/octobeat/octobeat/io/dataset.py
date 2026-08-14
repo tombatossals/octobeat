@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 
+from octobeat.audio import encode_to_mp3
 from octobeat.cache import cache
 from octobeat.io.songmap import write_songmap
 from octobeat.models.songmap import SongMap
+
+RECORDING_MP3 = "recording.mp3"
 
 
 def write_dataset(
@@ -18,7 +20,7 @@ def write_dataset(
     The dataset currently contains:
 
       - recording.songmap.json
-      - recording.wav
+      - recording.mp3
     """
 
     destination = destination.expanduser().resolve()
@@ -34,7 +36,7 @@ def write_dataset(
         destination / "recording.songmap.json",
     )
 
-    # Copy recording
+    # Encode recording
     recording = cache.lookup(songmap.metadata.source)
 
     if recording is None:
@@ -43,9 +45,9 @@ def write_dataset(
             f"{songmap.metadata.source.type}:{songmap.metadata.source.id}"
         )
 
-    shutil.copy2(
+    encode_to_mp3(
         recording,
-        destination / "recording.wav",
+        destination / RECORDING_MP3,
     )
 
     return destination

@@ -47,12 +47,14 @@ def decode_to_wav(
     )
 
 
-def encode_to_webm(
+def encode_to_mp3(
     input_path: Path,
     output_path: Path,
+    *,
+    bitrate: str = "192k",
 ) -> None:
     """
-    Encode an audio file to an Opus WebM suitable for streaming.
+    Encode an audio file to an MP3 suitable for streaming.
     """
 
     if not input_path.exists():
@@ -79,9 +81,9 @@ def encode_to_webm(
             str(input_path),
             "-vn",
             "-c:a",
-            "libopus",
+            "libmp3lame",
             "-b:a",
-            "128k",
+            bitrate,
             str(output_path),
         ],
         check=True,

@@ -343,8 +343,7 @@ dataset/
 
 ├── metadata.json
 ├── cover.jpg
-├── recording.webm
-├── recording.wav
+├── recording.mp3
 └── songmap.json
 ```
 

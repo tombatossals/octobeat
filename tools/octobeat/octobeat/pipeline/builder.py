@@ -189,14 +189,13 @@ def build_dataset(
             metadata_path=dataset_dir / METADATA_FILE,
             artist=recording.artist,
             title=recording.title,
-            audio="recording.webm",
+            audio="recording.mp3",
             cover_source=cover_source,
             duration=result.report.duration,
             bpm=result.report.bpm,
             beats=result.report.beats,
             confidence=result.report.confidence,
         )
-
     finally:
         recording.cleanup()
 
@@ -359,7 +358,7 @@ def _build_metadata(
             else []
         ),
         resources=ResourceRefs(
-            audio="recording.webm",
+            audio="recording.mp3",
         ),
     )
 

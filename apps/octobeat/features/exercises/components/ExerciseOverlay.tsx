@@ -15,6 +15,7 @@ import { useLibraryStore } from "@/features/library/store";
 import {
     beatAtTime,
     nextBeat,
+    type SongMap,
 } from "@octobeat/songmap";
 
 import {
@@ -88,6 +89,70 @@ function globalNoteIndexAt(
         cycles * totalNotes +
         (low - 1)
     );
+}
+
+/**
+ * Escala del beat grid de la canción: a cuántas negras equivale cada
+ * punto del grid. La mayoría de canciones tienen el grid en negras
+ * (1), pero algunas en corcheas (0.5), blancas (2) o semicorcheas
+ * (0.25). Sin normalizar, el ejercicio avanzaría al doble (o a la
+ * mitad) de la velocidad en esas canciones y la partitura se
+ * desincronizaría de la música.
+ */
+function beatGridScale(
+    songmap: SongMap,
+): number {
+    const bpm = songmap.timing?.bpm;
+
+    if (bpm == null || bpm <= 0) {
+        return 1;
+    }
+
+    const beats = songmap.beats;
+
+    if (beats.length < 2) {
+        return 1;
+    }
+
+    // Delta mediano entre beats consecutivos: robusto a cambios de
+    // tempo puntuales y a grids irregulares.
+    const deltas: number[] = [];
+
+    for (
+        let i = 1;
+        i < beats.length &&
+        deltas.length < 256;
+        i++
+    ) {
+        deltas.push(
+            beats[i]!.time -
+                beats[i - 1]!.time,
+        );
+    }
+
+    deltas.sort((a, b) => a - b);
+
+    const median =
+        deltas[Math.floor(deltas.length / 2)]!;
+
+    const quarter = 60 / bpm;
+    const ratio = median / quarter;
+
+    if (ratio <= 0) {
+        return 1;
+    }
+
+    // Ajusta a la potencia de 2 más cercana (negras, corcheas,
+    // blancas…) y solo la aplica si la medida es fiable.
+    const log2 = Math.log2(ratio);
+    const snapped = Math.round(log2);
+    const error = Math.abs(log2 - snapped);
+
+    if (error > 0.45) {
+        return 1;
+    }
+
+    return 2 ** snapped;
 }
 
 export function ExerciseOverlay(): JSX.Element | null {
@@ -274,6 +339,15 @@ export function ExerciseOverlay(): JSX.Element | null {
         repetitionsPerLine,
     ]);
 
+    // Normaliza la resolución del beat grid de la canción: si el grid
+    // está en corcheas/blancas en lugar de negras, la posición musical
+    // se escala para que el ejercicio avance a la velocidad correcta.
+    const gridScale = useMemo(() => {
+        const map = dataset?.songmap;
+
+        return map ? beatGridScale(map) : 1;
+    }, [dataset]);
+
     let lineIndex = 0;
     let repetition =
         repetitionsPerLine;
@@ -390,7 +464,8 @@ export function ExerciseOverlay(): JSX.Element | null {
 
                 const rawBeat =
                     globalNoteIndexAt(
-                        musicalPosition,
+                        musicalPosition *
+                            gridScale,
                         factor,
                         exerciseCycle,
                     ) + 1;
@@ -477,7 +552,8 @@ export function ExerciseOverlay(): JSX.Element | null {
 
                 const rawBeat =
                     globalNoteIndexAt(
-                        musicalPosition,
+                        musicalPosition *
+                            gridScale,
                         factor,
                         exerciseCycle,
                     ) + 1;
@@ -523,6 +599,7 @@ export function ExerciseOverlay(): JSX.Element | null {
         player,
         factor,
         exerciseCycle,
+        gridScale,
     ]);
 
     const songmap = dataset?.songmap;

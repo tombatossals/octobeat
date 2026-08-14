@@ -14,6 +14,7 @@ from octobeat.core.analyser import analyse_recording
 from octobeat.io.resource import (
     CATALOG_FILE,
     METADATA_FILE,
+    RECORDING_MP3,
     RECORDING_WAV,
     SONGMAP_FILE,
     upsert_catalog,
@@ -72,7 +73,7 @@ def reanalyse_datasets(
     Re-analyse every dataset inside ``output``.
 
     Each directory containing a `songmap.json` is re-analysed from its
-    decoded audio (`recording.wav`). The new SongMap is written in
+    decoded audio (`recording.mp3`). The new SongMap is written in
     place, and the dataset metadata plus the catalog are refreshed with
     the updated BPM, duration and confidence.
     """
@@ -138,12 +139,17 @@ def _reanalyse_dataset(
     dataset_id = dataset_dir.name
 
     audio_path = (
-        dataset_dir / RECORDING_WAV
+        dataset_dir / RECORDING_MP3
     )
 
     if not audio_path.exists():
+        audio_path = (
+            dataset_dir / RECORDING_WAV
+        )
+
+    if not audio_path.exists():
         raise FileNotFoundError(
-            f"missing {RECORDING_WAV}",
+            f"missing {RECORDING_MP3}",
         )
 
     provider = get_provider(str(audio_path))
@@ -213,7 +219,7 @@ def _populate_identity(
     """
     Restore artist/title from the dataset metadata.
 
-    The decoded audio is stored as "recording.wav", so the filename
+    The decoded audio is stored as "recording.mp3", so the filename
     carries no musical identity. The dataset metadata is used to
     restore artist and title on the recording before analysis.
     """
@@ -256,7 +262,7 @@ def _populate_identity(
             type="file",
             id=str(
                 dataset_dir
-                / RECORDING_WAV
+                / RECORDING_MP3
             ),
         )
 

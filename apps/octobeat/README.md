@@ -39,7 +39,7 @@ ln -s ~/Music/OctoBeat apps/octobeat/public/resources
 ```
 
 Each dataset must contain `catalog.json`, plus per-song directories
-with `metadata.json`, `songmap.json`, `recording.webm` and
+with `metadata.json`, `songmap.json`, `recording.mp3` and
 `cover.jpg`.
 
 ## Run the dev server

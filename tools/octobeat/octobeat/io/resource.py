@@ -4,13 +4,13 @@ import json
 import shutil
 from pathlib import Path
 
-from octobeat.audio import encode_to_webm
+from octobeat.audio import encode_to_mp3
 from octobeat.io.songmap import write_songmap
 from octobeat.models.metadata import CatalogMetadata
 from octobeat.models.songmap import SongMap
 
 RECORDING_WAV = "recording.wav"
-RECORDING_WEBM = "recording.webm"
+RECORDING_MP3 = "recording.mp3"
 SONGMAP_FILE = "songmap.json"
 METADATA_FILE = "metadata.json"
 COVER_FILE = "cover.jpg"
@@ -24,7 +24,6 @@ def write_resource(
     metadata: CatalogMetadata,
     audio: Path,
     cover: Path | None = None,
-    include_webm: bool = True,
 ) -> Path:
     """
     Write a complete resource dataset into `dataset_dir`.
@@ -33,12 +32,11 @@ def write_resource(
 
         songmap.json
         metadata.json
-        recording.wav
-        recording.webm
+        recording.mp3
         cover.jpg
 
-    `audio` is copied as recording.wav and (optionally) encoded to
-    recording.webm. `cover` is copied when provided.
+    `audio` is encoded to recording.mp3. `cover` is copied when
+    provided.
     """
 
     dataset_dir = dataset_dir.expanduser().resolve()
@@ -57,16 +55,10 @@ def write_resource(
         dataset_dir / METADATA_FILE,
     )
 
-    shutil.copy2(
+    encode_to_mp3(
         audio,
-        dataset_dir / RECORDING_WAV,
+        dataset_dir / RECORDING_MP3,
     )
-
-    if include_webm:
-        encode_to_webm(
-            audio,
-            dataset_dir / RECORDING_WEBM,
-        )
 
     if cover is not None:
         cover_target = (

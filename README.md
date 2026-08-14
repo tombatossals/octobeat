@@ -138,8 +138,7 @@ The result is a dataset directory like:
 ~/Music/OctoBeat/mxpx-responsibility-kjamzd0knte/
 ├── metadata.json
 ├── cover.jpg
-├── recording.webm
-├── recording.wav
+├── recording.mp3
 └── songmap.json
 ```
 
