@@ -296,17 +296,14 @@ export function FilterDialog({
                                 }
                                 options={Object.values(
                                     books,
-                                )
-                                    .flatMap(
-                                        (book) =>
-                                            Object.values(
-                                                book.sets,
-                                            ),
-                                    )
-                                    .map((set) => ({
+                                ).flatMap((book) =>
+                                    Object.values(
+                                        book.sets,
+                                    ).map((set) => ({
                                         value: set.id,
-                                        label: set.title,
-                                    }))}
+                                        label: `${book.title} · ${set.title}`,
+                                    })),
+                                )}
                                 placeholder="All sections"
                                 countLabel={(count) =>
                                     count === 1

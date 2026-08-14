@@ -254,6 +254,21 @@ function BeatCell({
     grow,
     active,
 }: BeatCellProps): JSX.Element {
+    const isRest = beat.rest === true;
+    const dotted =
+        beat.restDotted === true;
+    const hasGrace =
+        beat.grace != null;
+
+    const graceMark =
+        hasGrace
+            ? beat.grace === beat.hand
+                ? "g"
+                : beat.grace === "L"
+                  ? "l"
+                  : "r"
+            : null;
+
     return (
         <div
             className="relative flex min-w-0 justify-center py-0.5"
@@ -262,6 +277,13 @@ function BeatCell({
                 flexBasis: 0,
             }}
         >
+            {beat.accented &&
+                !isRest && (
+                    <div className="absolute -top-3 text-lg font-black leading-none text-neutral-700">
+                        &gt;
+                    </div>
+                )}
+
             {active && (
                 <>
                     <div className="absolute -top-1 text-[10px] leading-none text-blue-600">
@@ -274,8 +296,12 @@ function BeatCell({
 
             <div
                 className={cn(
-                    "relative z-10 flex items-center justify-center font-mono font-black transition-all duration-150",
-                    beat.rest && "text-neutral-400",
+                    "relative z-10 flex items-baseline justify-center font-mono font-black transition-all duration-150",
+                    isRest &&
+                        "text-neutral-400",
+                    beat.accented &&
+                        !isRest &&
+                        "text-red-600",
                     active
                         ? "scale-110 text-blue-700"
                         : "text-black",
@@ -287,7 +313,24 @@ function BeatCell({
                         "1px 1px 0 #e5e5e5, -1px -1px 0 #e5e5e5, 1px -1px 0 #e5e5e5, -1px 1px 0 #e5e5e5, 1px 0 0 #e5e5e5, -1px 0 0 #e5e5e5, 0 1px 0 #e5e5e5, 0 -1px 0 #e5e5e5, 0 2px 4px rgb(0 0 0 / 25%)",
                 }}
             >
-                {beat.rest ? "–" : beat.hand}
+                {graceMark != null && (
+                    <span className="-mr-0.5 text-[0.55em] opacity-40">
+                        {graceMark}
+                    </span>
+                )}
+
+                {isRest ? (
+                    <>
+                        <span>–</span>
+                        {dotted && (
+                            <span className="ml-px text-[0.6em]">
+                                .
+                            </span>
+                        )}
+                    </>
+                ) : (
+                    <span>{beat.hand}</span>
+                )}
             </div>
         </div>
     );
