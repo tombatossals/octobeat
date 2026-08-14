@@ -6,7 +6,6 @@ export const line64 = createExercise({
     title: "Line 64",
 
     notation: `
-        [LLLR] [RRLL] |
-        [LRRR] [LLLR] |
+        [LLLR] [RRLL] | [LRRR] [LLLR] |
     `,
 });
