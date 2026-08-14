@@ -7,6 +7,7 @@ import type {
     Exercise,
     ExerciseBeat,
 } from "@octobeat/exercises";
+import { exercisePassView } from "@octobeat/exercises";
 
 import { cn } from "../lib/utils";
 
@@ -37,37 +38,45 @@ export function ExerciseTimeline({
     preview = false,
     lastPass = false,
 }: ExerciseTimelineProps): JSX.Element {
+    // La pasada activa: los compases principales más el primer final
+    // (pasadas previas) o el final definitivo (última pasada).
+    const view = exercisePassView(
+        exercise,
+        lastPass,
+    );
+
     const activeBeat =
-        ((currentBeat - 1) % exercise.beats.length +
-            exercise.beats.length) %
-        exercise.beats.length;
+        ((currentBeat - 1) %
+            view.beats.length +
+            view.beats.length) %
+        view.beats.length;
 
     let currentMeasure = 0;
     let measureStart = 0;
 
     for (
         let i = 0;
-        i < exercise.barLengths.length;
+        i < view.barLengths.length;
         i++
     ) {
         if (
             activeBeat <
             measureStart +
-                exercise.barLengths[i]!
+                view.barLengths[i]!
         ) {
             currentMeasure = i;
             break;
         }
 
         measureStart +=
-            exercise.barLengths[i]!;
+            view.barLengths[i]!;
     }
 
     const measures: BeatGroup[][] = [];
     let offset = 0;
 
-    for (const barLength of exercise.barLengths) {
-        const barBeats = exercise.beats.slice(
+    for (const barLength of view.barLengths) {
+        const barBeats = view.beats.slice(
             offset,
             offset + barLength,
         );

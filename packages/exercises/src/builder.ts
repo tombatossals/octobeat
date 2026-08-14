@@ -32,12 +32,17 @@ export function createExercise({
         beatUnit,
         beats: parsed.beats,
         barLengths: parsed.barLengths,
+        endings: parsed.endings,
     };
 }
 
 interface ParsedNotation {
     beats: ExerciseBeat[];
     barLengths: number[];
+    endings?: {
+        first?: number;
+        final?: number;
+    };
 }
 
 /**
@@ -47,15 +52,22 @@ interface ParsedNotation {
  * "(3:RLR)" es un tresillo explícito con la misma regla de duración.
  * El resto de tokens son golpes sueltos, uno por letra. Cada nota
  * admite la sintaxis [grace][mano][acento] del manifiesto: "g"/"l"/"r"
- * en minúscula antecede a la mano (mayúscula) y "!" marca el acento.
- * Los compases se separan con "|" o "-".
+ * en minúscula antecede a la mano (mayúscula), "!" marca el acento y
+ * "_" es un silencio ("__" con puntillo). Los compases se separan con
+ * "|" o "-". Los finales alternativos "{1st: ... }" y "{final: ... }"
+ * se marcan como compases propios dentro del ejercicio.
  */
 function parseNotation(
     notation: string,
 ): ParsedNotation {
     const beats: ExerciseBeat[] = [];
     const barLengths: number[] = [];
+    const endings: {
+        first?: number;
+        final?: number;
+    } = {};
     let groupId = 0;
+    let barIndex = 0;
 
     const measures = notation
         .split(/[|\\-]/)
@@ -64,9 +76,12 @@ function parseNotation(
         )
         .filter(Boolean);
 
-    for (const measure of measures) {
+    const parseBar = (
+        text: string,
+        ending?: "1st" | "final",
+    ) => {
         const start = beats.length;
-        const tokens = measure
+        const tokens = text
             .split(/\s+/)
             .filter(Boolean);
 
@@ -94,6 +109,9 @@ function parseNotation(
                         accented:
                             stroke.accented,
                         rest: stroke.rest,
+                        restDotted:
+                            stroke.restDotted,
+                        ending,
                         group: groupId,
                         groupStrokes:
                             strokes.length,
@@ -114,6 +132,9 @@ function parseNotation(
                         accented:
                             stroke.accented,
                         rest: stroke.rest,
+                        restDotted:
+                            stroke.restDotted,
+                        ending,
                         group: groupId,
                         groupStrokes:
                             strokes.length,
@@ -129,6 +150,9 @@ function parseNotation(
                         accented:
                             stroke.accented,
                         rest: stroke.rest,
+                        restDotted:
+                            stroke.restDotted,
+                        ending,
                     });
                 }
             }
@@ -137,9 +161,73 @@ function parseNotation(
         barLengths.push(
             beats.length - start,
         );
+
+        if (ending === "1st") {
+            endings.first = barIndex;
+        } else if (ending === "final") {
+            endings.final = barIndex;
+        }
+
+        barIndex += 1;
+    };
+
+    for (const measure of measures) {
+        const endingPattern =
+            /{(1st|final):\s*([^}]*)}/g;
+
+        let match: RegExpExecArray | null;
+        let lastIndex = 0;
+        let found = false;
+
+        while (
+            (match =
+                endingPattern.exec(
+                    measure,
+                )) !== null
+        ) {
+            found = true;
+
+            const before = measure
+                .slice(lastIndex, match.index)
+                .trim();
+
+            if (before) {
+                parseBar(before);
+            }
+
+            const kind =
+                match[1] === "1st"
+                    ? "1st"
+                    : "final";
+
+            parseBar(match[2]!, kind);
+
+            lastIndex =
+                endingPattern.lastIndex;
+        }
+
+        const rest = measure
+            .slice(lastIndex)
+            .trim();
+
+        if (found) {
+            if (rest) {
+                parseBar(rest);
+            }
+        } else if (rest) {
+            parseBar(rest);
+        }
     }
 
-    return { beats, barLengths };
+    return {
+        beats,
+        barLengths,
+        endings:
+            endings.first != null ||
+            endings.final != null
+                ? endings
+                : undefined,
+    };
 }
 
 interface ParsedStroke {
@@ -147,6 +235,7 @@ interface ParsedStroke {
     grace?: Hand;
     accented?: boolean;
     rest?: boolean;
+    restDotted?: boolean;
 }
 
 /**
@@ -165,10 +254,20 @@ function parseStrokes(
         const c = text[i]!;
 
         if (c === "_") {
-            strokes.push({
-                hand: "R",
-                rest: true,
-            });
+            if (text[i + 1] === "_") {
+                strokes.push({
+                    hand: "R",
+                    rest: true,
+                    restDotted: true,
+                });
+
+                i += 1;
+            } else {
+                strokes.push({
+                    hand: "R",
+                    rest: true,
+                });
+            }
 
             continue;
         }
@@ -244,15 +343,106 @@ function parseHand(
  * ocupa 1 pulso; los golpes de un grupo rítmico (tresillo o roll)
  * ocupan 2/N de pulso, ya que un grupo de N golpes dura lo mismo que
  * dos golpes sueltos (p. ej. un tresillo LRL dura lo mismo que un LR).
+ * Un silencio con puntillo ("__") dura una subdivisión y media.
  */
 export function exerciseNoteDurations(
     exercise: Exercise,
 ): number[] {
-    return exercise.beats.map((beat) =>
-        beat.group == null
-            ? 1
-            : 2 / beat.groupStrokes!,
-    );
+    return exercise.beats.map((beat) => {
+        const base =
+            beat.group == null
+                ? 1
+                : 2 / beat.groupStrokes!;
+
+        return beat.restDotted
+            ? base * 1.5
+            : base;
+    });
+}
+
+/**
+ * Vista de un ejercicio para una pasada concreta. Cuando el ejercicio
+ * tiene finales alternativos, todas las pasadas salvo la última tocan
+ * los compases principales seguidos del primer final; la última pasada
+ * toca los compases principales seguidos del final definitivo.
+ */
+export function exercisePassView(
+    exercise: Exercise,
+    lastPass: boolean,
+): {
+    beats: ExerciseBeat[];
+    barLengths: number[];
+} {
+    const { first, final } =
+        exercise.endings ?? {};
+
+    if (first == null && final == null) {
+        return {
+            beats: exercise.beats,
+            barLengths: exercise.barLengths,
+        };
+    }
+
+    const firstBar = first ?? 0;
+    const finalBar =
+        final ??
+        exercise.barLengths.length;
+
+    let mainBeats = 0;
+
+    for (
+        let i = 0;
+        i < firstBar;
+        i++
+    ) {
+        mainBeats += exercise.barLengths[i]!;
+    }
+
+    let firstEndingBeats = 0;
+
+    for (
+        let i = firstBar;
+        i < finalBar;
+        i++
+    ) {
+        firstEndingBeats +=
+            exercise.barLengths[i]!;
+    }
+
+    if (lastPass) {
+        return {
+            beats: [
+                ...exercise.beats.slice(
+                    0,
+                    mainBeats,
+                ),
+                ...exercise.beats.slice(
+                    mainBeats +
+                        firstEndingBeats,
+                ),
+            ],
+            barLengths: [
+                ...exercise.barLengths.slice(
+                    0,
+                    firstBar,
+                ),
+                ...exercise.barLengths.slice(
+                    finalBar,
+                ),
+            ],
+        };
+    }
+
+    return {
+        beats: exercise.beats.slice(
+            0,
+            mainBeats + firstEndingBeats,
+        ),
+        barLengths: exercise.barLengths.slice(
+            0,
+            finalBar,
+        ),
+    };
 }
 
 /**

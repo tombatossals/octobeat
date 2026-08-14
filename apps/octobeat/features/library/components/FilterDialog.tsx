@@ -295,13 +295,18 @@ export function FilterDialog({
                                     )
                                 }
                                 options={Object.values(
-                                    books
-                                        .stickControl
-                                        .sets,
-                                ).map((set) => ({
-                                    value: set.id,
-                                    label: set.title,
-                                }))}
+                                    books,
+                                )
+                                    .flatMap(
+                                        (book) =>
+                                            Object.values(
+                                                book.sets,
+                                            ),
+                                    )
+                                    .map((set) => ({
+                                        value: set.id,
+                                        label: set.title,
+                                    }))}
                                 placeholder="All sections"
                                 countLabel={(count) =>
                                     count === 1

@@ -13,6 +13,18 @@ export interface ExerciseBeat {
     rest?: boolean;
 
     /**
+     * Silencio con puntillo ("__"): dura una subdivisión y media.
+     */
+    restDotted?: boolean;
+
+    /**
+     * Final alternativo al que pertenece este golpe: el primer final
+     * se toca en todas las repeticiones menos la última; el final
+     * definitivo solo en la última.
+     */
+    ending?: "1st" | "final";
+
+    /**
      * Mano del grace note / flam que precede a este golpe. Su presencia
      * indica que el golpe lleva adorno (p. ej. "gR", "lR").
      */
@@ -53,6 +65,19 @@ export interface Exercise {
      * rolls…) los compases pueden tener longitudes distintas.
      */
     barLengths: number[];
+
+    /**
+     * Finales alternativos ({1st: ...} / {final: ...}): índice de
+     * compás donde empieza cada final dentro de `barLengths`. Sin
+     * este campo el ejercicio se repite completo en cada pasada.
+     */
+    endings?: {
+        /** Índice de compás donde empieza el primer final. */
+        first?: number;
+
+        /** Índice de compás donde empieza el final definitivo. */
+        final?: number;
+    };
 }
 
 /**

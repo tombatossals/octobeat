@@ -6,6 +6,7 @@ import type { JSX } from "react";
 import {
     books,
     exerciseNoteDurations,
+    exercisePassView,
 } from "@octobeat/exercises";
 import { usePlayerStore } from "@octobeat/player";
 import { ExerciseStage } from "@octobeat/ui";
@@ -234,13 +235,24 @@ export function ExerciseOverlay(): JSX.Element | null {
                 .exerciseSets,
     );
 
-    const exercises = useMemo(() => {
-        const all = Object.values(
-            books.stickControl.sets,
-        ).flatMap((set) =>
+    const allSets = useMemo(
+        () =>
             Object.values(
-                set.exercises,
+                books,
+            ).flatMap((book) =>
+                Object.values(
+                    book.sets,
+                ),
             ),
+        [],
+    );
+
+    const exercises = useMemo(() => {
+        const all = allSets.flatMap(
+            (set) =>
+                Object.values(
+                    set.exercises,
+                ),
         );
 
         if (
@@ -250,9 +262,7 @@ export function ExerciseOverlay(): JSX.Element | null {
             return all;
         }
 
-        return Object.values(
-            books.stickControl.sets,
-        )
+        return allSets
             .filter((set) =>
                 exerciseSets.includes(
                     set.id,
@@ -263,24 +273,69 @@ export function ExerciseOverlay(): JSX.Element | null {
                     set.exercises,
                 ),
             );
-    }, [exerciseSets]);
+    }, [allSets, exerciseSets]);
 
     const factor =
         SPEED_FACTOR[speed];
 
     // La estructura del ejercicio (beats por línea y repeticiones) es
     // independiente de la velocidad: el factor solo acelera el reloj
-    // del beat en el tick de abajo, no cambia la rutina.
-    const lineTotals = useMemo(() => {
+    // del beat en el tick de abajo, no cambia la rutina. Cada pasada
+    // de una línea usa el primer final excepto la última, que usa el
+    // final definitivo cuando el ejercicio lo define.
+    const linePasses = useMemo(() => {
         return exercises.map(
-            (exercise) =>
-                exercise.beats.length *
-                repetitionsPerLine,
+            (exercise) => {
+                const passes: {
+                    beats: number;
+                    durations: number[];
+                }[] = [];
+
+                for (
+                    let pass = 0;
+                    pass <
+                    repetitionsPerLine;
+                    pass++
+                ) {
+                    const view =
+                        exercisePassView(
+                            exercise,
+                            pass ===
+                                repetitionsPerLine -
+                                    1,
+                        );
+
+                    passes.push({
+                        beats: view.beats.length,
+                        durations:
+                            exerciseNoteDurations(
+                                {
+                                    ...exercise,
+                                    beats: view.beats,
+                                },
+                            ),
+                    });
+                }
+
+                return passes;
+            },
         );
     }, [
         exercises,
         repetitionsPerLine,
     ]);
+
+    const lineTotals = useMemo(() => {
+        return linePasses.map(
+            (passes) =>
+                passes.reduce(
+                    (sum, pass) =>
+                        sum +
+                        pass.beats,
+                    0,
+                ),
+        );
+    }, [linePasses]);
 
     const totalBeats = useMemo(() => {
         return lineTotals.reduce(
@@ -293,7 +348,7 @@ export function ExerciseOverlay(): JSX.Element | null {
     // Estructura temporal del ciclo completo de ejercicios: la
     // duración en pulsos de cada golpe acumulada a lo largo de todas
     // las líneas y repeticiones. Se usa para mapear la posición
-    // musical al golpe activo respetando los tresillos.
+    // musical al golpe activo respetando los tresillos y los silencios.
     const exerciseCycle = useMemo(() => {
         const offsets: number[] = [
             0,
@@ -302,19 +357,9 @@ export function ExerciseOverlay(): JSX.Element | null {
         let runningBeats = 0;
         let totalNotes = 0;
 
-        for (const exercise of exercises) {
-            const durations =
-                exerciseNoteDurations(
-                    exercise,
-                );
-
-            for (
-                let repetition = 0;
-                repetition <
-                repetitionsPerLine;
-                repetition++
-            ) {
-                for (const duration of durations) {
+        for (const passes of linePasses) {
+            for (const pass of passes) {
+                for (const duration of pass.durations) {
                     runningBeats +=
                         duration;
 
@@ -322,11 +367,10 @@ export function ExerciseOverlay(): JSX.Element | null {
                         runningBeats,
                     );
                 }
-            }
 
-            totalNotes +=
-                durations.length *
-                repetitionsPerLine;
+                totalNotes +=
+                    pass.beats;
+            }
         }
 
         return {
@@ -334,10 +378,7 @@ export function ExerciseOverlay(): JSX.Element | null {
             totalNotes,
             totalBeats: runningBeats,
         };
-    }, [
-        exercises,
-        repetitionsPerLine,
-    ]);
+    }, [linePasses]);
 
     // Normaliza la resolución del beat grid de la canción: si el grid
     // está en corcheas/blancas en lugar de negras, la posición musical
@@ -351,6 +392,8 @@ export function ExerciseOverlay(): JSX.Element | null {
     let lineIndex = 0;
     let repetition =
         repetitionsPerLine;
+    let beatInLine = 0;
+    let withinPass = 0;
 
     if (exerciseBeat > 0) {
         let position =
@@ -367,19 +410,40 @@ export function ExerciseOverlay(): JSX.Element | null {
                 lineTotals[i]!
             ) {
                 lineIndex = i;
-
-                repetition =
-                    repetitionsPerLine -
-                    Math.floor(
-                        position /
-                            exercises[i]!
-                                .beats.length,
-                    );
+                beatInLine = position;
 
                 break;
             }
 
             position -= lineTotals[i]!;
+        }
+
+        // Dentro de la línea, localiza la pasada y el golpe exacto:
+        // las pasadas tienen distinta longitud según usen primer final
+        // o final definitivo.
+        let remaining = beatInLine;
+        const passes =
+            linePasses[lineIndex]!;
+
+        for (
+            let pass = 0;
+            pass < passes.length;
+            pass++
+        ) {
+            if (
+                remaining <
+                passes[pass]!.beats
+            ) {
+                withinPass = remaining;
+                repetition =
+                    repetitionsPerLine -
+                    pass;
+
+                break;
+            }
+
+            remaining -=
+                passes[pass]!.beats;
         }
     }
 
@@ -633,7 +697,9 @@ export function ExerciseOverlay(): JSX.Element | null {
                 <ExerciseStage
                     exercise={exercise}
                     preview={preview}
-                    currentBeat={exerciseBeat}
+                    currentBeat={
+                        withinPass + 1
+                    }
                     repetition={repetition}
                     previewRepetition={
                         repetitionsPerLine
