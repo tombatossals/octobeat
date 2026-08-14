@@ -53,6 +53,9 @@ export function loadFilters(): LibraryFilters {
             )
                 ? parsed.exerciseSets
                 : [],
+            favoritesOnly:
+                parsed.favoritesOnly ===
+                true,
         };
     } catch {
         return EMPTY_FILTERS;

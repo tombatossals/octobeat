@@ -16,6 +16,11 @@ import {
     saveFilters,
 } from "./filterStorage";
 
+import {
+    loadFavorites,
+    saveFavorites,
+} from "./favoritesStorage";
+
 /**
  * Fisher-Yates shuffle. Returns a new array.
  */
@@ -34,6 +39,34 @@ function shuffle<T>(items: readonly T[]): T[] {
     }
 
     return result;
+}
+
+/**
+ * Rebuilds the playback queue from the catalog using the given filters
+ * and favorites.
+ */
+function computeIds(
+    entries: readonly Metadata[],
+    filters: LibraryFilters,
+    favorites: readonly string[],
+): string[] {
+    const favoriteIds =
+        new Set(favorites);
+
+    return shuffle(
+        entries
+            .filter((entry) =>
+                matchesFilters(
+                    entry,
+                    filters,
+                    favoriteIds,
+                ),
+            )
+            .map(
+                (entry) =>
+                    entry.id,
+            ),
+    );
 }
 
 interface LibraryState {
@@ -64,6 +97,11 @@ interface LibraryState {
     filters: LibraryFilters;
 
     /**
+     * Dataset ids marked as favorites.
+     */
+    favorites: string[];
+
+    /**
      * Load the catalog and populate the available dataset ids.
      */
     initialize(): Promise<readonly string[]>;
@@ -74,6 +112,16 @@ interface LibraryState {
     setFilters(
         filters: LibraryFilters,
     ): void;
+
+    /**
+     * Toggle whether a dataset is a favorite.
+     */
+    toggleFavorite(id: string): void;
+
+    /**
+     * Returns whether a dataset is a favorite.
+     */
+    isFavorite(id: string): boolean;
 
     /**
      * Open a dataset by id.
@@ -108,6 +156,8 @@ export const useLibraryStore =
 
         filters: EMPTY_FILTERS,
 
+        favorites: [],
+
         async initialize() {
             const catalog =
                 await getLibrary().list();
@@ -115,23 +165,19 @@ export const useLibraryStore =
             const filters =
                 loadFilters();
 
-            const ids = shuffle(
-                catalog
-                    .filter((entry) =>
-                        matchesFilters(
-                            entry,
-                            filters,
-                        ),
-                    )
-                    .map(
-                        (entry) =>
-                            entry.id,
-                    ),
+            const favorites =
+                loadFavorites();
+
+            const ids = computeIds(
+                catalog,
+                filters,
+                favorites,
             );
 
             set({
                 entries: catalog,
                 filters,
+                favorites,
                 ids,
             });
 
@@ -141,22 +187,57 @@ export const useLibraryStore =
         setFilters(filters) {
             saveFilters(filters);
 
-            const ids = shuffle(
-                get()
-                    .entries.filter(
-                        (entry) =>
-                            matchesFilters(
-                                entry,
-                                filters,
-                            ),
-                    )
-                    .map(
-                        (entry) =>
-                            entry.id,
-                    ),
-            );
+            const { entries, favorites } =
+                get();
 
-            set({ filters, ids });
+            set({
+                filters,
+                ids: computeIds(
+                    entries,
+                    filters,
+                    favorites,
+                ),
+            });
+        },
+
+        toggleFavorite(id) {
+            const favorites =
+                get().favorites;
+
+            const next =
+                favorites.includes(id)
+                    ? favorites.filter(
+                          (favorite) =>
+                              favorite !==
+                              id,
+                      )
+                    : [...favorites, id];
+
+            saveFavorites(next);
+
+            const {
+                entries,
+                filters,
+            } = get();
+
+            set(
+                filters.favoritesOnly
+                    ? {
+                          favorites: next,
+                          ids: computeIds(
+                              entries,
+                              filters,
+                              next,
+                          ),
+                      }
+                    : { favorites: next },
+            );
+        },
+
+        isFavorite(id) {
+            return get().favorites.includes(
+                id,
+            );
         },
 
         async open(id: string) {

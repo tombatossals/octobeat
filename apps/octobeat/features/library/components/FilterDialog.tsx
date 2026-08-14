@@ -36,6 +36,8 @@ function toDraft(
         exerciseSets: [
             ...filters.exerciseSets,
         ],
+        favoritesOnly:
+            filters.favoritesOnly,
     };
 }
 
@@ -345,7 +347,34 @@ export function FilterDialog({
                         </fieldset>
                     </div>
 
-                    <div className="mt-8 flex justify-end gap-2">
+                        <fieldset className="lg:col-span-2">
+                            <legend className="mb-2 block text-sm font-semibold text-foreground">
+                                Favorites
+                            </legend>
+
+                            <Label className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition hover:bg-accent hover:text-accent-foreground">
+                                <input
+                                    type="checkbox"
+                                    checked={
+                                        draft.favoritesOnly
+                                    }
+                                    onChange={() =>
+                                        setDraft(
+                                            (current) => ({
+                                                ...current,
+                                                favoritesOnly:
+                                                    !current.favoritesOnly,
+                                            }),
+                                        )
+                                    }
+                                    className="size-4 accent-primary"
+                                />
+
+                                Solo favoritas
+                            </Label>
+                        </fieldset>
+
+                        <div className="mt-8 flex justify-end gap-2">
                         <Button
                             variant="ghost"
                             onClick={() => {

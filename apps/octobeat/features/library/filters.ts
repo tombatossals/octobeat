@@ -20,6 +20,11 @@ export interface LibraryFilters {
      * Selected exercise set ids to practice (e.g. "single-beat-combinations").
      */
     exerciseSets: string[];
+
+    /**
+     * Whether to restrict the queue to favorite songs.
+     */
+    favoritesOnly: boolean;
 }
 
 export const BPM_RANGES: ReadonlyArray<{
@@ -57,6 +62,7 @@ export const EMPTY_FILTERS: LibraryFilters = {
     genres: [],
     decades: [],
     exerciseSets: [],
+    favoritesOnly: false,
 };
 
 export function isEmptyFilters(
@@ -66,19 +72,29 @@ export function isEmptyFilters(
         filters.bpmRanges.length === 0 &&
         filters.genres.length === 0 &&
         filters.decades.length === 0 &&
-        filters.exerciseSets.length === 0
+        filters.exerciseSets.length === 0 &&
+        !filters.favoritesOnly
     );
 }
 
 /**
  * Returns whether an entry matches the given filters. Empty criteria
  * match everything; each non-empty criterion is an OR within itself and
- * AND across criteria.
+ * AND across criteria. `favoriteIds` is required to evaluate the
+ * favorites-only criterion.
  */
 export function matchesFilters(
     entry: Metadata,
     filters: LibraryFilters,
+    favoriteIds: ReadonlySet<string> = new Set(),
 ): boolean {
+    if (
+        filters.favoritesOnly &&
+        !favoriteIds.has(entry.id)
+    ) {
+        return false;
+    }
+
     if (filters.bpmRanges.length > 0) {
         const matchesBpm = filters.bpmRanges.some(
             (key) => {

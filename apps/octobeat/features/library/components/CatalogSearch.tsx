@@ -8,7 +8,7 @@ import {
 } from "react";
 import type { JSX } from "react";
 import { Dialog } from "@base-ui/react/dialog";
-import { Search } from "lucide-react";
+import { Search, Star } from "lucide-react";
 
 import { cn } from "@octobeat/ui";
 
@@ -50,6 +50,16 @@ export function CatalogSearch(): JSX.Element {
     const filters = useLibraryStore(
         (state) => state.filters,
     );
+
+    const favorites = useLibraryStore(
+        (state) => state.favorites,
+    );
+
+    const toggleFavorite =
+        useLibraryStore(
+            (state) =>
+                state.toggleFavorite,
+        );
 
     const revealed = useUiStore(
         (state) => state.revealed,
@@ -94,17 +104,19 @@ export function CatalogSearch(): JSX.Element {
         setOpen(next);
     }
 
-    const filteredByFilters = useMemo(
-        () =>
-            entries.filter(
-                (entry) =>
-                    matchesFilters(
-                        entry,
-                        filters,
-                    ),
-            ),
-        [entries, filters],
-    );
+    const filteredByFilters = useMemo(() => {
+        const favoriteIds =
+            new Set(favorites);
+
+        return entries.filter(
+            (entry) =>
+                matchesFilters(
+                    entry,
+                    filters,
+                    favoriteIds,
+                ),
+        );
+    }, [entries, filters, favorites]);
 
     const results = useMemo(() => {
         const needle =
@@ -270,46 +282,84 @@ export function CatalogSearch(): JSX.Element {
                                             selected
                                         }
                                     >
-                                        <button
-                                            type="button"
+                                        <div
                                             onMouseEnter={() =>
                                                 setSelected(
                                                     index,
                                                 )
                                             }
-                                            onClick={() =>
-                                                void handleSelect(
-                                                    entry,
-                                                )
-                                            }
                                             className={cn(
-                                                "flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors",
+                                                "flex w-full cursor-pointer items-center gap-1 rounded-lg pr-1.5 transition-colors",
                                                 index ===
                                                     selected
-                                                    ? "bg-accent text-accent-foreground"
-                                                    : "text-foreground hover:bg-accent/50",
+                                                    ? "bg-accent"
+                                                    : "hover:bg-accent/50",
                                             )}
                                         >
-                                            <div className="min-w-0">
-                                                <div className="truncate text-sm font-medium">
-                                                    {
-                                                        entry.title
-                                                    }
-                                                </div>
-
-                                                <div className="truncate text-xs text-muted-foreground">
-                                                    {
-                                                        entry.artist
-                                                    }
-                                                </div>
-                                            </div>
-
-                                            <span className="ml-auto shrink-0 font-mono text-sm tabular-nums text-muted-foreground">
-                                                {
-                                                    entry.bpm
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    void handleSelect(
+                                                        entry,
+                                                    )
                                                 }
-                                            </span>
-                                        </button>
+                                                className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2 text-left text-foreground outline-none focus:outline-none"
+                                            >
+                                                <div className="min-w-0">
+                                                    <div className="truncate text-sm font-medium">
+                                                        {
+                                                            entry.title
+                                                        }
+                                                    </div>
+
+                                                    <div className="truncate text-xs text-muted-foreground">
+                                                        {
+                                                            entry.artist
+                                                        }
+                                                    </div>
+                                                </div>
+
+                                                <span className="ml-auto shrink-0 font-mono text-sm tabular-nums text-muted-foreground">
+                                                    {
+                                                        entry.bpm
+                                                    }
+                                                </span>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                aria-label={
+                                                    favorites.includes(
+                                                        entry.id,
+                                                    )
+                                                        ? "Quitar de favoritos"
+                                                        : "Añadir a favoritos"
+                                                }
+                                                aria-pressed={favorites.includes(
+                                                    entry.id,
+                                                )}
+                                                onClick={(
+                                                    event,
+                                                ) => {
+                                                    event.stopPropagation();
+
+                                                    toggleFavorite(
+                                                        entry.id,
+                                                    );
+                                                }}
+                                                className="flex shrink-0 cursor-pointer items-center justify-center rounded-md p-1.5 text-muted-foreground transition-colors outline-none focus:outline-none hover:text-foreground"
+                                            >
+                                                <Star
+                                                    className={cn(
+                                                        "h-4 w-4",
+                                                        favorites.includes(
+                                                            entry.id,
+                                                        ) &&
+                                                            "fill-amber-400 text-amber-400",
+                                                    )}
+                                                />
+                                            </button>
+                                        </div>
                                     </li>
                                 ),
                             )}
