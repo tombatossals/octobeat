@@ -104,6 +104,16 @@ export function FilterDialog({
         [draft, filters],
     );
 
+    function handleOpenChange(
+        next: boolean,
+    ) {
+        if (next) {
+            setDraft(toDraft(filters));
+        }
+
+        onOpenChange(next);
+    }
+
     function handleSave() {
         setFilters(draft);
 
@@ -113,7 +123,7 @@ export function FilterDialog({
     return (
         <Dialog.Root
             open={open}
-            onOpenChange={onOpenChange}
+            onOpenChange={handleOpenChange}
         >
             <Dialog.Portal>
                 <Dialog.Backdrop className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm" />
