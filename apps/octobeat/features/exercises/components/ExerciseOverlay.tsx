@@ -411,6 +411,12 @@ export function ExerciseOverlay(): JSX.Element | null {
         let anchorPerf =
             performance.now();
 
+        // Margen máximo (segundos) que el reloj sintetizado puede
+        // adelantarse al último valor reportado por el media. Un poco
+        // más que un intervalo de actualización (~0.25s) para no
+        // cortar la interpolación suave entre lecturas.
+        const mediaMaxLead = 0.4;
+
         // Al cambiar de velocidad el rawBeat salta (mayor o menor según
         // el factor) y el guard monótono abajo lo bloquearía. Recalibra
         // el bias para que el contador continúe desde la última posición
@@ -496,12 +502,25 @@ export function ExerciseOverlay(): JSX.Element | null {
                 anchorPerf = now;
             }
 
+            // El reloj se extrapola a ritmo real entre lecturas del
+            // media, pero nunca más de mediaMaxLead por delante del
+            // último valor reportado. Sin este techo, un media que se
+            // queda congelado (búfer atascado, fluctuación del
+            // streaming) haría avanzar el reloj a ciegas y el guard
+            // monótono de abajo dejaría el puntero del ejercicio
+            // adelantado — acumulándose con cada micro-parón y
+            // haciéndose visible al atravesar las semicorcheas de los
+            // short rolls.
             const currentTime =
                 adapter.isPlaying()
-                    ? anchorMedia +
-                      (now -
-                          anchorPerf) /
-                          1000
+                    ? Math.min(
+                          anchorMedia +
+                              (now -
+                                  anchorPerf) /
+                                  1000,
+                          media +
+                              mediaMaxLead,
+                      )
                     : media;
 
             const beat = beatAtTime(
