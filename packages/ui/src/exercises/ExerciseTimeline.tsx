@@ -32,6 +32,117 @@ interface BeatGroup {
     startIndex: number;
 }
 
+interface MeasureData {
+    groups: BeatGroup[];
+    markers: { label: number; pos: number }[][];
+}
+
+/**
+ * Anchura en pulsos de un grupo: el espacio que ocupa dentro de la barra.
+ * Un golpe suelto ocupa 1 pulso; un grupo rítmico de N golpes, 2 pulsos
+ * (salvo "[N/M:...]" que ocupa M unidades de media pulso, es decir M/2, o
+ * "[F:...]" que ocupa 2/F). Coincide con `exerciseNoteDurations`, así que
+ * los números de beat se alinean con la posición real de cada golpe.
+ */
+function groupGrowOf(
+    group: BeatGroup,
+): number {
+    const strokes =
+        group.beats[0]?.groupStrokes;
+
+    if (strokes == null) {
+        return 1;
+    }
+
+    const groupUnits =
+        group.beats[0]?.groupUnits;
+
+    const density =
+        group.beats[0]?.density;
+
+    if (groupUnits != null) {
+        return groupUnits / 2;
+    }
+
+    if (density != null) {
+        return 2 / density;
+    }
+
+    return 2;
+}
+
+/**
+ * Marcadores de beat de cada grupo de un compás. Por cada frontera de
+ * pulso dentro del grupo se calcula la posición fraccional (dentro del
+ * grupo) a la que anclar el número: centrado bajo el golpe que arranca
+ * el pulso cuando existe, o en la propia frontera cuando el pulso cae a
+ * mitad de un grupo continuo (p. ej. un roll de 2 pulsos).
+ */
+function groupBeatMarkers(
+    groups: BeatGroup[],
+): { label: number; pos: number }[][] {
+    const all: { label: number; pos: number }[][] = [];
+
+    let startBeat = 0;
+
+    for (const group of groups) {
+        const grow = groupGrowOf(group);
+        const strokes = group.beats.length;
+        const strokeGrow = grow / strokes;
+        const markers: { label: number; pos: number }[] = [];
+
+        const first = Math.ceil(
+            startBeat - 1e-9,
+        );
+        const last = Math.floor(
+            startBeat + grow - 1e-9,
+        );
+
+        for (
+            let beat = first;
+            beat <= last;
+            beat++
+        ) {
+            const boundary =
+                beat - startBeat;
+            const strokeIndex =
+                Math.round(
+                    boundary /
+                        strokeGrow,
+                );
+
+            let pos =
+                boundary / grow;
+
+            if (
+                strokeIndex >= 0 &&
+                strokeIndex < strokes &&
+                Math.abs(
+                    strokeIndex *
+                        strokeGrow -
+                        boundary,
+                ) < 1e-6
+            ) {
+                pos =
+                    (strokeIndex *
+                        strokeGrow +
+                        strokeGrow / 2) /
+                    grow;
+            }
+
+            markers.push({
+                label: beat + 1,
+                pos,
+            });
+        }
+
+        all.push(markers);
+        startBeat += grow;
+    }
+
+    return all;
+}
+
 export function ExerciseTimeline({
     exercise,
     currentBeat,
@@ -72,7 +183,7 @@ export function ExerciseTimeline({
             view.barLengths[i]!;
     }
 
-    const measures: BeatGroup[][] = [];
+    const measures: MeasureData[] = [];
     let offset = 0;
 
     for (const barLength of view.barLengths) {
@@ -118,7 +229,12 @@ export function ExerciseTimeline({
             });
         }
 
-        measures.push(groups);
+        measures.push({
+            groups,
+            markers: groupBeatMarkers(
+                groups,
+            ),
+        });
     }
 
     return (
@@ -130,7 +246,10 @@ export function ExerciseTimeline({
         >
             <div className="flex items-center">
                 {measures.map(
-                    (groups, measureIndex) => (
+                    (
+                        { groups, markers },
+                        measureIndex,
+                    ) => (
                         <Fragment key={measureIndex}>
                             {measureIndex > 0 && (
                                 <div className="mx-2 flex h-8 items-center">
@@ -140,7 +259,7 @@ export function ExerciseTimeline({
 
                             <div
                                 className={cn(
-                                    "flex flex-1 items-center transition-opacity duration-500",
+                                    "flex flex-1 flex-col transition-opacity duration-500",
                                     lastPass &&
                                         measureIndex <
                                             currentMeasure
@@ -148,19 +267,27 @@ export function ExerciseTimeline({
                                         : "opacity-100",
                                 )}
                             >
-                                {groups.map(
-                                    (
-                                        group,
-                                        groupIndex,
-                                    ) => (
-                                        <GroupRenderer
-                                            key={groupIndex}
-                                            group={group}
-                                            preview={preview}
-                                            activeBeat={activeBeat}
-                                        />
-                                    ),
-                                )}
+                                <div className="flex items-center">
+                                    {groups.map(
+                                        (
+                                            group,
+                                            groupIndex,
+                                        ) => (
+                                            <GroupRenderer
+                                                key={groupIndex}
+                                                group={group}
+                                                preview={preview}
+                                                activeBeat={activeBeat}
+                                            />
+                                        ),
+                                    )}
+                                </div>
+
+                                <BeatNumbersRow
+                                    groups={groups}
+                                    markers={markers}
+                                    preview={preview}
+                                />
                             </div>
                         </Fragment>
                     ),
@@ -207,17 +334,10 @@ function GroupRenderer({
     // suelto, de modo que la línea siempre encaja en el contenedor. Un
     // grupo "[F:...]" ocupa 2/F de esa anchura y un grupo "[N/M:...]"
     // ocupa M unidades de media pulso (anchura M/2).
-    const groupGrow =
-        strokes != null
-            ? groupUnits != null
-                ? groupUnits / 2
-                : density != null
-                  ? 2 / density
-                  : 2
-            : 1;
+    const grow = groupGrowOf(group);
     const strokeGrow =
         strokes != null
-            ? groupGrow / strokes
+            ? grow / strokes
             : 1;
 
     const beats = group.beats.map(
@@ -250,7 +370,7 @@ function GroupRenderer({
                     "mx-1",
             )}
             style={{
-                flexGrow: groupGrow,
+                flexGrow: grow,
                 flexBasis: 0,
             }}
         >
@@ -272,6 +392,76 @@ function GroupRenderer({
                 )}
 
             {beats}
+        </div>
+    );
+}
+
+interface BeatNumbersRowProps {
+    groups: BeatGroup[];
+    markers: { label: number; pos: number }[][];
+    preview: boolean;
+}
+
+/**
+ * Fila de números de beat (1, 2, 3, 4) bajo cada compás. Replica la
+ * estructura flex de los golpes (mismos flexGrow y márgenes) para que
+ * cada número quede centrado exactamente bajo el golpe que arranca el
+ * pulso, anclando visualmente el beat — clave en ejercicios de tresillo.
+ */
+function BeatNumbersRow({
+    groups,
+    markers,
+    preview,
+}: BeatNumbersRowProps): JSX.Element {
+    return (
+        <div
+            className={cn(
+                "flex items-center",
+                preview ? "h-3" : "h-4",
+            )}
+        >
+            {groups.map((group, groupIndex) => {
+                const strokes =
+                    group.beats[0]
+                        ?.groupStrokes;
+
+                const grow =
+                    groupGrowOf(group);
+
+                return (
+                    <div
+                        key={groupIndex}
+                        className={cn(
+                            "relative flex min-w-0 items-center",
+                            strokes != null &&
+                                "mx-1",
+                        )}
+                        style={{
+                            flexGrow: grow,
+                            flexBasis: 0,
+                        }}
+                    >
+                        {markers[
+                            groupIndex
+                        ]!.map((marker) => (
+                            <span
+                                key={marker.label}
+                                className={cn(
+                                    "absolute -translate-x-1/2 font-mono font-bold leading-none text-neutral-400",
+                                    preview
+                                        ? "text-[9px]"
+                                        : "text-[10px]",
+                                )}
+                                style={{
+                                    left: `${marker.pos * 100}%`,
+                                }}
+                            >
+                                {marker.label}
+                            </span>
+                        ))}
+                    </div>
+                );
+            })}
         </div>
     );
 }
