@@ -188,6 +188,15 @@ function GroupRenderer({
     const articulation =
         group.beats[0]?.articulation;
 
+    // Un grupo de 4 golpes sin densidad, unidades ni articulación es la
+    // subdivisión por defecto: el marcador "--- N ---" es redundante y
+    // no debe mostrarse.
+    const isDefaultGroup =
+        strokes === 4 &&
+        groupUnits == null &&
+        density == null &&
+        articulation == null;
+
     // Un grupo rítmico (tresillo o roll) de N golpes dura lo mismo que
     // 2 golpes sueltos: cada golpe ocupa 2/N de la anchura de un golpe
     // suelto, de modo que la línea siempre encaja en el contenedor. Un
@@ -239,7 +248,7 @@ function GroupRenderer({
                 flexBasis: 0,
             }}
         >
-            {strokes != null && (
+            {strokes != null && !isDefaultGroup && (
                 <div
                     className="pointer-events-none absolute left-0 right-0 flex flex-col items-center"
                     style={{ bottom: "100%" }}

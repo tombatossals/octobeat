@@ -14,7 +14,7 @@ import { line12 } from "./line12";
 import type { ExerciseSet } from "../../../types";
 
 export const reviewOfShortRollCombinations: ExerciseSet = {
-    id: "06-review-of-short-roll-combinations",
+    id: "07-review-of-short-roll-combinations",
 
     title: "Review of Short Roll Combinations",
 

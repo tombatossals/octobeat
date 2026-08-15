@@ -6,10 +6,8 @@ export const line11 = createExercise({
     title: "Line 11",
 
     notation: `
-        [R!R!RR] [R!R!RR] |
-        [R!R!RR] [R!R!RR] |
-        [R!R!RR] [R!R!RR] |
-        [R!R!RR] [R!R!RR] |
-        {1st: [R!R!RR] [R!R!RR]} {final: [R!R!RR] R__} |
+        [R!R!R!R] [R!R!R!R] [R!R!R!R] [R!R!R!R] [R!R!R!R] [R!R!R!R]
+        {1st: [R!R!R!R] [R!R!R!R]}
+        {final: [R!R!R!R] [8:R!] [8:_]} |
     `,
 });
