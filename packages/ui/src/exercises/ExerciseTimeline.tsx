@@ -516,16 +516,6 @@ function BeatCell({
                     </div>
                 )}
 
-            {active && (
-                <>
-                    <div className="absolute -top-1 text-[10px] leading-none text-blue-600">
-                        ▼
-                    </div>
-
-                    <div className="absolute inset-0 rounded-md bg-blue-100" />
-                </>
-            )}
-
             <div
                 className={cn(
                     "relative z-10 flex items-baseline justify-center font-mono font-black transition-all duration-150",
@@ -535,7 +525,7 @@ function BeatCell({
                         !isRest &&
                         "text-red-600",
                     active
-                        ? "scale-110 text-blue-700"
+                        ? "scale-125 text-blue-500"
                         : "text-black",
                 )}
                 style={{
@@ -544,6 +534,9 @@ function BeatCell({
                         : "clamp(1.4rem,2vw,2rem)",
                     textShadow:
                         "1px 1px 0 #e5e5e5, -1px -1px 0 #e5e5e5, 1px -1px 0 #e5e5e5, -1px 1px 0 #e5e5e5, 1px 0 0 #e5e5e5, -1px 0 0 #e5e5e5, 0 1px 0 #e5e5e5, 0 -1px 0 #e5e5e5, 0 2px 4px rgb(0 0 0 / 25%)",
+                    ...(active
+                        ? { WebkitTextStroke: "2px #1e40af" }
+                        : {}),
                 }}
             >
                 {graceMark != null && (

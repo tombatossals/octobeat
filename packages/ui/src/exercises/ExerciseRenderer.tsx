@@ -125,7 +125,7 @@ export function ExerciseRenderer({
                 )}
             >
                 {!preview && (
-                    <div className="flex shrink-0 translate-y-2 items-center">
+                    <div className="flex shrink-0 items-center">
                         <span className="font-mono text-sm font-black text-neutral-700">
                             {exercise.title}
                         </span>

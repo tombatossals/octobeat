@@ -10,6 +10,7 @@ import type {
 } from "@octobeat/exercises";
 import {
     books,
+    DIFFICULTY_ORDER,
     exerciseNoteDurations,
     exercisePassView,
 } from "@octobeat/exercises";
@@ -264,7 +265,18 @@ export function ExerciseOverlay(): JSX.Element | null {
         if (
             exerciseSets.length === 0
         ) {
-            return all;
+            // Sin filtro de ejercicios: se ordenan los libros por
+            // dificultad (menor a mayor) para que el ciclo arranque
+            // con la rutina más fácil y no con la más difícil.
+            return [...all].sort(
+                (a, b) =>
+                    DIFFICULTY_ORDER.indexOf(
+                        a.book.difficulty,
+                    ) -
+                    DIFFICULTY_ORDER.indexOf(
+                        b.book.difficulty,
+                    ),
+            );
         }
 
         // Los ids persistidos en localStorage pueden pertenecer a un
