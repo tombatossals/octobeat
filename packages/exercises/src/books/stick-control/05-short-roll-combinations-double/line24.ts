@@ -6,7 +6,6 @@ export const line24 = createExercise({
     title: "Line 24",
 
     notation: `
-        RRRR [LLRR] [LLR] -
-        LLLL [RRLL] [RRL]
+        [RRRR] [openroll:7/4:LLRRLLR] | [LLLL] [openroll:7/4:RRLLRRL] |
     `,
 });

@@ -7,6 +7,8 @@ export const accentsAndRebounds: ExerciseBook = {
 
     title: "Accents and Rebounds",
 
+    difficulty: "medium",
+
     sets: {
         accentedEighths,
     },

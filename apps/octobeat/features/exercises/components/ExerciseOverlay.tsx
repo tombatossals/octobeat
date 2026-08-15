@@ -262,17 +262,28 @@ export function ExerciseOverlay(): JSX.Element | null {
             return all;
         }
 
-        return allSets
-            .filter((set) =>
+        // Los ids persistidos en localStorage pueden pertenecer a un
+        // catálogo anterior (p. ej. "single-beat-combinations" antes de
+        // "01-single-beat-combinations") y no coincidir con ningún set
+        // actual. Si ninguna selección coincide, se usa el catálogo
+        // completo en lugar de dejar el overlay sin ejercicios.
+        const selected = allSets.filter(
+            (set) =>
                 exerciseSets.includes(
                     set.id,
                 ),
-            )
-            .flatMap((set) =>
+        );
+
+        if (selected.length === 0) {
+            return all;
+        }
+
+        return selected.flatMap(
+            (set) =>
                 Object.values(
                     set.exercises,
                 ),
-            );
+        );
     }, [allSets, exerciseSets]);
 
     const factor =
@@ -687,7 +698,7 @@ export function ExerciseOverlay(): JSX.Element | null {
 
     const songmap = dataset?.songmap;
 
-    if (!songmap) {
+    if (!songmap || exercises.length === 0) {
         return null;
     }
 

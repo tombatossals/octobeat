@@ -48,10 +48,16 @@ interface ParsedNotation {
 /**
  * Cada token entre corchetes (p. ej. "[RLRL]", "[gRRLL]") es un grupo
  * rítmico que dura lo mismo que dos golpes sueltos: cada golpe ocupa
- * 2/N de pulso, con N el número de golpes del grupo. Un token
- * "(3:RLR)" es un tresillo explícito con la misma regla de duración;
- * "(N/M:...)" indica además el número M de unidades temporales que
- * ocupa el grupo (cada unidad equivale a media pulso).
+ * 2/N de pulso, con N el número de golpes del grupo. Un prefijo
+ * "[F:...]" comprime el grupo por un factor temporal F (p. ej.
+ * "[2:RLRL]" dura la mitad que "[RLRL]"). Un prefijo "[N/M:...]"
+ * distribuye N golpes sobre M unidades temporales (cada unidad
+ * equivale a media pulso), p. ej. "[3/2:RLR]" es un tresillo que ocupa
+ * el espacio de dos golpes sueltos. Una articulación que afecta a todo
+ * el grupo se antepone como "[art:N/M:...]" o "[art:...]" (p. ej.
+ * "[openroll:9/4:RRLLRRLLR]"): no altera la duración y se conserva en
+ * cada golpe del grupo. Los "(N/M:...)" con paréntesis son el
+ * equivalente heredado de la sintaxis previa al manifiesto v6.
  * El resto de tokens son golpes sueltos, uno por letra. Cada nota
  * admite la sintaxis [grace][mano][acento] del manifiesto: "g"/"l"/"r"
  * en minúscula antecede a la mano (mayúscula), "!" marca el acento y
@@ -89,7 +95,7 @@ function parseNotation(
 
         for (const token of tokens) {
             const bracketGroup = token.match(
-                /^\[([^\]]+)\]$/,
+                /^\[(?:([a-z]+):)?(?:(\d+)(?:\/(\d+))?:)?([^\]]+)\]$/,
             );
 
             const tupletGroup = token.match(
@@ -99,8 +105,30 @@ function parseNotation(
             if (bracketGroup) {
                 const strokes =
                     parseStrokes(
-                        bracketGroup[1]!,
+                        bracketGroup[4]!,
                     );
+
+                const articulation =
+                    bracketGroup[1] !=
+                    null
+                        ? bracketGroup[1]!
+                        : null;
+
+                const prefix =
+                    bracketGroup[2] !=
+                    null
+                        ? Number(
+                              bracketGroup[2],
+                          )
+                        : null;
+
+                const units =
+                    bracketGroup[3] !=
+                    null
+                        ? Number(
+                              bracketGroup[3],
+                          )
+                        : null;
 
                 groupId += 1;
 
@@ -117,6 +145,17 @@ function parseNotation(
                         group: groupId,
                         groupStrokes:
                             strokes.length,
+                        ...(articulation !=
+                        null
+                            ? {
+                                  articulation,
+                              }
+                            : {}),
+                        ...(units != null
+                            ? { groupUnits: units }
+                            : prefix != null
+                              ? { density: prefix }
+                              : {}),
                     });
                 }
             } else if (tupletGroup) {
@@ -355,9 +394,10 @@ function parseHand(
  * ocupa 1 pulso; los golpes de un grupo rítmico (tresillo o roll)
  * ocupan 2/N de pulso, ya que un grupo de N golpes dura lo mismo que
  * dos golpes sueltos (p. ej. un tresillo LRL dura lo mismo que un LR).
- * Un grupo "(N/M:...)" se distribuye sobre M unidades equivalentes de
- * media pulso: cada golpe ocupa M/(2N) de pulso. Un silencio con
- * puntillo ("__") dura una subdivisión y media.
+ * Un grupo "[F:...]" comprimido por un factor F dura 2/F de pulso por
+ * grupo. Un grupo "[N/M:...]" se distribuye sobre M unidades
+ * equivalentes de media pulso: cada golpe ocupa M/(2N) de pulso. Un
+ * silencio con puntillo ("__") dura una subdivisión y media.
  */
 export function exerciseNoteDurations(
     exercise: Exercise,
@@ -369,7 +409,11 @@ export function exerciseNoteDurations(
                 : beat.groupUnits != null
                   ? beat.groupUnits /
                     (2 * beat.groupStrokes!)
-                  : 2 / beat.groupStrokes!;
+                  : beat.density != null
+                    ? 2 /
+                      (beat.groupStrokes! *
+                          beat.density)
+                    : 2 / beat.groupStrokes!;
 
         return beat.restDotted
             ? base * 1.5

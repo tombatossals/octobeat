@@ -1,5 +1,28 @@
 export type Hand = "R" | "L";
 
+/**
+ * Nivel de dificultad de un libro de ejercicios.
+ */
+export type Difficulty = "easy" | "medium" | "hard";
+
+/**
+ * Orden de dificultad de menor a mayor, usado para ordenar libros.
+ */
+export const DIFFICULTY_ORDER: readonly Difficulty[] = [
+    "easy",
+    "medium",
+    "hard",
+];
+
+/**
+ * Etiqueta de visualización para cada nivel de dificultad.
+ */
+export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
+    easy: "Easy",
+    medium: "Medium",
+    hard: "Hard",
+};
+
 export interface ExerciseBeat {
     /**
      * Mano del golpe. Para silencios no es significativa (se usa "R"
@@ -50,11 +73,28 @@ export interface ExerciseBeat {
 
     /**
      * Número de unidades temporales equivalentes que ocupa el grupo
-     * (la `M` de `(N/M:...)`, p. ej. 2 en "(3/2:RLR)"). Cuando está
-     * presente, el grupo de `groupStrokes` golpes se distribuye sobre
-     * esas unidades; sin él, el grupo ocupa dos golpes sueltos.
+     * (la `M` de `(N/M:...)` o `[N/M:...]`, p. ej. 2 en "[3/2:RLR]").
+     * Cuando está presente, el grupo de `groupStrokes` golpes se
+     * distribuye sobre esas unidades; sin él, el grupo ocupa dos golpes
+     * sueltos.
      */
     groupUnits?: number;
+
+    /**
+     * Factor de compresión temporal del grupo (la `N` de "[N:...]",
+     * p. ej. 2 en "[2:RLRL]"). El grupo ocupa la mitad, un tercio…
+     * del tiempo que ocuparía sin prefijo. Cuando está presente, no
+     * hay `groupUnits`.
+     */
+    density?: number;
+
+    /**
+     * Articulación que afecta a todo el grupo (la `art` de
+     * "[art:N/M:...]" o "[art:...]", p. ej. "openroll" en
+     * "[openroll:9/4:RRLLRRLLR]"). No altera la duración del grupo y
+     * se conserva en cada golpe que lo compone.
+     */
+    articulation?: string;
 }
 
 export interface Exercise {
@@ -104,6 +144,11 @@ export interface ExerciseBook {
     id: string;
 
     title: string;
+
+    /**
+     * Nivel de dificultad del libro (p. ej. "easy", "medium").
+     */
+    difficulty: Difficulty;
 
     sets: Record<string, ExerciseSet>;
 }

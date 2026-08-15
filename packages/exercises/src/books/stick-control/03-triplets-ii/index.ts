@@ -5,7 +5,7 @@ import { line04 } from "./line04";
 import { line05 } from "./line05";
 import { line06 } from "./line06";
 import { line07 } from "./line07";
-import { line7b } from "./line7b";
+import { line07b } from "./line07b";
 import { line08 } from "./line08";
 import { line09 } from "./line09";
 
@@ -24,7 +24,7 @@ export const tripletsIi: ExerciseSet = {
         line05,
         line06,
         line07,
-        line7b,
+        line07b,
         line08,
         line09,
     },

@@ -12,6 +12,7 @@ export interface MediaPlayerEventMap {
     ready: EmptyEvent;
     play: EmptyEvent;
     pause: EmptyEvent;
+    ended: EmptyEvent;
     timeupdate: PlaybackPositionEvent;
     seek: PlaybackPositionEvent;
 }
@@ -30,6 +31,10 @@ export interface MediaPlayer {
      * Seek to an absolute position (seconds).
      */
     seek(time: number): void;
+    /**
+     * Set the volume level (0..1).
+     */
+    setVolume(volume: number): void;
     /**
      * Set the waveform zoom level.
      */

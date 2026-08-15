@@ -5,11 +5,15 @@ interface PlayerStore {
      */
     player: MediaPlayer | null;
     /**
+     * Whether playback has been started by the user.
+     */
+    started: boolean;
+    /**
      * Playback state.
      */
     playing: boolean;
     /**
-     * Current playback position (seconds).
+     * Current playback position (seconds) — always **song time**.
      */
     currentTime: number;
     /**
@@ -17,9 +21,21 @@ interface PlayerStore {
      */
     duration: number;
     /**
+     * Volume level (0..1).
+     */
+    volume: number;
+    /**
      * Register the active player.
      */
     setPlayer(player: MediaPlayer | null): void;
+    /**
+     * Update the volume level.
+     */
+    setVolume(volume: number): void;
+    /**
+     * Update whether playback has started.
+     */
+    setStarted(started: boolean): void;
     /**
      * Update playback state.
      */

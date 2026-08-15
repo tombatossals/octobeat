@@ -12,6 +12,8 @@ export const stickControl: ExerciseBook = {
 
     title: "Stick Control",
 
+    difficulty: "easy",
+
     sets: {
         singleBeatCombinations,
         triplets,

@@ -12,7 +12,10 @@ export declare function createExercise({ id, title, notation, beatsPerBar, beatU
  * ocupa 1 pulso; los golpes de un grupo rítmico (tresillo o roll)
  * ocupan 2/N de pulso, ya que un grupo de N golpes dura lo mismo que
  * dos golpes sueltos (p. ej. un tresillo LRL dura lo mismo que un LR).
- * Un silencio con puntillo ("__") dura una subdivisión y media.
+ * Un grupo "[F:...]" comprimido por un factor F dura 2/F de pulso por
+ * grupo. Un grupo "[N/M:...]" se distribuye sobre M unidades
+ * equivalentes de media pulso: cada golpe ocupa M/(2N) de pulso. Un
+ * silencio con puntillo ("__") dura una subdivisión y media.
  */
 export declare function exerciseNoteDurations(exercise: Exercise): number[];
 /**

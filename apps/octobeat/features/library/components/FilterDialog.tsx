@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Dialog } from "@base-ui/react/dialog";
 import { X } from "lucide-react";
 
-import { books } from "@octobeat/exercises";
+import { DIFFICULTY_ORDER, books } from "@octobeat/exercises";
 import {
     Button,
     cn,
@@ -307,16 +307,28 @@ function FilterDialogContent({
                                         }),
                                     )
                                 }
-                                options={Object.values(
-                                    books,
-                                ).flatMap((book) =>
-                                    Object.values(
-                                        book.sets,
-                                    ).map((set) => ({
-                                        value: set.id,
-                                        label: `${book.title} · ${set.title}`,
-                                    })),
-                                )}
+                                options={[
+                                    ...Object.values(
+                                        books,
+                                    ),
+                                ]
+                                    .sort(
+                                        (a, b) =>
+                                            DIFFICULTY_ORDER.indexOf(
+                                                a.difficulty,
+                                            ) -
+                                            DIFFICULTY_ORDER.indexOf(
+                                                b.difficulty,
+                                            ),
+                                    )
+                                    .flatMap((book) =>
+                                        Object.values(
+                                            book.sets,
+                                        ).map((set) => ({
+                                            value: set.id,
+                                            label: `${book.title} · ${set.title}`,
+                                        })),
+                                    )}
                                 placeholder="All sections"
                                 countLabel={(count) =>
                                     count === 1
