@@ -5,11 +5,15 @@ import wave
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 import octobeat.pipeline.builder as builder_module
 from octobeat.models.recording import Recording
 from octobeat.models.songmap import Source
-from octobeat.pipeline import build_dataset
+from octobeat.pipeline import (
+    DatasetExistsError,
+    build_dataset,
+)
 from octobeat.providers.deezer import DeezerMetadata
 
 
@@ -128,6 +132,89 @@ def test_build_dataset_skips_catalog_when_disabled(
     )
 
     assert not (output / "catalog.json").exists()
+
+
+def test_build_dataset_refuses_to_overwrite_existing(
+    tmp_path,
+) -> None:
+    source = _make_click_wav(
+        tmp_path / "mxpx.wav",
+    )
+
+    output = tmp_path / "datasets"
+
+    first = build_dataset(
+        str(source),
+        output=output,
+        include_cover=False,
+    )
+
+    dataset_dir = (
+        output
+        / first.dataset_id
+    )
+
+    songmap_path = (
+        dataset_dir / "songmap.json"
+    )
+
+    before = songmap_path.read_text(
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        DatasetExistsError,
+    ):
+        build_dataset(
+            str(source),
+            output=output,
+            include_cover=False,
+        )
+
+    # Nothing was overwritten.
+    assert songmap_path.read_text(
+        encoding="utf-8",
+    ) == before
+    assert (dataset_dir / "recording.mp3").exists()
+
+
+def test_build_dataset_overwrite_replaces_existing(
+    tmp_path,
+) -> None:
+    source = _make_click_wav(
+        tmp_path / "mxpx.wav",
+    )
+
+    output = tmp_path / "datasets"
+
+    first = build_dataset(
+        str(source),
+        output=output,
+        include_cover=False,
+    )
+
+    second = build_dataset(
+        str(source),
+        output=output,
+        include_cover=False,
+        overwrite=True,
+    )
+
+    assert second.dataset_id == first.dataset_id
+
+    songmap_path = (
+        output
+        / second.dataset_id
+        / "songmap.json"
+    )
+
+    songmap = json.loads(
+        songmap_path.read_text(
+            encoding="utf-8",
+        )
+    )
+
+    assert songmap["timing"]["bpm"] > 0
 
 
 class _FakeSourceProvider:

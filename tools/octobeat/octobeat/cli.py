@@ -131,6 +131,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     add_parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Replace an existing dataset directory with the same id.",
+    )
+
+    add_parser.add_argument(
         "--offset",
         type=float,
         default=None,

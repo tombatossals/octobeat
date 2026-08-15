@@ -13,7 +13,10 @@ from octobeat.config import (
 )
 from octobeat.config.model import Config
 from octobeat.io.resource import CATALOG_FILE
-from octobeat.pipeline import build_dataset
+from octobeat.pipeline import (
+    DatasetExistsError,
+    build_dataset,
+)
 from octobeat.ui import console
 
 
@@ -60,7 +63,17 @@ def run(args: argparse.Namespace) -> int:
                 config.catalog.auto_rebuild
             ),
             offset=args.offset,
+            overwrite=args.overwrite,
         )
+    except DatasetExistsError as error:
+        console.error(
+            str(error),
+        )
+        console.info(
+            "Nothing was overwritten. "
+            "Pass --overwrite to replace the existing dataset.",
+        )
+        return 1
     except Exception:
         traceback.print_exc()
         return 1

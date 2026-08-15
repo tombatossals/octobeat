@@ -7,6 +7,7 @@ import pytest
 
 import octobeat.commands.add as add_cmd
 from octobeat.config.model import Config, PathsConfig
+from octobeat.pipeline import DatasetExistsError
 
 
 @pytest.fixture
@@ -131,3 +132,51 @@ def test_run_reports_clean_error_and_returns_1(
         ".38 Special - Caught Up in You (Harmonix).sng"
         in output
     )
+
+
+def test_run_reports_existing_dataset_without_prompt(
+    monkeypatch,
+    charts_dir,
+    capsys,
+):
+    monkeypatch.setattr(
+        add_cmd,
+        "ensure_workspace",
+        lambda: _config(charts_dir),
+    )
+
+    def _exists(
+        _source: str,
+        **kwargs,
+    ):
+        raise DatasetExistsError(
+            Path(
+                "/tmp/existing-dataset",
+            ),
+        )
+
+    monkeypatch.setattr(
+        add_cmd,
+        "build_dataset",
+        _exists,
+    )
+
+    result = add_cmd.run(
+        argparse.Namespace(
+            input="Weezer - Say It Ain't So (Harmonix).sng",
+            output=None,
+            catalog=None,
+            id=None,
+            no_cover=True,
+            offset=None,
+            overwrite=False,
+        )
+    )
+
+    assert result == 1
+
+    output = capsys.readouterr().out
+
+    assert "ERROR: Dataset directory already exists" in output
+    assert "--overwrite" in output
+    assert "Nothing was overwritten" in output

@@ -1,5 +1,6 @@
 from octobeat.pipeline.builder import (
     BuildResult,
+    DatasetExistsError,
     build_dataset,
 )
 from octobeat.pipeline.reanalyse import (
@@ -10,6 +11,7 @@ from octobeat.pipeline.reanalyse import (
 
 __all__ = [
     "BuildResult",
+    "DatasetExistsError",
     "ReanalysisResult",
     "ReanalysisSummary",
     "build_dataset",

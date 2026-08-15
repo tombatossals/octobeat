@@ -40,6 +40,25 @@ from octobeat.timing import (
 from octobeat.ui import console
 
 
+class DatasetExistsError(Exception):
+    """
+    Raised when the target dataset directory already exists.
+
+    The default ``add`` behaviour is to never overwrite an existing
+    dataset; the caller must explicitly request ``overwrite=True`` to
+    replace it. No interactive confirmation is offered.
+    """
+
+    def __init__(
+        self,
+        dataset_dir: Path,
+    ) -> None:
+        super().__init__(
+            f"Dataset directory already exists: {dataset_dir}",
+        )
+        self.dataset_dir = dataset_dir
+
+
 @dataclass(slots=True)
 class BuildResult:
     """
@@ -88,6 +107,7 @@ def build_dataset(
     include_cover: bool = True,
     update_catalog: bool = True,
     offset: float | None = None,
+    overwrite: bool = False,
 ) -> BuildResult:
     """
     Build a complete dataset from a recording source.
@@ -98,6 +118,11 @@ def build_dataset(
 
     ``offset`` overrides the detected music start (seconds into the
     media where the actual song begins).
+
+    By default an existing dataset directory is never replaced: when
+    ``overwrite`` is false and the target directory already exists a
+    :class:`DatasetExistsError` is raised without touching anything. No
+    interactive prompt is shown.
     """
 
     provider = get_provider(source)
@@ -107,8 +132,6 @@ def build_dataset(
     deezer = DeezerProvider()
 
     try:
-        result = _analyse(recording, source, offset)
-
         dataset_id = (
             dataset_id
             or dataset_slug(recording)
@@ -118,6 +141,11 @@ def build_dataset(
             output
             / dataset_id
         )
+
+        if not overwrite and dataset_dir.exists():
+            raise DatasetExistsError(dataset_dir)
+
+        result = _analyse(recording, source, offset)
 
         cover_source: str | None = None
 

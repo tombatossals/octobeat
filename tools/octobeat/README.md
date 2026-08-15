@@ -133,7 +133,7 @@ octobeat config set k v  # update a configuration value
 Create a complete dataset from a source (YouTube URL or local file).
 
 ```bash
-octobeat add <input> [--no-cover] [--offset SECONDS]
+octobeat add <input> [--no-cover] [--offset SECONDS] [--overwrite]
 ```
 
 Options:
@@ -142,7 +142,14 @@ Options:
 - `--catalog` — catalog file (defaults to `<output>/catalog.json`);
 - `--id` — override the dataset identifier;
 - `--no-cover` — skip downloading the cover artwork;
-- `--offset` — seconds into the media where the song begins.
+- `--offset` — seconds into the media where the song begins;
+- `--overwrite` — replace an existing dataset directory with the same
+  id.
+
+By default `add` never overwrites: if a dataset directory already
+exists for the song it reports the collision and exits without touching
+anything (no confirmation is asked). Use `--overwrite` to rebuild the
+dataset in place.
 
 ## `dataset`
 
