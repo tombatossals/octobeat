@@ -71,6 +71,35 @@ class Section(TimingModel):
     start_time: float = Field(ge=0.0)
 
 
+class LyricSyllable(TimingModel):
+    """
+    A single lyric syllable.
+
+    ``text`` keeps the chart's raw syllable (e.g. ``"Mis-"`` when the
+    word continues); ``start_time`` is absolute seconds into the
+    recording.
+    """
+
+    text: str
+    start_time: float = Field(ge=0.0)
+
+
+class LyricLine(TimingModel):
+    """
+    A lyric line (phrase) shown as a single unit.
+
+    ``text`` is the assembled, readable line assembled from the
+    syllables; ``start_time`` is the time of the first syllable and
+    ``end_time`` the time of the last one (both absolute seconds).
+    """
+
+    index: int = Field(ge=1)
+    text: str
+    start_time: float = Field(ge=0.0)
+    end_time: float | None = Field(default=None, ge=0.0)
+    syllables: list[LyricSyllable] = Field(default_factory=list)
+
+
 class TimingData(TimingModel):
     """
     Canonical, source-agnostic timing information.
@@ -87,4 +116,5 @@ class TimingData(TimingModel):
     beats: list[Beat]
     time_signatures: list[TimeSignature]
     sections: list[Section]
+    lyrics: list[LyricLine] = Field(default_factory=list)
     offset: float = 0.0

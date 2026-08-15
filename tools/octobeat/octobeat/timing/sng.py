@@ -7,6 +7,8 @@ from pathlib import Path
 
 from octobeat.models.timing import (
     Beat,
+    LyricLine,
+    LyricSyllable,
     Section,
     TempoSegment,
     TimingData,
@@ -38,8 +40,21 @@ BEAT_PITCH = 13
 EVENTS_TRACK = "EVENTS"
 BEAT_TRACK = "BEAT"
 
+# Track names that carry the vocal lyrics (Rock Band convention).
+VOCALS_TRACKS = (
+    "PART VOCALS",
+    "VOCALS",
+    "PART VOCAL",
+    "VOCAL",
+    "LYRICS",
+)
+
 # Marker text pattern for section events in the EVENTS track.
 SECTION_PREFIX = "[section "
+
+# Gap (seconds) between two consecutive syllables that starts a new
+# lyric line. Syllables closer than this belong to the same phrase.
+LYRIC_LINE_GAP_SECONDS = 1.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -390,11 +405,17 @@ def midi_to_timing(mid_bytes: bytes) -> TimingData:
         beat_ticks,
     )
 
+    lyrics = _extract_lyrics(
+        mid,
+        tick_to_time,
+    )
+
     return TimingData(
         tempos=tempo_segments,
         beats=beats,
         time_signatures=time_signatures,
         sections=sections,
+        lyrics=lyrics,
         offset=round(beats[0].time if beats else 0.0, 3),
     )
 
@@ -598,3 +619,124 @@ def _build_sections(
             )
 
     return sections
+
+
+def _extract_lyrics(
+    mid: MidiFile,
+    tick_to_time: Callable[[int], float],
+) -> list[LyricLine]:
+    """
+    Extract synced lyrics from the vocal track text events.
+
+    Lyrics arrive as syllable text events on the vocals track. Stage
+    markers (``[play]``, ``[idle]``, ...) and ``+`` sustain markers are
+    skipped. Syllables closer than ``LYRIC_LINE_GAP_SECONDS`` are grouped
+    into the same line; ``LyricLine.text`` assembles the syllables into
+    readable words.
+    """
+
+    vocals_track = next(
+        (
+            track
+            for track in mid.tracks
+            if track.name.upper() in VOCALS_TRACKS
+        ),
+        None,
+    )
+
+    if vocals_track is None:
+        return []
+
+    timed: list[tuple[int, float, str]] = []
+
+    for text in sorted(
+        vocals_track.texts,
+        key=lambda event: event.tick,
+    ):
+        raw = text.text
+        if not raw or raw.startswith("[") or raw == "+":
+            continue
+
+        timed.append(
+            (
+                text.tick,
+                round(tick_to_time(text.tick), 3),
+                raw,
+            ),
+        )
+
+    lines: list[LyricLine] = []
+    current: list[tuple[int, float, str]] = []
+
+    for tick, time, raw in timed:
+        if (
+            current
+            and time - current[-1][1]
+            > LYRIC_LINE_GAP_SECONDS
+        ):
+            lines.append(_build_lyric_line(lines, current))
+            current = []
+
+        current.append((tick, time, raw))
+
+    if current:
+        lines.append(_build_lyric_line(lines, current))
+
+    return lines
+
+
+def _build_lyric_line(
+    lines: list[LyricLine],
+    syllables: list[tuple[int, float, str]],
+) -> LyricLine:
+    """Assemble a line from its raw syllable events."""
+
+    start_time = syllables[0][1]
+    end_time = syllables[-1][1]
+
+    return LyricLine(
+        index=len(lines) + 1,
+        text=_assemble_line_text(syllables),
+        start_time=start_time,
+        end_time=(
+            end_time
+            if end_time > start_time
+            else None
+        ),
+        syllables=[
+            LyricSyllable(
+                text=raw,
+                start_time=time,
+            )
+            for _tick, time, raw in syllables
+        ],
+    )
+
+
+def _assemble_line_text(
+    syllables: list[tuple[int, float, str]],
+) -> str:
+    """
+    Join raw syllables into readable words.
+
+    A trailing ``-`` marks a word continuation (the word keeps going on
+    the next syllable); a syllable without it closes the word. The ``#``
+    censor marker is dropped. Words are joined by single spaces.
+    """
+
+    words: list[str] = []
+    current = ""
+
+    for _tick, _time, raw in syllables:
+        cleaned = raw.rstrip("-").replace("#", "")
+
+        current += cleaned
+
+        if not raw.endswith("-"):
+            words.append(current)
+            current = ""
+
+    if current:
+        words.append(current)
+
+    return " ".join(words)

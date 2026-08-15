@@ -14,6 +14,7 @@ import json
 import struct
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import cast
 
 SNG_MAGIC = b"SNGPKG"
 PPQ = 480
@@ -27,6 +28,7 @@ CASE_NAMES = [
     "tempo-change",
     "multiple-timesig",
     "sections",
+    "lyrics",
     "no-beat-track",
     "invalid-magic",
     "unsupported-version",
@@ -55,6 +57,8 @@ class SngFixture:
 
     valid: bool
 
+    lyrics: list[dict[str, object]] | None = None
+
 
 def build_sng_fixtures(output: Path) -> list[SngFixture]:
     """Generate all SNG fixtures and a manifest into ``output``."""
@@ -66,6 +70,7 @@ def build_sng_fixtures(output: Path) -> list[SngFixture]:
         _tempo_change(),
         _multiple_timesig(),
         _sections(),
+        _lyrics(),
         _no_beat_track(),
         _invalid_magic(),
         _unsupported_version(),
@@ -219,6 +224,59 @@ def _no_beat_track() -> SngFixture:
         beats=12,
         downbeats=3,
         sections=["intro", "verse"],
+        valid=True,
+    )
+
+
+def _lyrics() -> SngFixture:
+    """120 BPM chart whose vocal track carries two lyric phrases.
+
+    Ground truth (120 BPM, 480 PPQ → 1 tick = 1/960 s):
+
+    * line 1: ``Mis- sis- sip- pi Queen`` starting at tick 2400 (2.5 s);
+    * line 2: ``if you know what I mean#`` starting at tick 5760 (6.0 s).
+
+    The ``[play]`` marker and the ``+`` sustain are not syllables and
+    must be skipped.
+    """
+
+    return SngFixture(
+        name="lyrics",
+        bpm=120.0,
+        tempo_map=[{"tick": 0, "bpm": 120.0}],
+        time_signatures=[{"tick": 0, "numerator": 4, "denominator": 4}],
+        beats=16,
+        downbeats=4,
+        sections=["intro", "verse"],
+        lyrics=[
+            {
+                "index": 1,
+                "text": "Mississippi Queen",
+                "start_time": 2.5,
+                "end_time": 3.5,
+                "syllables": [
+                    {"text": "Mis-", "start_time": 2.5},
+                    {"text": "sis-", "start_time": 2.75},
+                    {"text": "sip-", "start_time": 3.0},
+                    {"text": "pi", "start_time": 3.25},
+                    {"text": "Queen", "start_time": 3.5},
+                ],
+            },
+            {
+                "index": 2,
+                "text": "if you know what I mean",
+                "start_time": 6.0,
+                "end_time": 7.25,
+                "syllables": [
+                    {"text": "if", "start_time": 6.0},
+                    {"text": "you", "start_time": 6.25},
+                    {"text": "know", "start_time": 6.5},
+                    {"text": "what", "start_time": 6.75},
+                    {"text": "I", "start_time": 7.0},
+                    {"text": "mean#", "start_time": 7.25},
+                ],
+            },
+        ],
         valid=True,
     )
 
@@ -473,6 +531,9 @@ def _build_notes_mid(fixture: SngFixture) -> bytes:
             _events_track(fixture),
         ]
 
+    if fixture.name == "lyrics":
+        tracks.append(_vocals_track(fixture))
+
     payload = b"".join(_smf_track(track) for track in tracks)
 
     return (
@@ -622,6 +683,55 @@ def _beat_track(fixture: SngFixture) -> list[tuple[int, bytes, bytes]]:
     events.append((0, b"\xff\x2f", b""))
 
     return events + events_list
+
+
+def _vocals_track(fixture: SngFixture) -> list[tuple[int, bytes, bytes]]:
+    """Track 8: vocal lyrics as text events.
+
+    The syllables come from the fixture's ``lyrics`` ground truth. A
+    ``[play]`` marker and a ``+`` sustain are interleaved to verify they
+    are filtered out.
+    """
+
+    if not fixture.lyrics:
+        return [
+            (0, b"\xff\x03", b"PART VOCALS"),
+            (0, b"\xff\x2f", b""),
+        ]
+
+    events: list[tuple[int, bytes, bytes]] = [
+        (0, b"\xff\x03", b"PART VOCALS")
+    ]
+
+    text_events: list[tuple[int, bytes]] = [(0, b"[play]")]
+
+    for line in fixture.lyrics:
+        for syllable in cast(
+            list[dict[str, object]],
+            line["syllables"],
+        ):
+            text = syllable["text"]
+            assert isinstance(text, str)
+            assert isinstance(syllable["start_time"], float)
+            tick = int(round(syllable["start_time"] * PPQ * 2))
+            text_events.append((tick, text.encode()))
+            # Sustain marker on the same tick: must be filtered out.
+            text_events.append((tick, b"+"))
+
+    prev_tick = 0
+    for tick, text in sorted(text_events):
+        events.append(
+            (
+                tick - prev_tick,
+                b"\xff\x01",
+                text,
+            )
+        )
+        prev_tick = tick
+
+    events.append((0, b"\xff\x2f", b""))
+
+    return events
 
 
 def _smf_track(events: list[tuple[int, bytes, bytes]]) -> bytes:

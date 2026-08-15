@@ -73,3 +73,25 @@ as beats per bar.
 # Timeline
 
 Ordered sequence of temporal events.
+
+# Lyrics
+
+The vocal lyrics of a recording, synchronized to the timeline.
+
+In `songmap/v1` lyrics are organized as lines, each with an assembled
+text and a start time, plus optional per-syllable timestamps.
+
+# Lyric line
+
+A lyric phrase shown as a single unit.
+
+A line carries the assembled `text`, the `startTime` of its first
+syllable (and an optional `endTime`) and the raw `syllables` that form
+it.
+
+# Syllable
+
+A single lyric syllable with its own start time.
+
+The raw text preserves the chart's conventions: a trailing `-` marks a
+word continuation and `#` a censor marker.

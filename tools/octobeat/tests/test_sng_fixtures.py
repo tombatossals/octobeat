@@ -133,6 +133,7 @@ def test_case_names():
         "tempo-change",
         "multiple-timesig",
         "sections",
+        "lyrics",
         "no-beat-track",
         "invalid-magic",
         "unsupported-version",

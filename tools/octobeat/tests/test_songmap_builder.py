@@ -140,6 +140,68 @@ def test_sections_reference_beats(provider, fixtures):
     assert songmap.sections[0].startTime == 0.0
 
 
+def test_lyrics_extracted_from_vocals_track(provider, fixtures):
+    songmap = _songmap_for(provider, fixtures, "lyrics")
+
+    assert songmap.lyrics is not None
+    assert [line.index for line in songmap.lyrics] == [1, 2]
+    assert songmap.lyrics[0].text == "Mississippi Queen"
+    assert songmap.lyrics[1].text == "if you know what I mean"
+
+    first = songmap.lyrics[0]
+    assert first.startTime == 2.5
+    assert first.endTime == 3.5
+
+    # Syllables keep the raw chart text; markers and sustains are skipped.
+    assert [s.text for s in first.syllables] == [
+        "Mis-",
+        "sis-",
+        "sip-",
+        "pi",
+        "Queen",
+    ]
+    assert [s.startTime for s in first.syllables] == [
+        2.5,
+        2.75,
+        3.0,
+        3.25,
+        3.5,
+    ]
+
+
+def test_lyrics_absent_when_chart_has_no_vocals(provider, fixtures):
+    songmap = _songmap_for(provider, fixtures, "constant-tempo")
+
+    assert songmap.lyrics is None
+
+
+def test_songmap_lyrics_serialize_omitted_when_empty(tmp_path):
+    """Charts without lyrics must not emit a ``lyrics`` block."""
+
+    from octobeat.io.songmap import write_songmap
+    from octobeat.models.timing import TimingData
+
+    songmap = build_songmap(
+        TimingData(
+            tempos=[],
+            beats=[],
+            time_signatures=[],
+            sections=[],
+        ),
+        title="Empty",
+        duration=0.0,
+        source=Source(type="file", id="x.sng"),
+        source_kind="sng",
+        generated_by=GENERATED_BY,
+        created_at=CREATED_AT,
+    )
+
+    destination = tmp_path / "songmap.json"
+    write_songmap(songmap, destination)
+
+    assert "lyrics" not in destination.read_text(encoding="utf-8")
+
+
 def test_empty_beats_produce_empty_bars():
     from octobeat.models.timing import TimingData
 

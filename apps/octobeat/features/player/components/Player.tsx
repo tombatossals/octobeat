@@ -10,6 +10,7 @@ import { usePlayerStore } from "@octobeat/player";
 import { Logo } from "@/features/overlay/components/Logo";
 import { ExerciseOverlay } from "@/features/exercises/components/ExerciseOverlay";
 import { SpeedSwitcher } from "@/features/exercises/components/SpeedSwitcher";
+import { LyricsBox } from "@/features/lyrics/components/LyricsBox";
 import { HeaderActions } from "@/features/library/components/HeaderActions";
 import { SettingsToast } from "@/features/settings/components/SettingsToast";
 import { useSettingsHydration } from "@/features/settings/hooks/useSettingsHydration";
@@ -124,6 +125,8 @@ export function Player() {
             <Logo />
 
             <SpeedSwitcher />
+
+            <LyricsBox />
 
             <NowPlayingSummary />
 
