@@ -139,7 +139,8 @@ The result is a dataset directory like:
 ├── metadata.json
 ├── cover.jpg
 ├── recording.mp3
-└── songmap.json
+├── songmap.json
+└── lyrics.json    (optional, when the source provides synced lyrics)
 ```
 
 ## 5. Use it with the web interface

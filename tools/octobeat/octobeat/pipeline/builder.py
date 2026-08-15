@@ -188,6 +188,7 @@ def build_dataset(
             metadata=metadata,
             audio=recording.path,
             cover=cover_path,
+            lyrics=result.lyrics,
         )
 
         catalog_path = (
@@ -387,6 +388,11 @@ def _build_metadata(
         ),
         resources=ResourceRefs(
             audio="recording.mp3",
+            lyrics=(
+                "lyrics.json"
+                if result.lyrics
+                else None
+            ),
         ),
     )
 

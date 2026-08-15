@@ -393,6 +393,7 @@ def analyse_with_chart(
                 2,
             ),
         ),
+        lyrics=chart_timing.lyrics,
     )
 
 

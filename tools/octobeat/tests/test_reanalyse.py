@@ -66,8 +66,22 @@ def _make_dataset(
                 "duration": seconds,
                 "resources": {
                     "audio": RECORDING_WAV,
+                    "lyrics": "lyrics.json",
                 },
             }
+        ),
+        encoding="utf-8",
+    )
+
+    (dataset_dir / "lyrics.json").write_text(
+        json.dumps(
+            [
+                {
+                    "index": 1,
+                    "text": "La la la",
+                    "startTime": 0.5,
+                }
+            ]
         ),
         encoding="utf-8",
     )
@@ -156,6 +170,14 @@ def test_reanalyse_preserves_metadata(
     assert metadata["title"] == "My Song"
     assert metadata["artist"] == "The Artist"
     assert metadata["bpm"] > 100
+
+    # The synced-lyrics resource survives re-analysis.
+    assert metadata["resources"]["lyrics"] == "lyrics.json"
+    assert (
+        tmp_path
+        / "test-a"
+        / "lyrics.json"
+    ).exists()
 
 
 def test_reanalyse_refreshes_catalog(

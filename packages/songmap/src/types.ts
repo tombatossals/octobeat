@@ -4,7 +4,5 @@ export type {
     TempoSegment,
     Timing,
     Section,
-    LyricSyllable,
-    LyricLine,
     SongMap,
 } from "./schema";

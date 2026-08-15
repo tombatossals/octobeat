@@ -59,28 +59,6 @@ export const SectionSchema = z.object({
         .optional(),
 });
 
-export const LyricSyllableSchema = z.object({
-    text: z.string(),
-
-    startTime: z.number(),
-});
-
-export const LyricLineSchema = z.object({
-    index: z.number().int(),
-
-    text: z.string(),
-
-    startTime: z.number(),
-
-    endTime: z
-        .number()
-        .optional(),
-
-    syllables: z
-        .array(LyricSyllableSchema)
-        .optional(),
-});
-
 export const SourceSchema = z.object({
     type: z.string(),
     id: z.string(),
@@ -114,10 +92,6 @@ export const SongMapSchema = z.object({
     sections: z
         .array(SectionSchema)
         .optional(),
-
-    lyrics: z
-        .array(LyricLineSchema)
-        .optional(),
 });
 
 export type Beat = z.infer<typeof BeatSchema>;
@@ -131,12 +105,6 @@ export type TempoSegment = z.infer<
 export type Timing = z.infer<typeof TimingSchema>;
 
 export type Section = z.infer<typeof SectionSchema>;
-
-export type LyricSyllable = z.infer<
-    typeof LyricSyllableSchema
->;
-
-export type LyricLine = z.infer<typeof LyricLineSchema>;
 
 export type SongMap = z.infer<typeof SongMapSchema>;
 

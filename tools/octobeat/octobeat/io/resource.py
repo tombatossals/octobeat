@@ -5,9 +5,14 @@ import shutil
 from pathlib import Path
 
 from octobeat.audio import encode_to_mp3
+from octobeat.io.lyrics import (
+    LYRICS_FILE,
+    write_lyrics,
+)
 from octobeat.io.songmap import write_songmap
 from octobeat.models.metadata import CatalogMetadata
 from octobeat.models.songmap import SongMap
+from octobeat.models.timing import LyricLine
 
 RECORDING_WAV = "recording.wav"
 RECORDING_MP3 = "recording.mp3"
@@ -24,6 +29,7 @@ def write_resource(
     metadata: CatalogMetadata,
     audio: Path,
     cover: Path | None = None,
+    lyrics: list[LyricLine] | None = None,
 ) -> Path:
     """
     Write a complete resource dataset into `dataset_dir`.
@@ -34,9 +40,10 @@ def write_resource(
         metadata.json
         recording.mp3
         cover.jpg
+        lyrics.json (when the source provides synced lyrics)
 
     `audio` is encoded to recording.mp3. `cover` is copied when
-    provided.
+    provided. `lyrics` is written to lyrics.json when non-empty.
     """
 
     dataset_dir = dataset_dir.expanduser().resolve()
@@ -73,6 +80,12 @@ def write_resource(
                 cover,
                 cover_target,
             )
+
+    if lyrics:
+        write_lyrics(
+            lyrics,
+            dataset_dir / LYRICS_FILE,
+        )
 
     return dataset_dir
 

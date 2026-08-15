@@ -16,8 +16,7 @@ import { activeLyricLine } from "../activeLine";
  */
 export function LyricsBox() {
     const lyrics = useLibraryStore(
-        (state) =>
-            state.dataset?.songmap.lyrics,
+        (state) => state.dataset?.lyrics,
     );
 
     const currentTime = usePlayerStore(

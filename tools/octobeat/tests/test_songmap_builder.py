@@ -141,16 +141,17 @@ def test_sections_reference_beats(provider, fixtures):
 
 
 def test_lyrics_extracted_from_vocals_track(provider, fixtures):
-    songmap = _songmap_for(provider, fixtures, "lyrics")
+    timing_data = provider.load(
+        str(fixtures / "lyrics.sng"),
+    )
 
-    assert songmap.lyrics is not None
-    assert [line.index for line in songmap.lyrics] == [1, 2]
-    assert songmap.lyrics[0].text == "Mississippi Queen"
-    assert songmap.lyrics[1].text == "if you know what I mean"
+    assert [line.index for line in timing_data.lyrics] == [1, 2]
+    assert timing_data.lyrics[0].text == "Mississippi Queen"
+    assert timing_data.lyrics[1].text == "if you know what I mean"
 
-    first = songmap.lyrics[0]
-    assert first.startTime == 2.5
-    assert first.endTime == 3.5
+    first = timing_data.lyrics[0]
+    assert first.start_time == 2.5
+    assert first.end_time == 3.5
 
     # Syllables keep the raw chart text; markers and sustains are skipped.
     assert [s.text for s in first.syllables] == [
@@ -160,7 +161,7 @@ def test_lyrics_extracted_from_vocals_track(provider, fixtures):
         "pi",
         "Queen",
     ]
-    assert [s.startTime for s in first.syllables] == [
+    assert [s.start_time for s in first.syllables] == [
         2.5,
         2.75,
         3.0,
@@ -170,36 +171,19 @@ def test_lyrics_extracted_from_vocals_track(provider, fixtures):
 
 
 def test_lyrics_absent_when_chart_has_no_vocals(provider, fixtures):
-    songmap = _songmap_for(provider, fixtures, "constant-tempo")
-
-    assert songmap.lyrics is None
-
-
-def test_songmap_lyrics_serialize_omitted_when_empty(tmp_path):
-    """Charts without lyrics must not emit a ``lyrics`` block."""
-
-    from octobeat.io.songmap import write_songmap
-    from octobeat.models.timing import TimingData
-
-    songmap = build_songmap(
-        TimingData(
-            tempos=[],
-            beats=[],
-            time_signatures=[],
-            sections=[],
-        ),
-        title="Empty",
-        duration=0.0,
-        source=Source(type="file", id="x.sng"),
-        source_kind="sng",
-        generated_by=GENERATED_BY,
-        created_at=CREATED_AT,
+    timing_data = provider.load(
+        str(fixtures / "constant-tempo.sng"),
     )
 
-    destination = tmp_path / "songmap.json"
-    write_songmap(songmap, destination)
+    assert timing_data.lyrics == []
 
-    assert "lyrics" not in destination.read_text(encoding="utf-8")
+
+def test_lyrics_not_part_of_songmap(provider, fixtures):
+    """Lyrics live in a separate dataset resource, not in the SongMap."""
+
+    songmap = _songmap_for(provider, fixtures, "lyrics")
+
+    assert not hasattr(songmap, "lyrics")
 
 
 def test_empty_beats_produce_empty_bars():

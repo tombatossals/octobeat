@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from octobeat.models.songmap import SongMap
+from octobeat.models.timing import LyricLine
 
 
 @dataclass(slots=True)
@@ -58,8 +59,17 @@ class AnalysisReport:
 class AnalysisResult:
     """
     Result of an analysis: the SongMap plus a display report.
+
+    ``lyrics`` carries the synced lyrics extracted from the timing
+    source (an empty list when the source has none). They are written
+    to a separate ``lyrics.json`` dataset resource, not into the
+    SongMap.
     """
 
     songmap: SongMap
 
     report: AnalysisReport
+
+    lyrics: list[LyricLine] = field(
+        default_factory=list,
+    )

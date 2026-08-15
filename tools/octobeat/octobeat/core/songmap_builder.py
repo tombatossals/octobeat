@@ -14,8 +14,6 @@ from octobeat.models.songmap import (
     SCHEMA_ID,
     SONGMAP_VERSION,
     Bar,
-    LyricLine,
-    LyricSyllable,
     Section,
     SongMap,
     SongMetadata,
@@ -65,7 +63,6 @@ def build_songmap(
     beats = _build_beats(timing_data)
     bars = _build_bars(timing_data, downbeat_shift)
     sections = _build_sections(timing_data)
-    lyrics = _build_lyrics(timing_data)
     tempo_map = _build_tempo_map(timing_data)
 
     return SongMap(
@@ -107,7 +104,6 @@ def build_songmap(
         beats=beats,
         bars=bars,
         sections=sections,
-        lyrics=lyrics,
     )
 
 
@@ -216,38 +212,6 @@ def _source_name(source_name: str, normalized: str) -> str | None:
         return None
 
     return source_name
-
-
-def _build_lyrics(
-    timing_data: TimingData,
-) -> list[LyricLine] | None:
-    """Map canonical lyric lines into SongMap form.
-
-    Returns ``None`` when the chart carries no lyrics so the block is
-    omitted from the serialized document.
-    """
-
-    if not timing_data.lyrics:
-        return None
-
-    return [
-        LyricLine(
-            index=line.index,
-            text=line.text,
-            startTime=line.start_time,
-            endTime=line.end_time,
-            syllables=[
-                LyricSyllable(
-                    text=syllable.text,
-                    startTime=syllable.start_time,
-                )
-                for syllable in line.syllables
-            ]
-            if line.syllables
-            else None,
-        )
-        for line in timing_data.lyrics
-    ]
 
 
 def _build_tempo_map(timing_data: TimingData) -> list[TempoSegment]:

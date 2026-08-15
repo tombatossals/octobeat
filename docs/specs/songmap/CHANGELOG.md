@@ -28,12 +28,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   be added without a new schema).
 - Optional `timing.source` field recording where the timing came from
   (`sng`, `midi`, `chart`, `audio-analysis`, `manual`).
-- Optional `lyrics` block describing the synced vocal lyrics. Each line
-  carries an assembled `text`, a `startTime` (and optional `endTime`)
-  and optional per-syllable timestamps for karaoke-style highlighting.
-  Syllables preserve the chart's raw text (`-` word continuation, `#`
-  censor marker); stage markers and `+` sustains are omitted. This is an
-  additive change to `songmap/v1`.
 
 ## [1.0] — 2026-08-02
 

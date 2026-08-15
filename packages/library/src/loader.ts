@@ -3,6 +3,11 @@ import {
     type SongMap,
 } from "@octobeat/songmap";
 
+import {
+    parseLyrics,
+    type LyricLine,
+} from "./lyrics";
+
 import type {
     Dataset,
     Metadata,
@@ -25,10 +30,16 @@ export class Loader {
         const datasetUrl =
             `${this.baseUrl}/${metadata.id}`;
 
-        const response =
-            await fetch(
-                `${datasetUrl}/songmap.json`,
-            );
+        const [response, lyrics] =
+            await Promise.all([
+                fetch(
+                    `${datasetUrl}/songmap.json`,
+                ),
+                this.loadLyrics(
+                    datasetUrl,
+                    metadata,
+                ),
+            ]);
 
         if (!response.ok) {
             throw new Error(
@@ -45,10 +56,43 @@ export class Loader {
             metadata: {
                 ...metadata,
                 resources: {
+                    ...metadata.resources,
                     audio: `${datasetUrl}/${metadata.resources.audio}`,
                 },
             },
             songmap,
+            lyrics,
         };
+    }
+
+    /**
+     * Loads the dataset's synced lyrics resource, if present.
+     */
+    private async loadLyrics(
+        datasetUrl: string,
+        metadata: Metadata,
+    ): Promise<LyricLine[] | null> {
+        const resource =
+            metadata.resources.lyrics;
+
+        if (!resource) {
+            return null;
+        }
+
+        const response = await fetch(
+            `${datasetUrl}/${resource}`,
+        );
+
+        if (!response.ok) {
+            return null;
+        }
+
+        try {
+            return parseLyrics(
+                await response.json(),
+            );
+        } catch {
+            return null;
+        }
     }
 }

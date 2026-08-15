@@ -2,6 +2,10 @@ import { z } from "zod";
 
 export const ResourcesSchema = z.object({
     audio: z.string(),
+
+    lyrics: z
+        .string()
+        .optional(),
 });
 
 export const TimingProvenanceSchema =

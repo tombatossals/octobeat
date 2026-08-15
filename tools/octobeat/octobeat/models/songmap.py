@@ -116,37 +116,6 @@ class Section(SongMapModel):
     sourceName: str | None = None
 
 
-class LyricSyllable(SongMapModel):
-    """
-    A single lyric syllable.
-
-    ``text`` keeps the chart's raw syllable (e.g. ``"Mis-"`` when the
-    word continues); ``startTime`` is absolute seconds into the
-    recording.
-    """
-
-    text: str
-    startTime: float = Field(ge=0.0)
-
-
-class LyricLine(SongMapModel):
-    """
-    A lyric line (phrase) shown as a single unit.
-
-    ``text`` is the assembled, readable line assembled from the
-    syllables; ``startTime`` is the time of the first syllable and
-    ``endTime`` the time of the last one (both absolute seconds).
-    ``syllables`` preserves the per-syllable timing for fine-grained
-    karaoke highlighting.
-    """
-
-    index: int = Field(ge=1)
-    text: str
-    startTime: float = Field(ge=0.0)
-    endTime: float | None = Field(default=None, ge=0.0)
-    syllables: list[LyricSyllable] | None = None
-
-
 class SongMap(SongMapModel):
     """
     Root SongMap document.
@@ -168,5 +137,3 @@ class SongMap(SongMapModel):
     bars: list[Bar]
 
     sections: list[Section] | None = None
-
-    lyrics: list[LyricLine] | None = None

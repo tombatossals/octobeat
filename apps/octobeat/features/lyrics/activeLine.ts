@@ -1,4 +1,4 @@
-import type { LyricLine } from "@octobeat/songmap";
+import type { LyricLine } from "@octobeat/library";
 
 /**
  * Returns the lyric line active at `currentTime`.

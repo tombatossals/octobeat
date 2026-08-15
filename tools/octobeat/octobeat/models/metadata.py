@@ -71,3 +71,5 @@ class ResourceRefs(BaseModel):
     )
 
     audio: str
+
+    lyrics: str | None = None

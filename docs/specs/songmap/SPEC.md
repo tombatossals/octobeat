@@ -181,8 +181,6 @@ SongMap
 ├── bars
 
 ├── sections (optional)
-
-├── lyrics (optional)
 ```
 
 ---
@@ -371,79 +369,7 @@ chart label is preserved in `sourceName` when it differs from `name`.
 
 ---
 
-# 11. Lyrics
-
-The optional `lyrics` collection describes the vocal lyrics of the
-recording, synchronized to the timeline.
-
-Each line is a phrase shown as a single unit:
-
-```json
-{
-  "lyrics": [
-    {
-      "index": 1,
-      "text": "Mississippi Queen",
-      "startTime": 2.5,
-      "endTime": 3.5,
-      "syllables": [
-        { "text": "Mis-", "startTime": 2.5 },
-        { "text": "sis-", "startTime": 2.75 },
-        { "text": "sip-", "startTime": 3.0 },
-        { "text": "pi",   "startTime": 3.25 },
-        { "text": "Queen", "startTime": 3.5 }
-      ]
-    },
-    {
-      "index": 2,
-      "text": "if you know what I mean",
-      "startTime": 6.0,
-      "endTime": 7.25,
-      "syllables": [
-        { "text": "if",    "startTime": 6.0 },
-        { "text": "you",   "startTime": 6.25 },
-        { "text": "know",  "startTime": 6.5 },
-        { "text": "what",  "startTime": 6.75 },
-        { "text": "I",     "startTime": 7.0 },
-        { "text": "mean#", "startTime": 7.25 }
-      ]
-    }
-  ]
-}
-```
-
-Fields of a line:
-
-* `index` — 1-based, continuous line number;
-* `text` — assembled, readable line text;
-* `startTime` — seconds into the recording of the first syllable;
-* `endTime` (optional) — seconds into the recording of the last syllable;
-* `syllables` (optional) — per-syllable timing for fine-grained
-  highlighting.
-
-## 11.1 Syllables
-
-Each syllable preserves the chart's raw text (`"Mis-"`, `"mean#"`) and
-its start time in seconds. A trailing `-` marks a word continuation; the
-`#` censor marker is dropped from the assembled line `text` but kept in
-the syllable. Stage markers (`[play]`, `[mellow]`, `[idle]`, ...) and
-`+` sustain markers carry no text and are omitted.
-
-## 11.2 Line assembly
-
-`text` is assembled from the line's syllables: a syllable ending with
-`-` continues the current word, a syllable without it closes the word,
-and words are joined by single spaces.
-
-## 11.3 Line grouping
-
-Syllables closer than one second apart belong to the same line; a
-larger gap starts a new line. Producers may use any deterministic
-grouping; consumers must not rely on a specific grouping.
-
----
-
-# 12. Versioning
+# 11. Versioning
 
 Every SongMap declares:
 
@@ -463,7 +389,7 @@ Breaking compatibility requires a new schema identifier.
 
 ---
 
-# 13. Compatibility
+# 12. Compatibility
 
 SongMap follows a forward-compatible design whenever possible.
 
@@ -479,7 +405,7 @@ Applications must ignore unknown optional fields.
 
 ---
 
-# 14. Future evolution
+# 13. Future evolution
 
 Version 1 intentionally keeps the model minimal.
 
@@ -496,7 +422,7 @@ without modifying the existing contract.
 
 ---
 
-# 15. Future timeline model
+# 14. Future timeline model
 
 Although version 1 uses dedicated collections, the long-term conceptual model is an event timeline.
 
@@ -532,7 +458,7 @@ Applications should not assume that future SongMaps will always be organised usi
 
 ---
 
-# 16. Design goals
+# 15. Design goals
 
 SongMap has four primary goals.
 
@@ -570,7 +496,7 @@ BeatEngine and OctoBeat are consumers of SongMap, not its definition.
 
 ---
 
-# 17. Non-goals
+# 16. Non-goals
 
 SongMap is not:
 
@@ -585,7 +511,7 @@ Those concerns belong to independent specifications.
 
 ---
 
-# 18. Ecosystem
+# 17. Ecosystem
 
 SongMap is intended to become the common contract of the OctoBeat ecosystem.
 
@@ -608,7 +534,7 @@ Every component communicates exclusively through SongMap.
 
 ---
 
-# 21. Guiding principle
+# 20. Guiding principle
 
 > **A SongMap is a deterministic temporal description of a specific audio recording.**
 
