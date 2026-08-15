@@ -6,6 +6,7 @@ import { useShortcut } from "@/lib/useShortcut";
 
 import { ShortcutBadge } from "@/features/library/components/ShortcutBadge";
 import { useUiStore } from "@/features/ui/store";
+import { useLibraryStore } from "@/features/library/store";
 
 import {
     SPEED_FACTOR,
@@ -40,6 +41,19 @@ export function SpeedSwitcher() {
         (state) => state.revealed,
     );
 
+    const bpm = useLibraryStore(
+        (state) =>
+            state.dataset?.metadata.bpm,
+    );
+
+    const currentBpm =
+        bpm != null
+            ? Math.round(
+                  bpm *
+                      SPEED_FACTOR[speed],
+              )
+            : null;
+
     useShortcut(
         { code: "Digit1" },
         () =>
@@ -65,8 +79,13 @@ export function SpeedSwitcher() {
     );
 
     return (
-        <div className="pointer-events-auto flex items-center gap-1 rounded-md border border-border bg-background/60 p-1.5 shadow-2xl backdrop-blur-md short:p-1">
-            {ORDER.map((option) => {
+        <div className="pointer-events-auto fixed left-4 top-[5.5rem] z-50 flex flex-col gap-1 short:left-2 short:top-[4.5rem]">
+            <div className="px-1 font-mono text-[10px] font-black uppercase tracking-wider text-foreground">
+                Speed
+            </div>
+
+            <div className="flex items-center gap-1 rounded-md border border-border bg-background/60 p-1.5 shadow-2xl backdrop-blur-md short:p-1">
+                {ORDER.map((option) => {
                 const active =
                     speed === option;
 
@@ -112,6 +131,22 @@ export function SpeedSwitcher() {
                     </Button>
                 );
             })}
+
+            {bpm != null && currentBpm != null && (
+                <div className="ml-2 flex items-center gap-1.5 border-l border-border pl-2 pr-1 font-mono text-sm text-foreground short:text-xs">
+                    <span>BPM</span>
+
+                    <span
+                        className="font-black"
+                        style={{
+                            textShadow: TEXT_SHADOW,
+                        }}
+                    >
+                        {currentBpm}
+                    </span>
+                </div>
+            )}
+            </div>
         </div>
     );
 }

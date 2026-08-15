@@ -1,5 +1,10 @@
 import { create } from "zustand";
 
+import {
+    loadSpeed,
+    saveSpeed,
+} from "./speedStorage";
+
 export type Speed =
     | "x1"
     | "x2"
@@ -29,9 +34,11 @@ interface SpeedState {
 
 export const useSpeedStore =
     create<SpeedState>((set) => ({
-        speed: "x1",
+        speed: loadSpeed(),
 
         setSpeed(speed) {
+            saveSpeed(speed);
+
             set({
                 speed,
             });

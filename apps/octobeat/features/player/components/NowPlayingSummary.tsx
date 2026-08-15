@@ -33,7 +33,17 @@ export function NowPlayingSummary() {
         );
 
     return (
-        <div className="pointer-events-none fixed left-4 top-28 z-40 flex items-start gap-2 bg-background/60 py-2 pl-3 pr-2 text-foreground short:left-3 short:top-16 short:gap-1 short:py-1 short:pl-2 short:pr-1">
+        <div
+            key={metadata.id}
+            className="pointer-events-none fixed right-24 top-[5rem] z-40 flex animate-[fadeIn_300ms_ease-out] items-start gap-2 rounded-md border border-neutral-300/60 bg-background/60 py-2 pl-2 pr-2 text-foreground short:right-8 short:top-[3.5rem] short:gap-1 short:py-1 short:pl-1 short:pr-1 dark:border-neutral-600/60"
+            style={{ boxShadow: "var(--summary-shadow)" }}
+        >
+            <img
+                src={`/resources/${metadata.id}/cover.jpg`}
+                alt={`${metadata.title} cover`}
+                className="h-20 w-20 shrink-0 self-center object-cover shadow-lg short:h-12 short:w-12"
+            />
+
             <div className="flex flex-col gap-0.5 border-l-2 border-l-foreground pl-3 short:gap-0 short:pl-2">
                 <div className="text-sm font-bold leading-tight short:text-xs">
                     {metadata.title}
@@ -80,7 +90,7 @@ export function NowPlayingSummary() {
                         metadata.id,
                     );
                 }}
-                className="pointer-events-auto mt-1 flex shrink-0 cursor-pointer items-center justify-center rounded-lg p-1.5 text-muted-foreground transition-colors outline-none focus:outline-none hover:text-foreground short:mt-0 short:p-1"
+                className="pointer-events-auto flex shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors outline-none focus:outline-none hover:text-foreground"
             >
                 <Star
                     className={cn(

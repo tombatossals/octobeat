@@ -122,7 +122,12 @@ export function ExerciseTimeline({
     }
 
     return (
-        <div className="w-full pt-4">
+        <div
+            className={cn(
+                "w-full",
+                preview ? "pt-1" : "pt-4",
+            )}
+        >
             <div className="flex items-center">
                 {measures.map(
                     (groups, measureIndex) => (
@@ -226,6 +231,7 @@ function GroupRenderer({
                     key={index}
                     beat={beat}
                     grow={strokeGrow}
+                    preview={preview}
                     active={
                         !preview &&
                         index ===
@@ -248,20 +254,22 @@ function GroupRenderer({
                 flexBasis: 0,
             }}
         >
-            {strokes != null && !isDefaultGroup && (
-                <div
-                    className="pointer-events-none absolute left-0 right-0 flex flex-col items-center"
-                    style={{ bottom: "100%" }}
-                >
-                    <span className="bg-white px-1 text-xs font-black leading-none text-neutral-500">
-                        {articulation != null
-                            ? `${articulation} ${strokes}`
-                            : strokes}
-                    </span>
+            {!preview &&
+                strokes != null &&
+                !isDefaultGroup && (
+                    <div
+                        className="pointer-events-none absolute left-0 right-0 flex flex-col items-center"
+                        style={{ bottom: "100%" }}
+                    >
+                        <span className="bg-white px-1 text-xs font-black leading-none text-neutral-500">
+                            {articulation != null
+                                ? `${articulation} ${strokes}`
+                                : strokes}
+                        </span>
 
-                    <div className="mt-0.5 h-[2px] w-full bg-neutral-400" />
-                </div>
-            )}
+                        <div className="mt-0.5 h-[2px] w-full bg-neutral-400" />
+                    </div>
+                )}
 
             {beats}
         </div>
@@ -277,12 +285,15 @@ interface BeatCellProps {
      */
     grow: number;
 
+    preview: boolean;
+
     active: boolean;
 }
 
 function BeatCell({
     beat,
     grow,
+    preview,
     active,
 }: BeatCellProps): JSX.Element {
     const isRest = beat.rest === true;
@@ -338,8 +349,9 @@ function BeatCell({
                         : "text-black",
                 )}
                 style={{
-                    fontSize:
-                        "clamp(1.4rem,2vw,2rem)",
+                    fontSize: preview
+                        ? "clamp(0.8rem,1.1vw,1.1rem)"
+                        : "clamp(1.4rem,2vw,2rem)",
                     textShadow:
                         "1px 1px 0 #e5e5e5, -1px -1px 0 #e5e5e5, 1px -1px 0 #e5e5e5, -1px 1px 0 #e5e5e5, 1px 0 0 #e5e5e5, -1px 0 0 #e5e5e5, 0 1px 0 #e5e5e5, 0 -1px 0 #e5e5e5, 0 2px 4px rgb(0 0 0 / 25%)",
                 }}

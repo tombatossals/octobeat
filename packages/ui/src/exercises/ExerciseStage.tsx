@@ -12,7 +12,27 @@ import { ExerciseRenderer } from "./ExerciseRenderer";
 export interface ExerciseStageProps {
     exercise: Exercise;
 
+    /**
+     * Título del libro al que pertenece el ejercicio.
+     */
+    exerciseBookTitle?: string;
+
+    /**
+     * Título de la sección a la que pertenece el ejercicio.
+     */
+    exerciseSetTitle?: string;
+
     preview: Exercise;
+
+    /**
+     * Título del libro al que pertenece la preview.
+     */
+    previewBookTitle?: string;
+
+    /**
+     * Título de la sección a la que pertenece la preview.
+     */
+    previewSetTitle?: string;
 
     /**
      * Índice absoluto del beat actual.
@@ -34,7 +54,11 @@ const TRANSITION_MS = 600;
 
 export function ExerciseStage({
     exercise,
+    exerciseBookTitle,
+    exerciseSetTitle,
     preview,
+    previewBookTitle,
+    previewSetTitle,
     currentBeat,
     repetition,
     previewRepetition,
@@ -42,6 +66,16 @@ export function ExerciseStage({
     const [leaving, setLeaving] =
         useState<Exercise | null>(
             null,
+        );
+
+    const [leavingBookTitle, setLeavingBookTitle] =
+        useState<string | undefined>(
+            undefined,
+        );
+
+    const [leavingSetTitle, setLeavingSetTitle] =
+        useState<string | undefined>(
+            undefined,
         );
 
     const prevExerciseRef =
@@ -59,6 +93,12 @@ export function ExerciseStage({
         }
 
         setLeaving(prev);
+        setLeavingBookTitle(
+            exerciseBookTitle,
+        );
+        setLeavingSetTitle(
+            exerciseSetTitle,
+        );
 
         const timer = setTimeout(
             () => setLeaving(null),
@@ -68,7 +108,7 @@ export function ExerciseStage({
         return () => {
             clearTimeout(timer);
         };
-    }, [exercise]);
+    }, [exercise, exerciseBookTitle, exerciseSetTitle]);
 
     return (
         <div className="flex w-full flex-col gap-2">
@@ -77,6 +117,12 @@ export function ExerciseStage({
                     <div className="pointer-events-none absolute inset-0 animate-[exerciseExit_600ms_ease-in-out_forwards]">
                         <ExerciseRenderer
                             exercise={leaving}
+                            bookTitle={
+                                leavingBookTitle
+                            }
+                            setTitle={
+                                leavingSetTitle
+                            }
                             currentBeat={0}
                             repetition={previewRepetition}
                             preview
@@ -90,6 +136,12 @@ export function ExerciseStage({
                 >
                     <ExerciseRenderer
                         exercise={exercise}
+                        bookTitle={
+                            exerciseBookTitle
+                        }
+                        setTitle={
+                            exerciseSetTitle
+                        }
                         currentBeat={currentBeat}
                         repetition={repetition}
                         lastPass={
@@ -103,12 +155,18 @@ export function ExerciseStage({
                 className={cn(
                     "pointer-events-none transition-all duration-500",
                     repetition === 1
-                        ? "opacity-90 drop-shadow-[0_0_6px_rgba(37,99,235,0.6)]"
-                        : "opacity-40",
+                        ? "opacity-100 drop-shadow-[0_0_6px_rgba(37,99,235,0.6)]"
+                        : "opacity-70",
                 )}
             >
                 <ExerciseRenderer
                     exercise={preview}
+                    bookTitle={
+                        previewBookTitle
+                    }
+                    setTitle={
+                        previewSetTitle
+                    }
                     currentBeat={0}
                     repetition={previewRepetition}
                     preview

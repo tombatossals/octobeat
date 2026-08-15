@@ -3,6 +3,14 @@ import type { Exercise } from "@octobeat/exercises";
 export interface ExerciseRendererProps {
     exercise: Exercise;
     /**
+     * Título del libro al que pertenece el ejercicio.
+     */
+    bookTitle?: string;
+    /**
+     * Título de la sección a la que pertenece el ejercicio.
+     */
+    setTitle?: string;
+    /**
      * Índice absoluto del beat actual.
      */
     currentBeat: number;
@@ -21,4 +29,4 @@ export interface ExerciseRendererProps {
      */
     lastPass?: boolean;
 }
-export declare function ExerciseRenderer({ exercise, currentBeat, repetition, preview, lastPass, }: ExerciseRendererProps): JSX.Element;
+export declare function ExerciseRenderer({ exercise, bookTitle, setTitle, currentBeat, repetition, preview, lastPass, }: ExerciseRendererProps): JSX.Element;

@@ -9,11 +9,11 @@ import { usePlayerStore } from "@octobeat/player";
 
 import { Logo } from "@/features/overlay/components/Logo";
 import { ExerciseOverlay } from "@/features/exercises/components/ExerciseOverlay";
+import { SpeedSwitcher } from "@/features/exercises/components/SpeedSwitcher";
 import { HeaderActions } from "@/features/library/components/HeaderActions";
 import { SettingsToast } from "@/features/settings/components/SettingsToast";
 import { useSettingsHydration } from "@/features/settings/hooks/useSettingsHydration";
 import { useTheme } from "@/features/settings/hooks/useTheme";
-import { NowPlayingCard } from "./NowPlayingCard";
 import { NowPlayingSummary } from "./NowPlayingSummary";
 import { PlayerControlsOverlay } from "./PlayerControlsOverlay";
 
@@ -123,9 +123,9 @@ export function Player() {
 
             <Logo />
 
-            <NowPlayingSummary />
+            <SpeedSwitcher />
 
-            <NowPlayingCard />
+            <NowPlayingSummary />
 
             <ExerciseOverlay />
 

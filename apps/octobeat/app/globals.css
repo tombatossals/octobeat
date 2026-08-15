@@ -54,6 +54,10 @@
 
 :root {
   --icon-outline: rgba(255, 255, 255, 0.85);
+  --title-outline: transparent;
+  --title-color: #374151;
+  --title-weight: 900;
+  --summary-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -90,6 +94,10 @@
 
 .dark {
   --icon-outline: #374151;
+  --title-outline: rgba(82, 82, 91, 0.9);
+  --title-color: #ffffff;
+  --title-weight: 600;
+  --summary-shadow: 0 4px 24px rgba(0, 0, 0, 0.8);
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -162,6 +170,18 @@
 
   to {
     opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

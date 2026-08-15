@@ -3,6 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
 
+import type {
+    Exercise,
+    ExerciseBook,
+    ExerciseSet,
+} from "@octobeat/exercises";
 import {
     books,
     exerciseNoteDurations,
@@ -24,8 +29,6 @@ import {
     useSpeedStore,
 } from "../store";
 import { useSettingsStore } from "@/features/settings/store";
-
-import { SpeedSwitcher } from "./SpeedSwitcher";
 
 interface ExerciseCycle {
     /**
@@ -235,29 +238,31 @@ export function ExerciseOverlay(): JSX.Element | null {
                 .exerciseSets,
     );
 
-    const allSets = useMemo(
-        () =>
+    // Cada ejercicio con su libro y sección: permite mostrar el título
+    // del libro y la sección a la que pertenece cada línea.
+    const entries = useMemo<{
+        book: ExerciseBook;
+        set: ExerciseSet;
+        exercise: Exercise;
+    }[]>(() => {
+        const all = Object.values(
+            books,
+        ).flatMap((book) =>
             Object.values(
-                books,
-            ).flatMap((book) =>
-                Object.values(
-                    book.sets,
-                ),
-            ),
-        [],
-    );
-
-    const exercises = useMemo(() => {
-        const all = allSets.flatMap(
-            (set) =>
+                book.sets,
+            ).flatMap((set) =>
                 Object.values(
                     set.exercises,
-                ),
+                ).map((exercise) => ({
+                    book,
+                    set,
+                    exercise,
+                })),
+            ),
         );
 
         if (
-            exerciseSets.length ===
-            0
+            exerciseSets.length === 0
         ) {
             return all;
         }
@@ -267,24 +272,24 @@ export function ExerciseOverlay(): JSX.Element | null {
         // "01-single-beat-combinations") y no coincidir con ningún set
         // actual. Si ninguna selección coincide, se usa el catálogo
         // completo en lugar de dejar el overlay sin ejercicios.
-        const selected = allSets.filter(
-            (set) =>
+        const selected = all.filter(
+            (entry) =>
                 exerciseSets.includes(
-                    set.id,
+                    entry.set.id,
                 ),
         );
 
-        if (selected.length === 0) {
-            return all;
-        }
+        return selected.length === 0
+            ? all
+            : selected;
+    }, [exerciseSets]);
 
-        return selected.flatMap(
-            (set) =>
-                Object.values(
-                    set.exercises,
-                ),
+    const exercises = useMemo(() => {
+        return entries.map(
+            (entry) =>
+                entry.exercise,
         );
-    }, [allSets, exerciseSets]);
+    }, [entries]);
 
     const factor =
         SPEED_FACTOR[speed];
@@ -458,13 +463,13 @@ export function ExerciseOverlay(): JSX.Element | null {
         }
     }
 
-    const exercise =
-        exercises[lineIndex]!;
+    const exerciseEntry =
+        entries[lineIndex]!;
 
-    const preview =
-        exercises[
+    const previewEntry =
+        entries[
             (lineIndex + 1) %
-                exercises.length
+                entries.length
         ]!;
 
     useEffect(() => {
@@ -704,10 +709,30 @@ export function ExerciseOverlay(): JSX.Element | null {
 
     return (
         <div className="pointer-events-none absolute inset-x-0 bottom-24 z-30 flex justify-center px-4 short:bottom-14">
-            <div className="flex w-full max-w-6xl flex-col items-center gap-3 short:gap-1.5">
+            <div className="flex w-full max-w-6xl flex-col items-center">
                 <ExerciseStage
-                    exercise={exercise}
-                    preview={preview}
+                    exercise={
+                        exerciseEntry.exercise
+                    }
+                    exerciseBookTitle={
+                        exerciseEntry.book
+                            .title
+                    }
+                    exerciseSetTitle={
+                        exerciseEntry.set
+                            .title
+                    }
+                    preview={
+                        previewEntry.exercise
+                    }
+                    previewBookTitle={
+                        previewEntry.book
+                            .title
+                    }
+                    previewSetTitle={
+                        previewEntry.set
+                            .title
+                    }
                     currentBeat={
                         withinPass + 1
                     }
@@ -716,8 +741,6 @@ export function ExerciseOverlay(): JSX.Element | null {
                         repetitionsPerLine
                     }
                 />
-
-                <SpeedSwitcher />
             </div>
         </div>
     );
