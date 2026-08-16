@@ -1,7 +1,7 @@
 /**
  * Genre taxonomy. The catalog stores dozens of raw genre tags coming from
  * music providers (e.g. Deezer). Instead of exposing every raw tag in the
- * filters, we group similar tags into a small set of "big genres" (8–12).
+ * filters, we group similar tags into a set of "big genres".
  *
  * Filter values persist these group keys, so they are stable regardless of
  * the raw tags found in the catalog.
@@ -15,6 +15,10 @@ export interface GenreGroup {
 
 export const GENRE_GROUPS: ReadonlyArray<GenreGroup> = [
     { key: "rock", label: "Rock" },
+    { key: "hard-rock", label: "Hard Rock" },
+    { key: "alternativo", label: "Alternativo / Indie" },
+    { key: "punk", label: "Punk / Emo" },
+    { key: "clasico", label: "Clásico / Rock & Roll" },
     { key: "metal", label: "Metal" },
     { key: "pop", label: "Pop" },
     { key: "rap", label: "Rap / Hip-Hop" },
@@ -30,40 +34,45 @@ export const GENRE_GROUPS: ReadonlyArray<GenreGroup> = [
 
 const GENRE_TO_GROUP_KEY: Readonly<Record<string, string>> = {
     Rock: "rock",
-    "Hard Rock": "rock",
-    "Classic Rock": "rock",
-    "Indie Rock": "rock",
-    Alternativo: "rock",
-    Alternative: "rock",
-    "Alternative Rock": "rock",
-    "Indie Rock/Rock pop": "rock",
-    "Southern Rock": "rock",
-    "Punk Rock": "rock",
-    Punk: "rock",
-    Emo: "rock",
-    "Rock y Roll/Rockabilly": "rock",
-    Rockabilly: "rock",
     Glam: "rock",
     "Glam Rock": "rock",
     Progressive: "rock",
     Prog: "rock",
     "Progressive Rock": "rock",
     "Instrumental Rock": "rock",
-    "New Wave": "rock",
-    Grunge: "rock",
-    "Post-Grunge": "rock",
-    "Post-grunge": "rock",
-    "Noise Rock": "rock",
     "Stoner Rock": "rock",
     "Space Rock": "rock",
     "Psychedelic Rock": "rock",
     "Art Rock": "rock",
-    "Arena Rock": "rock",
     "Garage Rock": "rock",
-    "Grunge/Instrumental Rock": "rock",
     "Funk Rock": "rock",
     "Mordern Rock": "rock",
-    "Post-Punk Revival": "rock",
+
+    "Hard Rock": "hard-rock",
+    "Arena Rock": "hard-rock",
+
+    Alternativo: "alternativo",
+    Alternative: "alternativo",
+    "Alternative Rock": "alternativo",
+    "Indie Rock": "alternativo",
+    "Indie Rock/Rock pop": "alternativo",
+    "New Wave": "alternativo",
+    Grunge: "alternativo",
+    "Post-Grunge": "alternativo",
+    "Post-grunge": "alternativo",
+    "Noise Rock": "alternativo",
+    "Post-Punk Revival": "alternativo",
+    "Grunge/Instrumental Rock": "alternativo",
+
+    "Punk Rock": "punk",
+    Punk: "punk",
+    Emo: "punk",
+    "Pop Punk": "punk",
+
+    "Classic Rock": "clasico",
+    "Southern Rock": "clasico",
+    "Rock y Roll/Rockabilly": "clasico",
+    Rockabilly: "clasico",
 
     Metal: "metal",
     "Heavy Metal": "metal",
@@ -87,7 +96,6 @@ const GENRE_TO_GROUP_KEY: Readonly<Record<string, string>> = {
     "Pop-Rock": "pop",
     "Pop/Rock": "pop",
     "Power Pop": "pop",
-    "Pop Punk": "pop",
     "Pop Indie": "pop",
     "Art Pop": "pop",
 

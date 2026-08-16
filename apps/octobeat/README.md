@@ -129,7 +129,7 @@ interface.
 | `F`                        | Toggle fullscreen         |
 | `Ctrl`+`F`                 | Toggle genre filter       |
 | `Ctrl`+`K`                 | Search the catalog        |
-| `1` / `2` / `4`            | Speed 1x/2x/4x          |
+| `0` / `1` / `2`           | Speed 0.5x/1x/2x          |
 
 ---
 

@@ -20,7 +20,7 @@ import {
     EMPTY_FILTERS,
 } from "../filters";
 import type { LibraryFilters } from "../filters";
-import { GENRE_GROUPS } from "../genres";
+import { GENRE_GROUPS, genreGroupKeys } from "../genres";
 
 interface FilterDialogProps {
     open: boolean;
@@ -78,6 +78,10 @@ function FilterDialogContent({
         (state) => state.filters,
     );
 
+    const entries = useLibraryStore(
+        (state) => state.entries,
+    );
+
     const setFilters =
         useLibraryStore(
             (state) =>
@@ -98,15 +102,30 @@ function FilterDialogContent({
         setDraft(toDraft(filters));
     }
 
+    const genreCounts = useMemo(() => {
+        const counts = new Map<string, number>();
+
+        for (const entry of entries) {
+            for (const key of genreGroupKeys(entry.genres)) {
+                counts.set(
+                    key,
+                    (counts.get(key) ?? 0) + 1,
+                );
+            }
+        }
+
+        return counts;
+    }, [entries]);
+
     const genres = useMemo(
         () =>
             GENRE_GROUPS.map(
                 (group) => ({
                     value: group.key,
-                    label: group.label,
+                    label: `${group.label} (${genreCounts.get(group.key) ?? 0})`,
                 }),
             ),
-        [],
+        [genreCounts],
     );
 
     const dirty = useMemo(

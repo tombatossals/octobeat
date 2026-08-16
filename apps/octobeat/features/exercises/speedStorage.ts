@@ -21,7 +21,11 @@ export function loadSpeed(): Speed {
             STORAGE_KEY,
         );
 
-    if (raw === "x1" || raw === "x2" || raw === "x4") {
+    if (
+        raw === "x0_5" ||
+        raw === "x1" ||
+        raw === "x2"
+    ) {
         return raw;
     }
 

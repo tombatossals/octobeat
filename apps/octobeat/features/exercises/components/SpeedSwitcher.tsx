@@ -1,6 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
+
 import { Button, cn } from "@octobeat/ui";
+import { usePlayerStore } from "@octobeat/player";
+import { bpmAtTime } from "@octobeat/songmap";
 
 import { useShortcut } from "@/lib/useShortcut";
 
@@ -11,14 +15,15 @@ import { useLibraryStore } from "@/features/library/store";
 import {
     SPEED_FACTOR,
     SPEED_LABELS,
+    SPEED_SHORTCUTS,
     useSpeedStore,
 } from "../store";
 import type { Speed } from "../store";
 
 const ORDER: Speed[] = [
+    "x0_5",
     "x1",
     "x2",
-    "x4",
 ];
 
 const TEXT_SHADOW =
@@ -41,9 +46,23 @@ export function SpeedSwitcher() {
         (state) => state.revealed,
     );
 
-    const bpm = useLibraryStore(
-        (state) =>
-            state.dataset?.metadata.bpm,
+    const dataset = useLibraryStore(
+        (state) => state.dataset,
+    );
+
+    const currentTime = usePlayerStore(
+        (state) => state.currentTime,
+    );
+
+    const bpm = useMemo(
+        () =>
+            dataset
+                ? bpmAtTime(
+                      dataset.songmap,
+                      currentTime,
+                  )
+                : null,
+        [dataset, currentTime],
     );
 
     const currentBpm =
@@ -55,27 +74,27 @@ export function SpeedSwitcher() {
             : null;
 
     useShortcut(
-        { code: "Digit1" },
+        {
+            code: `Digit${SPEED_SHORTCUTS[ORDER[0]!]}`,
+        },
         () =>
-            setSpeed(
-                ORDER[0]!,
-            ),
+            setSpeed(ORDER[0]!),
     );
 
     useShortcut(
-        { code: "Digit2" },
+        {
+            code: `Digit${SPEED_SHORTCUTS[ORDER[1]!]}`,
+        },
         () =>
-            setSpeed(
-                ORDER[1]!,
-            ),
+            setSpeed(ORDER[1]!),
     );
 
     useShortcut(
-        { code: "Digit4" },
+        {
+            code: `Digit${SPEED_SHORTCUTS[ORDER[2]!]}`,
+        },
         () =>
-            setSpeed(
-                ORDER[2]!,
-            ),
+            setSpeed(ORDER[2]!),
     );
 
     return (
@@ -119,11 +138,11 @@ export function SpeedSwitcher() {
                         {revealed && (
                             <span className="absolute -right-2 -top-4">
                                 <ShortcutBadge
-                                    label={String(
-                                        SPEED_FACTOR[
+                                    label={
+                                        SPEED_SHORTCUTS[
                                             option
-                                        ],
-                                    )}
+                                        ]
+                                    }
                                     className="border border-border"
                                 />
                             </span>

@@ -6,22 +6,29 @@ import {
 } from "./speedStorage";
 
 export type Speed =
+    | "x0_5"
     | "x1"
-    | "x2"
-    | "x4";
+    | "x2";
 
 export const SPEED_FACTOR:
     Record<Speed, number> = {
+        x0_5: 0.5,
         x1: 1,
         x2: 2,
-        x4: 4,
     };
 
 export const SPEED_LABELS:
     Record<Speed, string> = {
+        x0_5: "0.5x",
         x1: "1x",
         x2: "2x",
-        x4: "4x",
+    };
+
+export const SPEED_SHORTCUTS:
+    Record<Speed, string> = {
+        x0_5: "0",
+        x1: "1",
+        x2: "2",
     };
 
 interface SpeedState {
