@@ -80,9 +80,14 @@ export function NowPlayingSummary() {
                 aria-label={
                     favorite
                         ? "Quitar de favoritos"
-                        : "Añadir a favoritos"
+                        : "Marcar como favorita"
                 }
                 aria-pressed={favorite}
+                title={
+                    favorite
+                        ? "Quitar de favoritos"
+                        : "Marcar como favorita"
+                }
                 onClick={(event) => {
                     event.stopPropagation();
 
@@ -90,13 +95,18 @@ export function NowPlayingSummary() {
                         metadata.id,
                     );
                 }}
-                className="pointer-events-auto flex shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors outline-none focus:outline-none hover:text-foreground"
+                className={cn(
+                    "pointer-events-auto flex shrink-0 cursor-pointer items-center justify-center rounded-lg p-1 transition-transform outline-none focus:outline-none active:scale-90",
+                    favorite
+                        ? "text-amber-400 hover:scale-110"
+                        : "text-muted-foreground hover:scale-110 hover:text-amber-400",
+                )}
             >
                 <Star
                     className={cn(
                         "h-6 w-6 short:h-5 short:w-5",
                         favorite &&
-                            "fill-amber-400 text-amber-400",
+                            "fill-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]",
                     )}
                 />
             </button>

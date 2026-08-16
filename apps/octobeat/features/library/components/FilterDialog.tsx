@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { Dialog } from "@base-ui/react/dialog";
 import { X } from "lucide-react";
 
-import { DIFFICULTY_ORDER, books } from "@octobeat/exercises";
 import {
     Button,
     cn,
@@ -45,9 +44,6 @@ function toDraft(
         ],
         genres: [...filters.genres],
         decades: [...filters.decades],
-        exerciseSets: [
-            ...filters.exerciseSets,
-        ],
         favoritesOnly:
             filters.favoritesOnly,
     };
@@ -296,52 +292,6 @@ function FilterDialogContent({
                                     count === 1
                                         ? "1 genre"
                                         : `${count} genres`
-                                }
-                            />
-                        </fieldset>
-
-                        <fieldset className="lg:col-span-2">
-                            <legend className="mb-2 block text-sm font-semibold text-foreground">
-                                Book Sections
-                            </legend>
-
-                            <MultiSelect
-                                value={draft.exerciseSets}
-                                onValueChange={(exerciseSets) =>
-                                    setDraft(
-                                        (current) => ({
-                                            ...current,
-                                            exerciseSets,
-                                        }),
-                                    )
-                                }
-                                options={[
-                                    ...Object.values(
-                                        books,
-                                    ),
-                                ]
-                                    .sort(
-                                        (a, b) =>
-                                            DIFFICULTY_ORDER.indexOf(
-                                                a.difficulty,
-                                            ) -
-                                            DIFFICULTY_ORDER.indexOf(
-                                                b.difficulty,
-                                            ),
-                                    )
-                                    .flatMap((book) =>
-                                        Object.values(
-                                            book.sets,
-                                        ).map((set) => ({
-                                            value: set.id,
-                                            label: `${book.title} · ${set.title}`,
-                                        })),
-                                    )}
-                                placeholder="All sections"
-                                countLabel={(count) =>
-                                    count === 1
-                                        ? "1 section"
-                                        : `${count} sections`
                                 }
                             />
                         </fieldset>

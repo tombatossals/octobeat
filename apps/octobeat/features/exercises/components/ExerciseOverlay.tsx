@@ -10,7 +10,6 @@ import type {
 } from "@octobeat/exercises";
 import {
     books,
-    DIFFICULTY_ORDER,
     exerciseNoteDurations,
     exercisePassView,
 } from "@octobeat/exercises";
@@ -29,6 +28,9 @@ import {
     SPEED_FACTOR,
     useSpeedStore,
 } from "../store";
+import { useExerciseSelectionStore } from "../selectionStore";
+import { defaultSelection } from "../selectionStorage";
+import { ExerciseHeader } from "./ExerciseHeader";
 import { useSettingsStore } from "@/features/settings/store";
 
 interface ExerciseCycle {
@@ -233,68 +235,84 @@ export function ExerciseOverlay(): JSX.Element | null {
         datasetIdRef.current = id;
     }, [dataset?.metadata.id]);
 
-    const exerciseSets = useLibraryStore(
-        (state) =>
-            state.filters
-                .exerciseSets,
-    );
+    const bookId =
+        useExerciseSelectionStore(
+            (state) => state.bookId,
+        );
 
-    // Cada ejercicio con su libro y sección: permite mostrar el título
-    // del libro y la sección a la que pertenece cada línea.
+    const setId =
+        useExerciseSelectionStore(
+            (state) => state.setId,
+        );
+
+    // Cada ejercicio con su libro y sección: la práctica queda anclada
+    // a la sección seleccionada. El ciclo solo avanza por los ejercicios
+    // de esa sección; al terminarla, vuelve a su primer ejercicio.
     const entries = useMemo<{
         book: ExerciseBook;
         set: ExerciseSet;
         exercise: Exercise;
     }[]>(() => {
-        const all = Object.values(
+        const book = Object.values(
             books,
-        ).flatMap((book) =>
-            Object.values(
-                book.sets,
-            ).flatMap((set) =>
-                Object.values(
-                    set.exercises,
-                ).map((exercise) => ({
-                    book,
-                    set,
-                    exercise,
-                })),
-            ),
+        ).find(
+            (candidate) =>
+                candidate.id === bookId,
         );
 
-        if (
-            exerciseSets.length === 0
-        ) {
-            // Sin filtro de ejercicios: se ordenan los libros por
-            // dificultad (menor a mayor) para que el ciclo arranque
-            // con la rutina más fácil y no con la más difícil.
-            return [...all].sort(
-                (a, b) =>
-                    DIFFICULTY_ORDER.indexOf(
-                        a.book.difficulty,
-                    ) -
-                    DIFFICULTY_ORDER.indexOf(
-                        b.book.difficulty,
-                    ),
-            );
+        const set = book
+            ? Object.values(
+                  book.sets,
+              ).find(
+                  (candidate) =>
+                      candidate.id ===
+                      setId,
+              )
+            : undefined;
+
+        if (!book || !set) {
+            // Los ids persistidos en localStorage pueden pertenecer a
+            // un catálogo anterior. Si no coinciden con ninguna
+            // sección actual, se usa la sección por defecto en lugar
+            // de dejar el overlay sin ejercicios.
+            const fallback =
+                defaultSelection();
+
+            const fallbackBook =
+                Object.values(
+                    books,
+                ).find(
+                    (candidate) =>
+                        candidate.id ===
+                        fallback.bookId,
+                )!;
+
+            const fallbackSet =
+                Object.values(
+                    fallbackBook.sets,
+                ).find(
+                    (candidate) =>
+                        candidate.id ===
+                        fallback.setId,
+                )!;
+
+            return Object.values(
+                fallbackSet.exercises,
+            ).map((exercise) => ({
+                book: fallbackBook,
+                set: fallbackSet,
+                exercise,
+            }));
         }
 
-        // Los ids persistidos en localStorage pueden pertenecer a un
-        // catálogo anterior (p. ej. "single-beat-combinations" antes de
-        // "01-single-beat-combinations") y no coincidir con ningún set
-        // actual. Si ninguna selección coincide, se usa el catálogo
-        // completo en lugar de dejar el overlay sin ejercicios.
-        const selected = all.filter(
-            (entry) =>
-                exerciseSets.includes(
-                    entry.set.id,
-                ),
-        );
-
-        return selected.length === 0
-            ? all
-            : selected;
-    }, [exerciseSets]);
+        return Object.values(
+            set.exercises,
+        ).map((exercise) => ({
+            book,
+            set,
+            exercise,
+        }));
+    }, [bookId, setId]);
 
     const exercises = useMemo(() => {
         return entries.map(
@@ -733,6 +751,16 @@ export function ExerciseOverlay(): JSX.Element | null {
                     exerciseSetTitle={
                         exerciseEntry.set
                             .title
+                    }
+                    header={
+                        <ExerciseHeader
+                            book={
+                                exerciseEntry.book
+                            }
+                            set={
+                                exerciseEntry.set
+                            }
+                        />
                     }
                     preview={
                         previewEntry.exercise

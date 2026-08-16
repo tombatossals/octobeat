@@ -54,11 +54,6 @@ export function loadFilters(): LibraryFilters {
             )
                 ? parsed.decades
                 : [],
-            exerciseSets: Array.isArray(
-                parsed.exerciseSets,
-            )
-                ? parsed.exerciseSets
-                : [],
             favoritesOnly:
                 parsed.favoritesOnly ===
                 true,

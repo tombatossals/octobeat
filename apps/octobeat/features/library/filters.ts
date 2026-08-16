@@ -19,11 +19,6 @@ export interface LibraryFilters {
     decades: string[];
 
     /**
-     * Selected exercise set ids to practice (e.g. "01-single-beat-combinations").
-     */
-    exerciseSets: string[];
-
-    /**
      * Whether to restrict the queue to favorite songs.
      */
     favoritesOnly: boolean;
@@ -59,7 +54,6 @@ export const EMPTY_FILTERS: LibraryFilters = {
     bpmRanges: [],
     genres: [],
     decades: [],
-    exerciseSets: [],
     favoritesOnly: false,
 };
 
@@ -70,7 +64,6 @@ export function isEmptyFilters(
         filters.bpmRanges.length === 0 &&
         filters.genres.length === 0 &&
         filters.decades.length === 0 &&
-        filters.exerciseSets.length === 0 &&
         !filters.favoritesOnly
     );
 }

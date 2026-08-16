@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
 
 import type { Exercise } from "@octobeat/exercises";
 
@@ -21,6 +21,12 @@ export interface ExerciseStageProps {
      * Título de la sección a la que pertenece el ejercicio.
      */
     exerciseSetTitle?: string;
+
+    /**
+     * Encabezado interactivo (selector de libro y sección) que
+     * sustituye a la línea de títulos por defecto de la línea activa.
+     */
+    header?: ReactNode;
 
     preview: Exercise;
 
@@ -56,6 +62,7 @@ export function ExerciseStage({
     exercise,
     exerciseBookTitle,
     exerciseSetTitle,
+    header,
     preview,
     previewBookTitle,
     previewSetTitle,
@@ -142,6 +149,7 @@ export function ExerciseStage({
                         setTitle={
                             exerciseSetTitle
                         }
+                        header={header}
                         currentBeat={currentBeat}
                         repetition={repetition}
                         lastPass={
