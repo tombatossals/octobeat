@@ -10,6 +10,10 @@ export function PlayerBackend() {
         (state) => state.dataset,
     );
 
+    const revision = useLibraryStore(
+        (state) => state.revision,
+    );
+
     if (!dataset) {
         return null;
     }
@@ -20,7 +24,7 @@ export function PlayerBackend() {
     return (
         <>
             <WaveformPlayer
-                key={`waveform-${id}`}
+                key={`waveform-${id}-${revision}`}
                 src={resources.audio}
                 sections={
                     dataset.songmap
@@ -29,7 +33,7 @@ export function PlayerBackend() {
             />
 
             <LocalAudioPlayer
-                key={`audio-${id}`}
+                key={`audio-${id}-${revision}`}
                 src={resources.audio}
             />
         </>

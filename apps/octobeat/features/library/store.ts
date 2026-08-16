@@ -97,6 +97,12 @@ interface LibraryState {
     filters: LibraryFilters;
 
     /**
+     * Monotonic counter bumped on every open so that reopening the same
+     * dataset (e.g. looping a single favorite) remounts the player.
+     */
+    revision: number;
+
+    /**
      * Dataset ids marked as favorites.
      */
     favorites: string[];
@@ -157,6 +163,8 @@ export const useLibraryStore =
         filters: EMPTY_FILTERS,
 
         favorites: [],
+
+        revision: 0,
 
         async initialize() {
             const catalog =
@@ -262,6 +270,8 @@ export const useLibraryStore =
                     index >= 0
                         ? index
                         : 0,
+                revision:
+                    get().revision + 1,
             });
         },
 
@@ -270,6 +280,10 @@ export const useLibraryStore =
                 ids,
                 index,
             } = get();
+
+            if (ids.length === 0) {
+                return;
+            }
 
             const next =
                 (index + 1) %
@@ -285,6 +299,10 @@ export const useLibraryStore =
                 ids,
                 index,
             } = get();
+
+            if (ids.length === 0) {
+                return;
+            }
 
             const previous =
                 (index - 1 + ids.length) %
