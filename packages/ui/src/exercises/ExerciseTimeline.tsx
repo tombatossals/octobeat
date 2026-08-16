@@ -407,6 +407,9 @@ interface BeatNumbersRowProps {
  * estructura flex de los golpes (mismos flexGrow y márgenes) para que
  * cada número quede centrado exactamente bajo el golpe que arranca el
  * pulso, anclando visualmente el beat — clave en ejercicios de tresillo.
+ *
+ * En la vista previa la numeración se oculta (conservando la altura)
+ * para que no revele la acentuación de la línea siguiente.
  */
 function BeatNumbersRow({
     groups,
@@ -420,48 +423,45 @@ function BeatNumbersRow({
                 preview ? "h-3" : "h-4",
             )}
         >
-            {groups.map((group, groupIndex) => {
-                const strokes =
-                    group.beats[0]
-                        ?.groupStrokes;
+            {preview
+                ? null
+                : groups.map((group, groupIndex) => {
+                      const strokes =
+                          group.beats[0]
+                              ?.groupStrokes;
 
-                const grow =
-                    groupGrowOf(group);
+                      const grow =
+                          groupGrowOf(group);
 
-                return (
-                    <div
-                        key={groupIndex}
-                        className={cn(
-                            "relative flex min-w-0 items-center",
-                            strokes != null &&
-                                "mx-1",
-                        )}
-                        style={{
-                            flexGrow: grow,
-                            flexBasis: 0,
-                        }}
-                    >
-                        {markers[
-                            groupIndex
-                        ]!.map((marker) => (
-                            <span
-                                key={marker.label}
-                                className={cn(
-                                    "absolute -translate-x-1/2 font-mono font-bold leading-none text-neutral-400",
-                                    preview
-                                        ? "text-[9px]"
-                                        : "text-[10px]",
-                                )}
-                                style={{
-                                    left: `${marker.pos * 100}%`,
-                                }}
-                            >
-                                {marker.label}
-                            </span>
-                        ))}
-                    </div>
-                );
-            })}
+                      return (
+                          <div
+                              key={groupIndex}
+                              className={cn(
+                                  "relative flex min-w-0 items-center",
+                                  strokes != null &&
+                                      "mx-1",
+                              )}
+                              style={{
+                                  flexGrow: grow,
+                                  flexBasis: 0,
+                              }}
+                          >
+                              {markers[
+                                  groupIndex
+                              ]!.map((marker) => (
+                                  <span
+                                      key={marker.label}
+                                      className="absolute -translate-x-1/2 font-mono font-bold leading-none text-neutral-400 text-[10px]"
+                                      style={{
+                                          left: `${marker.pos * 100}%`,
+                                      }}
+                                  >
+                                      {marker.label}
+                                  </span>
+                              ))}
+                          </div>
+                      );
+                  })}
         </div>
     );
 }
@@ -509,7 +509,8 @@ function BeatCell({
                 flexBasis: 0,
             }}
         >
-            {beat.accented &&
+            {!preview &&
+                beat.accented &&
                 !isRest && (
                     <div className="absolute -top-3 text-lg font-black leading-none text-neutral-700">
                         &gt;
@@ -523,6 +524,7 @@ function BeatCell({
                         "text-neutral-400",
                     beat.accented &&
                         !isRest &&
+                        !preview &&
                         "text-red-600",
                     active
                         ? "scale-125 text-blue-500"
