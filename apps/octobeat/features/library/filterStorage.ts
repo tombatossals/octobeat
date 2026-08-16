@@ -3,6 +3,8 @@ import {
 } from "./filters";
 import type { LibraryFilters } from "./filters";
 
+import { GENRE_GROUP_BY_KEY } from "./genres";
+
 const STORAGE_KEY =
     "octobeat.filters";
 
@@ -41,7 +43,11 @@ export function loadFilters(): LibraryFilters {
             genres: Array.isArray(
                 parsed.genres,
             )
-                ? parsed.genres
+                ? parsed.genres.filter(
+                      (genre) =>
+                          genre in
+                          GENRE_GROUP_BY_KEY,
+                  )
                 : [],
             decades: Array.isArray(
                 parsed.decades,

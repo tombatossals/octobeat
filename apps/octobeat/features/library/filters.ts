@@ -1,5 +1,7 @@
 import type { Metadata } from "@octobeat/library";
 
+import { genreGroupKeys } from "./genres";
+
 export interface LibraryFilters {
     /**
      * Selected BPM range keys, e.g. "100-120".
@@ -7,7 +9,7 @@ export interface LibraryFilters {
     bpmRanges: string[];
 
     /**
-     * Selected genre names.
+     * Selected big genre keys, e.g. "rock".
      */
     genres: string[];
 
@@ -120,12 +122,15 @@ export function matchesFilters(
     }
 
     if (filters.genres.length > 0) {
+        const entryKeys =
+            genreGroupKeys(
+                entry.genres,
+            );
+
         const matchesGenre =
             filters.genres.some(
-                (genre) =>
-                    entry.genres.includes(
-                        genre,
-                    ),
+                (key) =>
+                    entryKeys.has(key),
             );
 
         if (!matchesGenre) {
