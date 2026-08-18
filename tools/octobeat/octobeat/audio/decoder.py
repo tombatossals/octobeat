@@ -1,5 +1,6 @@
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 
@@ -45,6 +46,31 @@ def decode_to_wav(
         ],
         check=True,
     )
+
+
+def decode_to_wav_from_bytes(
+    audio_bytes: bytes,
+    destination: Path,
+) -> None:
+    """
+    Decode raw audio bytes (Opus/Ogg/MP3) to a PCM WAV file.
+    """
+
+    with tempfile.NamedTemporaryFile(
+        suffix=".ogg",
+        prefix="octobeat-audio-",
+        delete=False,
+    ) as temp:
+        temp.write(audio_bytes)
+        temp_path = Path(temp.name)
+
+    try:
+        decode_to_wav(
+            temp_path,
+            destination,
+        )
+    finally:
+        temp_path.unlink(missing_ok=True)
 
 
 def encode_to_mp3(

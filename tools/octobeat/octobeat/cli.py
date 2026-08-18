@@ -543,11 +543,45 @@ def build_parser() -> argparse.ArgumentParser:
     export_parser.add_argument(
         "songmap",
         type=Path,
+        help="SongMap JSON file, or an .sng container to export "
+        "directly (its chart generates the SongMap).",
     )
 
     export_parser.add_argument(
         "destination",
         type=Path,
+    )
+
+    export_parser.add_argument(
+        "--metronome",
+        action="store_true",
+        help="Overlay a metronome click track on the exported MP3, "
+        "marking every beat and accenting the downbeat of each bar.",
+    )
+
+    export_parser.add_argument(
+        "--click-volume",
+        type=float,
+        default=1.0,
+        help="Metronome click volume multiplier (default 1.0; e.g. 2.0 "
+        "makes the clicks twice as loud).",
+    )
+
+    export_parser.add_argument(
+        "--no-drums",
+        action="store_true",
+        help="Mix the exported MP3 from the original SNG multitracks "
+        "with the drum stems removed, so the drums can be practiced "
+        "along with the rest of the instruments.",
+    )
+
+    export_parser.add_argument(
+        "--audio",
+        type=Path,
+        default=None,
+        help="Source recording to export (defaults to the cached "
+        "recording of the SongMap); accepts an .sng container whose "
+        "full-mix audio is used; with --no-drums, the SNG.",
     )
 
     export_parser.set_defaults(

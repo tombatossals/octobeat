@@ -210,6 +210,39 @@ def extract_stems(data: bytes) -> list[tuple[str, bytes]]:
     return stems
 
 
+def is_drum_stem(name: str) -> bool:
+    """
+    True when an SNG audio file is a drum stem.
+
+    Matches ``drums.opus`` and the ``drums_1/2/3`` split variants.
+    """
+
+    stem = name.rpartition(".")[0]
+
+    if stem == "drums":
+        return True
+
+    return (
+        stem.startswith("drums_")
+        and stem[6:].isdigit()
+    )
+
+
+def extract_stems_without_drums(data: bytes) -> list[tuple[str, bytes]]:
+    """
+    Extract the instrument stems minus any drum stems.
+
+    Used to build a "no drums" mix from the SNG multitracks (all
+    instruments except the drums).
+    """
+
+    return [
+        (name, audio)
+        for name, audio in extract_stems(data)
+        if not is_drum_stem(name)
+    ]
+
+
 def extract_audio(data: bytes) -> tuple[str, bytes]:
     """
     Extract the preferred full-mix audio track from the container.

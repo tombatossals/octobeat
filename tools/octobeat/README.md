@@ -321,6 +321,59 @@ Export a SongMap.
 octobeat export <songmap.json> <destination>
 ```
 
+The exported files are named `<bpm> - <title>.mp3` (and the matching
+`.songmap.json`), with the BPM zero-padded to three digits (`080 - ...`,
+`120 - ...`, `180 - ...`) so a batch of exports placed in the same
+directory sorts by song speed.
+
+Export the recording as an MP3 with a metronome click track overlaid,
+marking every beat and accenting the downbeat of each bar — ideal for
+practicing an instrument (e.g. drums) by ear:
+
+```bash
+octobeat export <songmap.json> <destination> --metronome
+```
+
+Mix the exported MP3 from the original SNG multitracks with the drum
+stems removed, so the drums can be practiced along with the rest of the
+instruments (combine with `--metronome` for a full practice track):
+
+```bash
+octobeat export <songmap.json> <destination> --no-drums --metronome
+```
+
+`--no-drums` resolves the SNG from the SongMap source (a `file` source
+pointing to a `.sng`), or from `--audio` when it points to the `.sng`.
+
+`--audio` also accepts an `.sng` container directly: its full-mix audio
+track is extracted and used as the recording. So a single `.sng` file
+becomes a beat-marked MP3 in two commands:
+
+```bash
+octobeat analyse "song.sng" -o songmap.json
+octobeat export songmap.json practice/ --metronome --audio "song.sng"
+```
+
+Or in a single command, passing the `.sng` directly: the SongMap is
+generated from the embedded chart and the full-mix audio is extracted
+automatically (a multitrack SNG without a `song.*` track exports its
+single audio track as-is):
+
+```bash
+octobeat export "song.sng" practice/ --metronome
+octobeat export "song.sng" practice/ --no-drums --metronome
+```
+
+Options:
+
+- `--metronome` — overlay the click track on the exported MP3;
+- `--click-volume <multiplier>` — metronome click volume (default
+  `1.0`; e.g. `2.0` makes the clicks twice as loud);
+- `--no-drums` — mix the multitracks without the drum stems;
+- `--audio <file>` — source recording to export (defaults to the
+  cached recording referenced by the SongMap); accepts an `.sng`
+  container, and with `--no-drums` it must be the `.sng`.
+
 ---
 
 # Configuration

@@ -30,6 +30,7 @@ from octobeat.providers.deezer import (
     DeezerProvider,
 )
 from octobeat.providers.factory import get_provider
+from octobeat.providers.sng import SngSourceProvider
 from octobeat.providers.youtube import YouTubeProvider
 from octobeat.timing import (
     TimingData,
@@ -283,6 +284,35 @@ def _analyse(
         source=source,
         offset=offset,
     )
+
+
+def analyse_sng(
+    path: Path,
+    *,
+    offset: float | None = None,
+) -> AnalysisResult:
+    """
+    Analyse an SNG container and generate a SongMap.
+
+    Extracts the audio and the embedded chart from the container; the
+    chart provides the timing (validated against the audio), exactly as
+    ``add`` does for an SNG source.
+    """
+
+    provider = SngSourceProvider()
+
+    recording = provider.load(
+        str(path),
+    )
+
+    try:
+        return _analyse(
+            recording,
+            str(path),
+            offset,
+        )
+    finally:
+        recording.cleanup()
 
 
 def _load_chart_timing(chart: Path) -> TimingData:

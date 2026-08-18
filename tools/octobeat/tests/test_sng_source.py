@@ -135,6 +135,67 @@ def _multitrack_sng() -> bytes:
     )
 
 
+def _multitrack_sng_with_drums() -> bytes:
+    from octobeat.fixtures.sng import (
+        _build_notes_mid,
+        _build_sng_container,
+        _constant_tempo,
+    )
+
+    return _build_sng_container(
+        {
+            "name": "Drums",
+            "artist": "Fixture Band",
+            "song_length": "5000",
+        },
+        {
+            "notes.mid": _build_notes_mid(_constant_tempo()),
+            "guitar.opus": _make_wav(0.5),
+            "drums.opus": _make_wav(0.3),
+            "drums_1.opus": _make_wav(0.2),
+            "vocals.opus": _make_wav(0.4),
+        },
+    )
+
+
+def test_is_drum_stem():
+    from octobeat.timing.sng import is_drum_stem
+
+    assert is_drum_stem("drums.opus")
+    assert is_drum_stem("drums.ogg")
+    assert is_drum_stem("drums.mp3")
+    assert is_drum_stem("drums.wav")
+    assert is_drum_stem("drums_1.opus")
+    assert is_drum_stem("drums_3.wav")
+
+    assert not is_drum_stem("guitar.opus")
+    assert not is_drum_stem("vocals.ogg")
+    assert not is_drum_stem("song.wav")
+
+
+def test_extract_stems_without_drums():
+    from octobeat.timing.sng import (
+        extract_stems,
+        extract_stems_without_drums,
+    )
+
+    data = _multitrack_sng_with_drums()
+
+    assert [name for name, _ in extract_stems(data)] == [
+        "drums.opus",
+        "drums_1.opus",
+        "guitar.opus",
+        "vocals.opus",
+    ]
+
+    without = extract_stems_without_drums(data)
+
+    assert [name for name, _ in without] == [
+        "guitar.opus",
+        "vocals.opus",
+    ]
+
+
 def test_extract_stems_lists_instrument_tracks():
     from octobeat.timing.sng import extract_stems
 
