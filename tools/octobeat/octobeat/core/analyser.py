@@ -209,6 +209,7 @@ def analyse_recording(
         timing_data,
         title=recording.title
         or recording.path.stem,
+        artist=recording.artist,
         duration=duration,
         source=recording.source
         or Source(
@@ -358,6 +359,7 @@ def analyse_with_chart(
         chart_timing,
         title=recording.title
         or recording.path.stem,
+        artist=recording.artist,
         duration=audio.duration,
         source=recording.source
         or Source(
@@ -487,6 +489,7 @@ def _silence_result(
         ),
         title=recording.title
         or recording.path.stem,
+        artist=recording.artist,
         duration=duration,
         source=recording.source
         or Source(

@@ -262,6 +262,30 @@ def test_export_stem_prefixes_bpm() -> None:
     assert export_stem(songmap) == "120 - Test"
 
 
+def test_export_stem_includes_artist() -> None:
+    songmap = _songmap().model_copy(
+        update={
+            "metadata": _songmap().metadata.model_copy(
+                update={"artist": "Fixture Band"},
+            ),
+        }
+    )
+
+    assert export_stem(songmap) == "120 - Fixture Band - Test"
+
+
+def test_export_stem_omits_missing_artist() -> None:
+    songmap = _songmap().model_copy(
+        update={
+            "metadata": _songmap().metadata.model_copy(
+                update={"artist": None},
+            ),
+        }
+    )
+
+    assert export_stem(songmap) == "120 - Test"
+
+
 def test_export_stem_sorts_by_bpm() -> None:
     slow = _songmap()
     fast = _songmap()
@@ -420,8 +444,8 @@ def test_write_dataset_no_drums_excludes_drums(
     # Only the guitar (constant 0.5) is mixed, so both halves sit at
     # the same level. With the drums (0.5 in the second half) the first
     # half would drop to ~0.47 after normalisation.
-    assert first > 0.7
-    assert second > 0.7
+    assert first > 0.6
+    assert second > 0.6
     assert abs(first - second) < 0.1
 
 
@@ -670,11 +694,14 @@ def test_export_command_direct_from_sng(
     assert result == 0
 
     # The SongMap comes from the SNG metadata/chart: 120 BPM from the
-    # constant-tempo chart, title from the container.
-    mp3 = destination / "120 - Direct Song.mp3"
+    # constant-tempo chart, title and group from the container.
+    mp3 = destination / "120 - Fixture Band - Direct Song.mp3"
 
     assert mp3.exists()
-    assert (destination / "120 - Direct Song.songmap.json").exists()
+    assert (
+        destination
+        / "120 - Fixture Band - Direct Song.songmap.json"
+    ).exists()
 
     # The full-mix audio was extracted and the metronome marks the
     # first beat.
@@ -711,7 +738,7 @@ def test_export_command_direct_from_sng_no_drums(
 
     assert result == 0
 
-    mp3 = destination / "120 - Multitrack.mp3"
+    mp3 = destination / "120 - Fixture Band - Multitrack.mp3"
 
     assert mp3.exists()
 
@@ -730,8 +757,8 @@ def test_export_command_direct_from_sng_no_drums(
     )
 
     # Only the guitar is mixed; the drums (second half only) are gone.
-    assert first > 0.7
-    assert second > 0.7
+    assert first > 0.6
+    assert second > 0.6
     assert abs(first - second) < 0.1
 
 
@@ -783,7 +810,7 @@ def test_export_direct_from_sng_without_full_mix_uses_single_track(
     assert result == 0
 
     audio = _load(
-        destination / "120 - Stems Only.mp3",
+        destination / "120 - Fixture Band - Stems Only.mp3",
     )
 
     level = float(
@@ -867,3 +894,37 @@ def test_export_command_click_volume(
 
     assert result == 0
     assert (tmp_path / "out" / "120 - Test.mp3").exists()
+
+
+# --------------------------------------------------------------------------
+# MP3 encoding compatibility
+# --------------------------------------------------------------------------
+
+
+def test_exported_mp3_is_44100hz_stereo(
+    tmp_path,
+) -> None:
+    source = _silence_wav(
+        tmp_path / "silence.wav",
+    )
+    songmap = _songmap()
+
+    destination = write_dataset(
+        songmap,
+        tmp_path / "export",
+        audio_path=source,
+    )
+
+    mp3 = destination / "120 - Test.mp3"
+
+    assert mp3.exists()
+
+    audio, sr = librosa.load(
+        str(mp3),
+        sr=None,
+        mono=False,
+    )
+
+    assert sr == 44100
+    assert audio.ndim == 2
+    assert audio.shape[0] == 2

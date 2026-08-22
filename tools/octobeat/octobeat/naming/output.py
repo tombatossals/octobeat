@@ -53,19 +53,31 @@ def export_stem(songmap: SongMap) -> str:
     """
     Canonical filename stem for an exported song.
 
-    The stem is prefixed with the song BPM (``"120 - Title"``) so a
-    batch of exports placed in the same directory sorts by song speed.
+    The stem is prefixed with the song BPM and the group name
+    (``"120 - Band - Title"``) so a batch of exports placed in the
+    same directory sorts by song speed. The group is omitted when the
+    SongMap carries no artist.
     """
 
-    return (
-        f"{format_bpm(songmap.timing.bpm)}"
-        f" - {_safe_title(songmap.metadata.title)}"
+    parts = [
+        format_bpm(songmap.timing.bpm),
+    ]
+
+    if songmap.metadata.artist:
+        parts.append(
+            _safe_token(songmap.metadata.artist),
+        )
+
+    parts.append(
+        _safe_token(songmap.metadata.title),
     )
 
+    return " - ".join(parts)
 
-def _safe_title(title: str) -> str:
-    """Make a song title safe for a filename, preserving its case."""
 
-    safe = title.replace("/", "-").replace("\\", "-").replace(":", "-")
+def _safe_token(value: str) -> str:
+    """Make an artist/title safe for a filename, preserving its case."""
+
+    safe = value.replace("/", "-").replace("\\", "-").replace(":", "-")
 
     return safe.strip(" .")

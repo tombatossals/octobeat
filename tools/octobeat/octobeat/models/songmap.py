@@ -40,6 +40,7 @@ class SongMetadata(SongMapModel):
     """
 
     title: str
+    artist: str | None = None
     duration: float = Field(ge=0.0)
     source: Source
 

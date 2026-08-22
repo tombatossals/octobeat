@@ -321,10 +321,11 @@ Export a SongMap.
 octobeat export <songmap.json> <destination>
 ```
 
-The exported files are named `<bpm> - <title>.mp3` (and the matching
-`.songmap.json`), with the BPM zero-padded to three digits (`080 - ...`,
-`120 - ...`, `180 - ...`) so a batch of exports placed in the same
-directory sorts by song speed.
+The exported files are named `<bpm> - <group> - <title>.mp3` (and the
+matching `.songmap.json`), with the BPM zero-padded to three digits
+(`080 - ...`, `120 - ...`, `180 - ...`) so a batch of exports placed in
+the same directory sorts by song speed. The group is omitted when the
+SongMap carries no artist.
 
 Export the recording as an MP3 with a metronome click track overlaid,
 marking every beat and accenting the downbeat of each bar — ideal for

@@ -67,6 +67,10 @@ export const SourceSchema = z.object({
 export const SongMetadataSchema = z.object({
     title: z.string(),
 
+    artist: z
+        .string()
+        .optional(),
+
     duration: z.number(),
 
     source: SourceSchema,

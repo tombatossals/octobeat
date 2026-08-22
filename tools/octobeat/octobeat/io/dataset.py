@@ -32,9 +32,10 @@ def write_dataset(
     """
     Write a SongMap dataset to disk.
 
-    The exported files are named ``"<bpm> - <title>.mp3"`` (and the
-    matching ``.songmap.json``), so a batch of exports placed in the
-    same directory sorts by song speed.
+    The exported files are named ``"<bpm> - <group> - <title>.mp3"``
+    (and the matching ``.songmap.json``), so a batch of exports placed
+    in the same directory sorts by song speed. The group is omitted
+    when the SongMap carries no artist.
 
     When ``metronome`` is true the exported MP3 gets a metronome click
     track overlaid, marking every beat with a click and accenting the

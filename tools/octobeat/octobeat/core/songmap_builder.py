@@ -43,6 +43,7 @@ def build_songmap(
     offset: float = 0.0,
     confidence: float = 1.0,
     downbeat_shift: int = 0,
+    artist: str | None = None,
     count_in_start: float | None = None,
     song_start: float | None = None,
     count_in_clicks: list[float] | None = None,
@@ -72,6 +73,7 @@ def build_songmap(
         createdAt=created_at,
         metadata=SongMetadata(
             title=title,
+            artist=artist,
             duration=round(duration, 3),
             source=source,
         ),

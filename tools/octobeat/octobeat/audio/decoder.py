@@ -81,6 +81,10 @@ def encode_to_mp3(
 ) -> None:
     """
     Encode an audio file to an MP3 suitable for streaming.
+
+    The output is resampled to 44.1 kHz stereo, encoded at ``bitrate``
+    and stripped of source metadata (``-map_metadata -1``) for maximum
+    player compatibility.
     """
 
     if not input_path.exists():
@@ -106,6 +110,12 @@ def encode_to_mp3(
             "-i",
             str(input_path),
             "-vn",
+            "-ar",
+            "44100",
+            "-ac",
+            "2",
+            "-map_metadata",
+            "-1",
             "-c:a",
             "libmp3lame",
             "-b:a",
